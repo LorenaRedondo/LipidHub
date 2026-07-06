@@ -25,6 +25,18 @@ npm run typecheck  # types only
 The original single-file vanilla-JS prototype is preserved at
 [`legacy/prototype.html`](legacy/prototype.html).
 
+### API & agent access
+
+The atlas is also consumable programmatically and by agents — a **REST API**, an **MCP
+server**, and a **Claude Skill**, all over one shared service layer. See
+[`docs/api.md`](docs/api.md).
+
+```bash
+npm run api                          # REST at http://localhost:8787
+npm run mcp                          # MCP server (stdio)
+claude mcp add lipidex -- npm run mcp
+```
+
 ## Try it
 
 Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
