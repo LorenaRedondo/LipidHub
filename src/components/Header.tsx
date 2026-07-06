@@ -22,7 +22,7 @@ export default function Header({ view, onView }: { view: View; onView: (v: View)
       </nav>
       <div className="status">
         <span className="dot" />
-        <span>demo build · 12 classes · properties computed live</span>
+        <span>Research preview · 12 lipid classes</span>
       </div>
     </header>
   )

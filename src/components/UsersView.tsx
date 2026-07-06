@@ -48,12 +48,13 @@ export default function UsersView() {
         </div>
 
         <div className="marketnote">
-          <b>Why this wins as a product, not just a database.</b> LIPID MAPS and SwissLipids already
-          own "the reference list." Competing on catalogue size is a losing game. LIPIDEX competes on{' '}
-          <b>integration + inference + the two missing layers</b> (systematic synthesizability, and
-          the explicit gap map) wrapped in a UI each audience can actually operate. The moat is the
-          reconciled, provenance-tagged property graph — and the trust that comes from never hiding
-          which numbers are predicted.
+          <b>How LIPIDEX fits alongside the reference databases.</b> LIPIDEX builds on the resources
+          the field already relies on — LIPID MAPS, SwissLipids, Rhea, HMDB — rather than replacing
+          them. It adds three things they don't put in one place: the <em>enumerated</em> space shown
+          beside the <em>catalogued</em> one, so the gaps are visible; properties inferred for every
+          species from its composition; and an explicit label on every value — measured, calculated,
+          or predicted — with the model behind it. Nothing predicted is hidden, so you can cite a
+          number, or decide it's worth taking to the bench.
         </div>
       </div>
     </section>
