@@ -1,12 +1,14 @@
-export type View = 'atlas' | 'pipe' | 'users'
+export type View = 'atlas' | 'compare' | 'refs' | 'pipe' | 'users'
 
 const TABS: { id: View; label: string }[] = [
   { id: 'atlas', label: 'Atlas' },
+  { id: 'compare', label: 'Compare' },
+  { id: 'refs', label: 'References' },
   { id: 'pipe', label: 'Pipeline' },
   { id: 'users', label: "Who it's for" },
 ]
 
-export default function Header({ view, onView }: { view: View; onView: (v: View) => void }) {
+export default function Header({ view, onView, compareCount }: { view: View; onView: (v: View) => void; compareCount: number }) {
   return (
     <header>
       <div className="brand">
@@ -17,12 +19,13 @@ export default function Header({ view, onView }: { view: View; onView: (v: View)
         {TABS.map((t) => (
           <button key={t.id} className={view === t.id ? 'on' : ''} onClick={() => onView(t.id)}>
             {t.label}
+            {t.id === 'compare' && compareCount > 0 && <span className="navbadge">{compareCount}</span>}
           </button>
         ))}
       </nav>
       <div className="status">
         <span className="dot" />
-        <span>Research preview · 12 lipid classes</span>
+        <span>Research preview · 17 lipid classes</span>
       </div>
     </header>
   )

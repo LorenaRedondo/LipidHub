@@ -4,14 +4,19 @@ import Header, { type View } from './components/Header'
 import AtlasView from './components/AtlasView'
 import PipelineView from './components/PipelineView'
 import UsersView from './components/UsersView'
+import CompareView from './components/CompareView'
+import ReferencesView from './components/ReferencesView'
 
 export interface Cell { c: number; d: number }
+export interface Pin { clsK: string; c: number; d: number }
+export const MAX_PINS = 4
 
 export default function App() {
   const [view, setView] = useState<View>('atlas')
   const [cls, setCls] = useState<LipidClass>(CLASSES[0])
   const [sel, setSel] = useState<Cell | null>(null)
   const [persona, setPersona] = useState<Persona>('analyst')
+  const [pins, setPins] = useState<Pin[]>([])
 
   const select = useCallback((c: number, d: number, c2 = cls) => {
     setSel({ c, d })
@@ -21,6 +26,15 @@ export default function App() {
   const selectClass = useCallback((next: LipidClass) => {
     setCls(next)
     setSel(null)
+  }, [])
+
+  const togglePin = useCallback((pin: Pin) => {
+    setPins((prev) => {
+      const i = prev.findIndex((p) => p.clsK === pin.clsK && p.c === pin.c && p.d === pin.d)
+      if (i >= 0) return prev.filter((_, j) => j !== i)
+      if (prev.length >= MAX_PINS) return prev
+      return [...prev, pin]
+    })
   }, [])
 
   // deep-link (#PC-34-1) on first mount, else preselect a familiar species
@@ -60,7 +74,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header view={view} onView={setView} />
+      <Header view={view} onView={setView} compareCount={pins.length} />
       {view === 'atlas' && (
         <AtlasView
           cls={cls}
@@ -69,8 +83,12 @@ export default function App() {
           onSelect={(c, d) => select(c, d)}
           persona={persona}
           onPersona={setPersona}
+          pins={pins}
+          onTogglePin={togglePin}
         />
       )}
+      {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
+      {view === 'refs' && <ReferencesView />}
       {view === 'pipe' && <PipelineView />}
       {view === 'users' && <UsersView />}
     </div>

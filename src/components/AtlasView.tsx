@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { findClass, GRID_D, type LipidClass, type Persona } from '../lib/lipids'
-import type { Cell } from '../App'
+import type { Cell, Pin } from '../App'
 import Rail from './Rail'
 import GapMap from './GapMap'
 import Inspector from './Inspector'
@@ -12,9 +12,11 @@ interface Props {
   onSelect: (c: number, d: number) => void
   persona: Persona
   onPersona: (p: Persona) => void
+  pins: Pin[]
+  onTogglePin: (pin: Pin) => void
 }
 
-export default function AtlasView({ cls, onSelectClass, sel, onSelect, persona, onPersona }: Props) {
+export default function AtlasView({ cls, onSelectClass, sel, onSelect, persona, onPersona, pins, onTogglePin }: Props) {
   const [query, setQuery] = useState('')
 
   function onSearch(value: string) {
@@ -52,7 +54,7 @@ export default function AtlasView({ cls, onSelectClass, sel, onSelect, persona, 
         </main>
         <aside className="inspector">
           <div className="insp-scroll">
-            <Inspector cls={cls} sel={sel} persona={persona} />
+            <Inspector cls={cls} sel={sel} persona={persona} pins={pins} onTogglePin={onTogglePin} />
           </div>
         </aside>
       </div>
