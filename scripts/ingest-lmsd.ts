@@ -22,9 +22,11 @@ const OURS = new Set(['PC', 'PE', 'PS', 'PG', 'PI', 'PA', 'LPC', 'DG', 'TG', 'MG
 
 interface ClassEntry { core?: string; mainClass?: string; comps: Record<string, number>; curatedCount: number }
 const classes: Record<string, ClassEntry> = {}
+// one representative real structure per curated composition, keyed by id (PC-34-1)
+const structures: Record<string, { lmId: string; inchikey: string; smiles: string }> = {}
 
 let field: string | null = null
-let abbrev = '', category = '', mainClass = ''
+let abbrev = '', category = '', mainClass = '', lmId = '', inchikey = '', smiles = ''
 let records = 0
 
 function commit() {
@@ -49,17 +51,23 @@ function commit() {
   if (!e.comps[cd]) e.curatedCount++
   e.comps[cd] = (e.comps[cd] || 0) + 1
   if (!e.core && category) { e.core = category; e.mainClass = mainClass }
+
+  const id = `${token}-${cd.replace(':', '-')}`
+  if (lmId && smiles && !structures[id]) structures[id] = { lmId, inchikey, smiles } // first-wins
 }
 
 const rl = readline.createInterface({ input: fs.createReadStream(SDF), crlfDelay: Infinity })
 for await (const line of rl) {
   if (line.startsWith('> <')) { field = line.slice(3, line.indexOf('>', 3)); continue }
-  if (line.startsWith('$$$$')) { commit(); abbrev = category = mainClass = ''; field = null; continue }
+  if (line.startsWith('$$$$')) { commit(); abbrev = category = mainClass = lmId = inchikey = smiles = ''; field = null; continue }
   if (field) {
     const v = line.trim()
     if (field === 'ABBREVIATION') abbrev = v
     else if (field === 'CATEGORY') category = v
     else if (field === 'MAIN_CLASS') mainClass = v
+    else if (field === 'LM_ID') lmId = v
+    else if (field === 'INCHI_KEY') inchikey = v
+    else if (field === 'SMILES') smiles = v
     field = null
   }
 }
@@ -75,8 +83,13 @@ const out = {
 const dir = 'src/data'
 fs.mkdirSync(dir, { recursive: true })
 fs.writeFileSync(`${dir}/lmsdCurated.json`, JSON.stringify(out))
+fs.writeFileSync(`${dir}/lmsdStructures.json`, JSON.stringify({
+  source: 'LIPID MAPS Structure Database (LMSD)', license: 'CC BY 4.0', structures,
+}))
 
 const summary = Object.entries(classes).map(([k, e]) => `${k}:${e.curatedCount}`).join('  ')
+const kb = (f: string) => (fs.statSync(`${dir}/${f}`).size / 1024).toFixed(0)
 console.error(`scanned ${records} records`)
 console.error(`curated sum-compositions per class → ${summary}`)
-console.error(`wrote ${dir}/lmsdCurated.json (${(fs.statSync(`${dir}/lmsdCurated.json`).size / 1024).toFixed(0)} KB)`)
+console.error(`representative structures: ${Object.keys(structures).length}`)
+console.error(`wrote lmsdCurated.json (${kb('lmsdCurated.json')} KB), lmsdStructures.json (${kb('lmsdStructures.json')} KB)`)

@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import type { LipidClass } from '../lib/lipids'
 import { toSmiles } from '../lib/smiles'
+import { useLmsdStructure } from '../lib/lmsdStructures'
 import Schematic from './Schematic'
 
 interface Props { cls: LipidClass; c: number; d: number; iso: [number, number][] }
 
 /**
- * Real 2D depiction of the selected species. Builds a SMILES from composition and
- * renders it with OpenChemLib (lazy-loaded, code-split). Falls back to the cartoon
- * schematic while loading, when a class has no template, or on any parse failure.
+ * 2D depiction of the selected species. Prefers the real LIPID MAPS structure for
+ * curated species; otherwise builds a SMILES from composition. Renders with
+ * OpenChemLib (lazy-loaded), falling back to the cartoon on any failure.
  */
 export default function Structure({ cls, c, d, iso }: Props) {
-  const smiles = toSmiles(cls, c, d)
+  const real = useLmsdStructure(`${cls.k}-${c}-${d}`)
+  const smiles = real?.smiles ?? toSmiles(cls, c, d)
   const [svg, setSvg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -24,13 +26,7 @@ export default function Structure({ cls, c, d, iso }: Props) {
         try {
           const mol = OCL.Molecule.fromSmiles(smiles)
           mol.stripStereoInformation()
-          const out = mol.toSVG(340, 150, undefined, {
-            autoCrop: true,
-            autoCropMargin: 6,
-            suppressChiralText: true,
-            noStereoProblem: true,
-          })
-          setSvg(out)
+          setSvg(mol.toSVG(340, 150, undefined, { autoCrop: true, autoCropMargin: 6, suppressChiralText: true, noStereoProblem: true }))
         } catch {
           setSvg(null)
         }
@@ -45,8 +41,9 @@ export default function Structure({ cls, c, d, iso }: Props) {
     <div className="structure">
       <div className="struct-canvas" dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="struct-cap">
-        2D structure of the likely isomer {iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')} · double-bond
-        positions illustrative
+        {real
+          ? <>Real structure from <b>LIPID MAPS</b> · {real.lmId}</>
+          : <>Predicted 2D structure of the likely isomer {iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')} · double-bond positions illustrative</>}
       </div>
     </div>
   )
