@@ -46,7 +46,7 @@ measure.
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
 | Synthesizability | ⚠️ heuristic placeholders | pathway match + SAScore/retrosynthesis |
 | Known vs. gap status | ⚠️ rule-based demo | real diff vs. LMSD |
-| Classes | 8 glycero/glycerophospholipid | + sphingolipids, sterols, … |
+| Classes | 12: 8 glycero/glycerophospho + Cer/SM/HexCer + CE | + free sterols, oxysterols, … |
 
 See [`docs/architecture.md`](docs/architecture.md) for the full data architecture.
 
