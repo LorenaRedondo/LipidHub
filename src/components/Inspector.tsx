@@ -5,7 +5,7 @@ import {
   type LipidClass, type Method, type Persona,
 } from '../lib/lipids'
 import { MAX_PINS, type Cell, type Pin } from '../App'
-import Schematic from './Schematic'
+import Structure from './Structure'
 
 function Conf({ m }: { m: Method }) {
   const cls = m === 'measured' ? 'meas' : m === 'calculated' ? 'calc' : 'pred'
@@ -246,7 +246,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
         </div>
         <div className="idline">{idline}</div>
       </div>
-      <div className="schematic"><Schematic cls={cls} iso={iso} /></div>
+      <div className="schematic"><Structure cls={cls} c={c} d={d} iso={iso} /></div>
       <div className="tip"><b>{persona} view</b>{tips[persona]}</div>
       {sections[persona].map((node, i) => <div key={i}>{node}</div>)}
     </>

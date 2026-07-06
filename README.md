@@ -31,8 +31,9 @@ Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
 
 - **Atlas tab** — a carbon-number × double-bond *gap map* per lipid class. Classes are
   grouped by taxonomy and filterable by the **kingdom** they occur in. Click any cell to
-  inspect a species (formula, adducts, predicted CCS/RT/Tm/logP, synthesizability,
-  **biological taxonomy & occurrence**, and a live literature link); search `PC 34:1`,
+  inspect a species (a **2D chemical structure** built from its composition, formula,
+  adducts, predicted CCS/RT/Tm/logP, synthesizability, **biological taxonomy &
+  occurrence**, and a live literature link); search `PC 34:1`,
   `MGDG 34:6`, `TG 52:3`; walk cells with the arrow keys; every selection is
   deep-linkable (`#PC-34-1`). The "View as…" presets reorder the inspector per audience.
 - **Compare tab** — pin up to four species (`+ compare` in the inspector) and line their
@@ -72,6 +73,7 @@ measure.
 | Classes | 17 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |
 | Per-species citations | ⚠️ live Europe PMC search per class | curated refs via DB integration |
+| 2D structures | ✅ SMILES built from composition, drawn by OpenChemLib | canonical SVGs cached server-side (RDKit) |
 
 See [`docs/architecture.md`](docs/architecture.md) for the full data architecture.
 
