@@ -7,6 +7,7 @@ import UsersView from './components/UsersView'
 import CompareView from './components/CompareView'
 import AnalyticsView from './components/AnalyticsView'
 import ReferencesView from './components/ReferencesView'
+import SearchView from './components/SearchView'
 
 export interface Cell { c: number; d: number }
 export interface Pin { clsK: string; c: number; d: number }
@@ -27,6 +28,15 @@ export default function App() {
   const selectClass = useCallback((next: LipidClass) => {
     setCls(next)
     setSel(null)
+  }, [])
+
+  const openInAtlas = useCallback((clsK: string, c: number, d: number) => {
+    const cl = findClass(clsK)
+    if (!cl) return
+    setCls(cl)
+    setSel({ c, d })
+    try { history.replaceState(null, '', `#${cl.k}-${c}-${d}`) } catch { /* noop */ }
+    setView('atlas')
   }, [])
 
   const togglePin = useCallback((pin: Pin) => {
@@ -88,6 +98,7 @@ export default function App() {
           onTogglePin={togglePin}
         />
       )}
+      {view === 'search' && <SearchView onOpen={openInAtlas} />}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
       {view === 'analytics' && <AnalyticsView />}
       {view === 'refs' && <ReferencesView />}

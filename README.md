@@ -48,6 +48,9 @@ Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
   occurrence**, and a live literature link); search `PC 34:1`,
   `MGDG 34:6`, `TG 52:3`; walk cells with the arrow keys; every selection is
   deep-linkable (`#PC-34-1`). The "View as…" presets reorder the inspector per audience.
+- **Search tab** — query and filter across *all* plausible species (name/shorthand + facets
+  for group, kingdom, origin, mass, double bonds, synthesizability) instead of browsing class
+  by class; each result opens in the Atlas. Runs over the same service layer as the API/MCP.
 - **Compare tab** — pin up to four species (`+ compare` in the inspector) and line their
   properties up side by side.
 - **Analytics tab** — every plausible species as one point: a property **correlation
