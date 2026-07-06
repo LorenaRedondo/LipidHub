@@ -176,6 +176,25 @@ export const CLASSES: LipidClass[] = [
     xlabel: 'Acyl carbons', enz: ['FASN', 'ACACA', 'SCD'], rhea: 'RHEA:16385',
     pw: 'De novo synthesis by fatty acid synthase from acetyl/malonyl-CoA; released by lipases and thioesterases.',
     hgFrag: { lab: '[M−H]⁻ carboxylate', mz: null } },
+
+  { k: 'CL', name: 'Cardiolipin', group: 'Glycerophospholipids', category: 'GP · Glycerophospholipids (cardiolipin)',
+    kingdoms: ['Animals', 'Plants', 'Fungi', 'Bacteria'], occurrence: 'Four-chain signature lipid of mitochondrial (and bacterial) membranes; concentrated at curved cristae. Remodelling by tafazzin is disrupted in Barth syndrome.',
+    bb: { C: 9, H: 22, O: 13, N: 0, P: 2 }, n: 4, cRange: [60, 80], mid: 72, pref: '[M-H]⁻', lpOff: 14.0, hasTm: true,
+    xlabel: 'Total acyl carbons · 4 chains', enz: ['CRLS1', 'TAZ', 'PGS1'], rhea: 'RHEA:32931',
+    pw: 'Cardiolipin synthase (CRLS1) condenses PG with CDP-DAG; remodelled by tafazzin (TAZ) to its mature tetra-acyl form.',
+    hgFrag: { lab: 'phosphatidyl / glycerophosphate (−)', mz: 152.9958 } },
+  { k: 'LPE', name: 'Lysophosphatidylethanolamine', group: 'Glycerophospholipids', category: 'GP · Glycerophospholipids (lyso)',
+    kingdoms: ['Animals', 'Plants', 'Fungi'], occurrence: 'Single-chain lyso-PE; a signalling and membrane-remodelling intermediate.',
+    bb: { C: 5, H: 14, O: 6, N: 1, P: 1 }, n: 1, cRange: [12, 22], mid: 18, pref: '[M-H]⁻', lpOff: 9.0, hasTm: false,
+    xlabel: 'sn-1 acyl carbons', enz: ['PLA2G6', 'MBOAT'], rhea: 'RHEA:32967',
+    pw: 'Phospholipase A hydrolysis of PE; re-acylated by lyso-PE acyltransferases (Lands cycle).',
+    hgFrag: { lab: 'neutral loss 141 (−)', mz: 141.0191 } },
+  { k: 'CAR', name: 'Acylcarnitine', group: 'Fatty acyls', category: 'FA · Fatty acyls (acylcarnitine)',
+    kingdoms: ['Animals', 'Plants', 'Fungi', 'Bacteria'], occurrence: 'Fatty acyl esterified to carnitine — the mitochondrial fatty-acid import shuttle; a clinical biomarker of fatty-acid-oxidation disorders.',
+    bb: { C: 7, H: 15, O: 3, N: 1, P: 0 }, n: 1, cRange: [2, 20], mid: 16, pref: '[M+H]⁺', lpOff: 4.0, hasTm: false,
+    xlabel: 'Acyl carbons', enz: ['CPT1A', 'CPT2', 'CRAT'], rhea: 'RHEA:12929',
+    pw: 'Carnitine palmitoyltransferases (CPT1/CPT2) shuttle acyl groups into mitochondria for β-oxidation.',
+    hgFrag: { lab: 'carnitine fragment (+)', mz: 85.0284 } },
 ]
 
 // ── chemistry ──────────────────────────────────────────────────────────────
@@ -298,6 +317,11 @@ export function isomer(cls: LipidClass, c: number, d: number): [number, number][
     return [[18, bDB], [c - 18, d - bDB]]
   }
   if (kind === 'sterolester' || kind === 'fattyacyl' || cls.n === 1) return [[c, d]]
+  if (cls.n === 4) {
+    const base = Math.floor(c / 4)
+    const cs = [base, base, base, c - 3 * base]
+    return cs.map((cc, i) => [cc, i < d % 4 ? Math.ceil(d / 4) : Math.floor(d / 4)]) as [number, number][]
+  }
   if (cls.n === 2) {
     let c1 = 16
     let c2 = c - 16
@@ -320,8 +344,8 @@ export function findClass(k: string): LipidClass | undefined {
 }
 
 export function headgroupCharge(cls: LipidClass): string {
-  if (cls.k === 'PC' || cls.k === 'SM' || cls.k === 'LPC') return 'zwitterionic'
-  if (cls.k === 'SQDG' || cls.k === 'FA') return 'anionic'
+  if (cls.k === 'PC' || cls.k === 'SM' || cls.k === 'LPC' || cls.k === 'CAR') return 'zwitterionic'
+  if (cls.k === 'SQDG' || cls.k === 'FA' || cls.k === 'CL') return 'anionic'
   if (cls.group === 'Glycerolipids' || cls.group === 'Glycolipids' || cls.group === 'Sterol lipids' || cls.k === 'Cer' || cls.k === 'HexCer') return 'neutral'
   return 'anionic'
 }
@@ -339,8 +363,8 @@ export function prefersAmmonium(cls: LipidClass): boolean {
 
 /** Effective headgroup cross-sectional area (Å²) per class. */
 const HEAD_AREA: Record<string, number> = {
-  PC: 68, PE: 52, PS: 55, PG: 66, PI: 75, PA: 50, LPC: 92,
-  DGDG: 75, SQDG: 70, MGDG: 48, SM: 60, Cer: 40, HexCer: 65,
+  PC: 68, PE: 52, PS: 55, PG: 66, PI: 75, PA: 50, LPC: 92, LPE: 55,
+  DGDG: 75, SQDG: 70, MGDG: 48, SM: 60, Cer: 40, HexCer: 65, CL: 120,
 }
 /** Classes that form / participate in membranes (vs. neutral storage lipids). */
 export const MEMBRANE_CLASSES = new Set(Object.keys(HEAD_AREA))
