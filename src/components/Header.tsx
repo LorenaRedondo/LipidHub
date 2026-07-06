@@ -1,8 +1,9 @@
-export type View = 'atlas' | 'compare' | 'refs' | 'pipe' | 'users'
+export type View = 'atlas' | 'compare' | 'analytics' | 'refs' | 'pipe' | 'users'
 
 const TABS: { id: View; label: string }[] = [
   { id: 'atlas', label: 'Atlas' },
   { id: 'compare', label: 'Compare' },
+  { id: 'analytics', label: 'Analytics' },
   { id: 'refs', label: 'References' },
   { id: 'pipe', label: 'Pipeline' },
   { id: 'users', label: "Who it's for" },
