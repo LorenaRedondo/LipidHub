@@ -47,6 +47,7 @@ export interface LipidClass {
   bb?: Partial<Formula> // deacylated backbone (glycero classes only)
   n: number // acyl chain count
   cRange: [number, number]
+  dMax?: number // max double bonds on the grid (defaults to GRID_D); higher for many-chain classes
   mid?: number
   pref: string // preferred ionization adduct
   lpOff: number // logP headgroup offset
@@ -71,6 +72,8 @@ export const PROTON = 1.0072764
 export const NH4 = 18.0338254
 export const FORMATE = 44.9982
 export const GRID_D = 6
+/** Max double bonds on the composition grid for a class (many-chain classes go higher). */
+export function dMaxOf(cls: LipidClass): number { return cls.dMax ?? GRID_D }
 
 const empty: Formula = { C: 0, H: 0, O: 0, N: 0, P: 0, S: 0 }
 
@@ -120,7 +123,7 @@ export const CLASSES: LipidClass[] = [
     hgFrag: { lab: '[M+H−RCOOH]⁺ (acyl loss)', mz: null } },
   { k: 'TG', name: 'Triacylglycerol', group: 'Glycerolipids', category: 'GL · Glycerolipids',
     kingdoms: ['Animals', 'Plants', 'Algae', 'Fungi'], occurrence: 'The universal neutral storage fat of lipid droplets and plant/algal oils.',
-    bb: { C: 3, H: 8, O: 3, N: 0, P: 0 }, n: 3, cRange: [44, 60], pref: '[M+NH₄]⁺', lpOff: -4.0, hasTm: false,
+    bb: { C: 3, H: 8, O: 3, N: 0, P: 0 }, n: 3, cRange: [44, 60], dMax: 9, pref: '[M+NH₄]⁺', lpOff: -4.0, hasTm: false,
     enz: ['DGAT1', 'DGAT2'], rhea: 'RHEA:10868', pw: 'Final esterification of DAG by DGAT; the storage-fat endpoint.',
     hgFrag: { lab: '[M+NH₄−RCOOH]⁺ (acyl loss)', mz: null } },
 
@@ -179,7 +182,7 @@ export const CLASSES: LipidClass[] = [
 
   { k: 'CL', name: 'Cardiolipin', group: 'Glycerophospholipids', category: 'GP · Glycerophospholipids (cardiolipin)',
     kingdoms: ['Animals', 'Plants', 'Fungi', 'Bacteria'], occurrence: 'Four-chain signature lipid of mitochondrial (and bacterial) membranes; concentrated at curved cristae. Remodelling by tafazzin is disrupted in Barth syndrome.',
-    bb: { C: 9, H: 22, O: 13, N: 0, P: 2 }, n: 4, cRange: [60, 80], mid: 72, pref: '[M-H]⁻', lpOff: 14.0, hasTm: true,
+    bb: { C: 9, H: 22, O: 13, N: 0, P: 2 }, n: 4, cRange: [60, 80], dMax: 12, mid: 72, pref: '[M-H]⁻', lpOff: 14.0, hasTm: true,
     xlabel: 'Total acyl carbons · 4 chains', enz: ['CRLS1', 'TAZ', 'PGS1'], rhea: 'RHEA:32931',
     pw: 'Cardiolipin synthase (CRLS1) condenses PG with CDP-DAG; remodelled by tafazzin (TAZ) to its mature tetra-acyl form.',
     hgFrag: { lab: 'phosphatidyl / glycerophosphate (−)', mz: 152.9958 } },

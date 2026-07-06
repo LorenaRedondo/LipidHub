@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { fam, GRID_D, likelihood, status, type LipidClass } from '../lib/lipids'
+import { fam, dMaxOf, likelihood, status, type LipidClass } from '../lib/lipids'
 import type { Cell } from '../App'
 
 interface Props {
@@ -24,9 +24,9 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
 
   const rows = useMemo(() => {
     const r: number[] = []
-    for (let d = GRID_D; d >= 0; d--) r.push(d)
+    for (let d = dMaxOf(cls); d >= 0; d--) r.push(d)
     return r
-  }, [])
+  }, [cls])
 
   let known = 0
   let gap = 0
@@ -46,7 +46,7 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
       <div className="headline">
         <h2>{cls.name}</h2>
         <span className="sub">
-          {cls.category} · {chainTxt} · carbons {lo}–{hi}, 0–{GRID_D} double bonds
+          {cls.category} · {chainTxt} · carbons {lo}–{hi}, 0–{dMaxOf(cls)} double bonds
         </span>
       </div>
       <div className="counts">

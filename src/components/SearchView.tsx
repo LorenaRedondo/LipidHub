@@ -2,14 +2,19 @@ import { useMemo, useState } from 'react'
 import { GROUPS, KINGDOMS, type Kingdom } from '../lib/lipids'
 import { search, type SearchParams } from '../lib/service'
 import { downloadCSV } from '../lib/download'
+import { MAX_PINS, type Pin } from '../App'
 
 const PAGE = 25
 
-interface Props { onOpen: (clsK: string, c: number, d: number) => void }
+interface Props {
+  onOpen: (clsK: string, c: number, d: number) => void
+  pins: Pin[]
+  onTogglePin: (pin: Pin) => void
+}
 
 const numOr = (s: string): number | undefined => (s.trim() === '' ? undefined : Number(s))
 
-export default function SearchView({ onOpen }: Props) {
+export default function SearchView({ onOpen, pins, onTogglePin }: Props) {
   const [q, setQ] = useState('')
   const [group, setGroup] = useState('')
   const [kingdom, setKingdom] = useState<Kingdom | ''>('')
@@ -121,29 +126,44 @@ export default function SearchView({ onOpen }: Props) {
             <thead>
               <tr>
                 <th>Species</th><th>Group</th><th className="num">Formula</th><th className="num">Mass</th>
-                <th className="num">CCS</th><th className="num">logP</th><th>Origin</th><th className="num">bio / SA</th><th />
+                <th className="num">CCS</th><th className="num">logP</th><th>Origin</th><th className="num">bio / SA</th><th /><th />
               </tr>
             </thead>
             <tbody>
-              {result.results.map((r) => (
-                <tr key={r.id}>
-                  <td className="mono" style={{ color: 'var(--text)', fontWeight: 600 }}>{r.shorthand}</td>
-                  <td style={{ color: 'var(--muted)', fontSize: 12 }}>{r.class.group}</td>
-                  <td className="num">{r.formula}</td>
-                  <td className="num">{r.exactMass.toFixed(4)}</td>
-                  <td className="num">{r.properties.ccs}</td>
-                  <td className="num">{r.properties.logP}</td>
-                  <td>
-                    <span className={'badge ' + (r.origin === 'curated' ? 'known' : 'gap')} style={{ fontSize: 9 }}>
-                      {r.origin === 'curated' ? 'curated' : 'gap'}
-                    </span>
-                  </td>
-                  <td className="num">{r.synthesizability.biosynthetic} / {r.synthesizability.saScore}</td>
-                  <td><button className="openbtn" onClick={() => onOpen(r.class.k, r.composition.carbons, r.composition.doubleBonds)}>open →</button></td>
-                </tr>
-              ))}
+              {result.results.map((r) => {
+                const pin: Pin = { clsK: r.class.k, c: r.composition.carbons, d: r.composition.doubleBonds }
+                const isPinned = pins.some((p) => p.clsK === pin.clsK && p.c === pin.c && p.d === pin.d)
+                const compareFull = pins.length >= MAX_PINS && !isPinned
+                return (
+                  <tr key={r.id}>
+                    <td className="mono" style={{ color: 'var(--text)', fontWeight: 600 }}>{r.shorthand}</td>
+                    <td style={{ color: 'var(--muted)', fontSize: 12 }}>{r.class.group}</td>
+                    <td className="num">{r.formula}</td>
+                    <td className="num">{r.exactMass.toFixed(4)}</td>
+                    <td className="num">{r.properties.ccs}</td>
+                    <td className="num">{r.properties.logP}</td>
+                    <td>
+                      <span className={'badge ' + (r.origin === 'curated' ? 'known' : 'gap')} style={{ fontSize: 9 }}>
+                        {r.origin === 'curated' ? 'curated' : 'gap'}
+                      </span>
+                    </td>
+                    <td className="num">{r.synthesizability.biosynthetic} / {r.synthesizability.saScore}</td>
+                    <td>
+                      <button
+                        className={'pinbtn' + (isPinned ? ' on' : '')}
+                        disabled={compareFull}
+                        onClick={() => onTogglePin(pin)}
+                        title={compareFull ? `Compare is full (${MAX_PINS})` : 'Add to side-by-side comparison'}
+                      >
+                        {isPinned ? '✓ comparing' : compareFull ? 'compare full' : '+ compare'}
+                      </button>
+                    </td>
+                    <td><button className="openbtn" onClick={() => onOpen(r.class.k, r.composition.carbons, r.composition.doubleBonds)}>open →</button></td>
+                  </tr>
+                )
+              })}
               {!result.results.length && (
-                <tr><td colSpan={9} style={{ color: 'var(--muted)', padding: '26px 16px', textAlign: 'center' }}>No species match these filters.</td></tr>
+                <tr><td colSpan={10} style={{ color: 'var(--muted)', padding: '26px 16px', textAlign: 'center' }}>No species match these filters.</td></tr>
               )}
             </tbody>
           </table>

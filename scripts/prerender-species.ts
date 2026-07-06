@@ -5,7 +5,7 @@
 //
 // Run after a build:  npm run build:seo
 import fs from 'node:fs'
-import { CLASSES, LMSD_CURATED, findClass } from '../src/lib/lipids'
+import { CLASSES, LMSD_CURATED, dMaxOf, findClass } from '../src/lib/lipids'
 import { buildRecord, type SpeciesRecord } from '../src/lib/service'
 import structuresData from '../src/data/lmsdStructures.json'
 
@@ -76,7 +76,7 @@ for (const cls of CLASSES) {
   if (!e) continue
   for (const cd of Object.keys(e.comps)) {
     const [c, d] = cd.split(':').map(Number)
-    if (c >= cls.cRange[0] && c <= cls.cRange[1] && d <= 6) ids.push(`${cls.k}-${c}-${d}`)
+    if (c >= cls.cRange[0] && c <= cls.cRange[1] && d <= dMaxOf(cls)) ids.push(`${cls.k}-${c}-${d}`)
   }
 }
 

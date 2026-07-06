@@ -3,7 +3,7 @@
 // MCP server so agents and HTTP clients return identical records.
 
 import {
-  CLASSES, FORMATE, GRID_D, NH4, PROTON, fmtObj, formulaParts, findClass, headgroupCharge,
+  CLASSES, FORMATE, dMaxOf, NH4, PROTON, fmtObj, formulaParts, findClass, headgroupCharge,
   membraneBiophysics, pmcSearchUrl, prefersAmmonium, props, status, synth,
   type Group, type Kingdom, type LipidClass, type Membrane,
 } from './lipids'
@@ -38,7 +38,7 @@ export function parseId(id: string): { cls: LipidClass; c: number; d: number } |
   const cls = findClass(m[1])
   if (!cls) return null
   const c = +m[2], d = +m[3]
-  if (c < cls.cRange[0] || c > cls.cRange[1] || d > GRID_D) return null
+  if (c < cls.cRange[0] || c > cls.cRange[1] || d > dMaxOf(cls)) return null
   return { cls, c, d }
 }
 
@@ -117,7 +117,7 @@ export function search(params: SearchParams) {
     for (let c = lo; c <= hi; c++) {
       if (params.carbonsMin != null && c < params.carbonsMin) continue
       if (params.carbonsMax != null && c > params.carbonsMax) continue
-      for (let d = 0; d <= GRID_D; d++) {
+      for (let d = 0; d <= dMaxOf(cls); d++) {
         if (params.dbMin != null && d < params.dbMin) continue
         if (params.dbMax != null && d > params.dbMax) continue
         const st = status(cls, c, d)
@@ -145,7 +145,7 @@ export function identifyByMz(mz: number, ppm = 10, adduct = '[M+H]+') {
   for (const cls of CLASSES) {
     const [lo, hi] = cls.cRange
     for (let c = lo; c <= hi; c++) {
-      for (let d = 0; d <= GRID_D; d++) {
+      for (let d = 0; d <= dMaxOf(cls); d++) {
         if (status(cls, c, d) === 'rare') continue
         const rec = buildRecord(cls, c, d)
         const am = rec.adducts[adduct]

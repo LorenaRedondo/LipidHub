@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CLASSES, GRID_D, findClass, type LipidClass, type Persona } from './lib/lipids'
+import { CLASSES, dMaxOf, findClass, type LipidClass, type Persona } from './lib/lipids'
 import Header, { type View } from './components/Header'
 import AtlasView from './components/AtlasView'
 import PipelineView from './components/PipelineView'
@@ -64,7 +64,7 @@ export default function App() {
       const cl = findClass(m[1])
       const c = +m[2]
       const d = +m[3]
-      if (cl && c >= cl.cRange[0] && c <= cl.cRange[1] && d <= GRID_D) {
+      if (cl && c >= cl.cRange[0] && c <= cl.cRange[1] && d <= dMaxOf(cl)) {
         setCls(cl)
         setSel({ c, d })
         return
@@ -84,7 +84,7 @@ export default function App() {
       let moved = false
       if (e.key === 'ArrowLeft' && c > cls.cRange[0]) { c--; moved = true }
       else if (e.key === 'ArrowRight' && c < cls.cRange[1]) { c++; moved = true }
-      else if (e.key === 'ArrowUp' && d < GRID_D) { d++; moved = true }
+      else if (e.key === 'ArrowUp' && d < dMaxOf(cls)) { d++; moved = true }
       else if (e.key === 'ArrowDown' && d > 0) { d--; moved = true }
       if (moved) { e.preventDefault(); select(c, d) }
     }
@@ -118,7 +118,7 @@ export default function App() {
           onTogglePin={togglePin}
         />
       )}
-      {view === 'search' && <SearchView onOpen={openInAtlas} />}
+      {view === 'search' && <SearchView onOpen={openInAtlas} pins={pins} onTogglePin={togglePin} />}
       {view === 'identify' && <IdentifyView onOpen={openInAtlas} />}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
       {view === 'analytics' && <AnalyticsView />}
