@@ -8,6 +8,7 @@ import { z } from 'zod'
 import {
   compare, findGaps, getSpecies, identifyByMz, listClasses, search,
 } from '../src/lib/service'
+import { enrichWithLmsd } from '../src/lib/lmsd'
 
 const server = new McpServer({ name: 'lipidex', version: '0.1.0' })
 
@@ -75,6 +76,21 @@ server.registerTool(
     inputSchema: { ids: z.array(z.string()).describe('species ids, e.g. ["PC-34-1","MGDG-34-2"]') },
   },
   async ({ ids }) => json({ species: compare(ids) }),
+)
+
+server.registerTool(
+  'check_lmsd',
+  {
+    title: 'Verify against LIPID MAPS',
+    description: 'Check whether a species is actually curated in the LIPID MAPS Structure Database (LMSD) — the authoritative reference. Returns real LM IDs and the official classification (core / main class / sub class), or confirms it is an uncatalogued gap. Use this to ground-truth an identification before reporting it.',
+    inputSchema: { id: z.string().describe('species id or shorthand, e.g. PC-34-1') },
+  },
+  async ({ id }) => {
+    const rec = getSpecies(id)
+    if (!rec) return json({ error: 'not found', hint: 'ids look like PC-34-1' })
+    const lmsd = await enrichWithLmsd(rec.shorthand, rec.class.group)
+    return json({ species: { id: rec.id, shorthand: rec.shorthand, formula: rec.formula, exactMass: rec.exactMass }, lmsd })
+  },
 )
 
 server.registerTool(

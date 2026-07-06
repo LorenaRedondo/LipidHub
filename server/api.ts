@@ -6,6 +6,7 @@ import { cors } from 'hono/cors'
 import {
   compare, findGaps, getSpecies, identifyByMz, listClasses, search,
 } from '../src/lib/service'
+import { enrichWithLmsd } from '../src/lib/lmsd'
 
 const app = new Hono()
 app.use('/*', cors())
@@ -20,7 +21,8 @@ app.get('/', (c) =>
     endpoints: [
       'GET /health',
       'GET /classes',
-      'GET /species/:id            (e.g. /species/PC-34-1)',
+      'GET /species/:id            (e.g. /species/PC-34-1 ; add ?lmsd=1 to verify against LIPID MAPS)',
+      'GET /lmsd/:id               (live LIPID MAPS LMSD verification: real LM IDs + classification)',
       'GET /search?q=&group=&kingdom=&massMin=&massMax=&carbonsMin=&carbonsMax=&dbMin=&dbMax=&origin=&minBiosynthetic=&maxSaScore=&page=&pageSize=',
       'GET /identify?mz=760.585&ppm=10&adduct=[M+H]+',
       'GET /compare?ids=PC-34-1,MGDG-34-2',
@@ -32,9 +34,22 @@ app.get('/', (c) =>
 app.get('/health', (c) => c.json({ ok: true }))
 app.get('/classes', (c) => c.json(listClasses()))
 
-app.get('/species/:id', (c) => {
+app.get('/species/:id', async (c) => {
   const rec = getSpecies(c.req.param('id'))
-  return rec ? c.json(rec) : c.json({ error: 'not found', hint: 'id looks like PC-34-1' }, 404)
+  if (!rec) return c.json({ error: 'not found', hint: 'id looks like PC-34-1' }, 404)
+  if (c.req.query('lmsd')) {
+    const lmsd = await enrichWithLmsd(rec.shorthand, rec.class.group)
+    return c.json({ ...rec, origin: lmsd.inLMSD ? 'curated' : rec.origin, lmsd })
+  }
+  return c.json(rec)
+})
+
+// live LIPID MAPS verification for a species
+app.get('/lmsd/:id', async (c) => {
+  const rec = getSpecies(c.req.param('id'))
+  if (!rec) return c.json({ error: 'not found', hint: 'id looks like PC-34-1' }, 404)
+  const lmsd = await enrichWithLmsd(rec.shorthand, rec.class.group)
+  return c.json({ species: { id: rec.id, shorthand: rec.shorthand, formula: rec.formula, exactMass: rec.exactMass }, lmsd })
 })
 
 app.get('/search', (c) => {

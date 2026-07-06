@@ -26,6 +26,9 @@ console.log('identify_by_mz 760.585 ->', id.candidates.map((c: { record: { short
 const gaps = await call('find_gaps', { classK: 'SM', limit: 3 })
 console.log('find_gaps SM ->', gaps.gaps.map((g: { shorthand: string }) => g.shorthand).join(' | '))
 
+const lmsd = await call('check_lmsd', { id: 'PC-34-1' })
+console.log('check_lmsd PC-34-1 -> inLMSD', lmsd.lmsd.inLMSD, '| LM IDs', lmsd.lmsd.lmIds.slice(0, 2).join(', '), '|', lmsd.lmsd.classification?.subClass)
+
 await client.close()
 console.log('\n✓ MCP server responds correctly over stdio')
 process.exit(0)
