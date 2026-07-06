@@ -3,6 +3,7 @@ import {
   CLUSTER_COLORS, CLUSTER_FEATURES, FEATURES, FEATURE_MAP, GROUP_COLORS,
   buildDataset, correlate, kmeans, type FeatureKey,
 } from '../lib/analytics'
+import { downloadSVG } from '../lib/download'
 
 type ColorBy = 'group' | 'cluster'
 
@@ -124,6 +125,7 @@ export default function AnalyticsView() {
                   <button onClick={() => setK(Math.min(8, k + 1))}>+</button>
                 </label>
               )}
+              <button className="dl-link" onClick={() => downloadSVG(`lipidex-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
             </div>
 
             <div className="rline">
