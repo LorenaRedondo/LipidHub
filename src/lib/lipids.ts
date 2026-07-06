@@ -4,6 +4,16 @@
 // synthesizability are clearly-labelled heuristic model outputs pending the
 // real pipelines (see docs/architecture.md and GitHub issues #3, #4).
 
+import curatedData from '../data/lmsdCurated.json'
+
+interface LmsdIndex {
+  source: string
+  license: string
+  recordsScanned: number
+  classes: Record<string, { comps: Record<string, number>; curatedCount: number; core?: string; mainClass?: string }>
+}
+export const LMSD_CURATED = curatedData as unknown as LmsdIndex
+
 export type Elem = 'C' | 'H' | 'O' | 'N' | 'P' | 'S'
 export type Formula = Record<Elem, number>
 export type Kind = 'glycero' | 'sphingo' | 'sterolester' | 'glyco' | 'fattyacyl'
@@ -233,10 +243,19 @@ export function likelihood(cls: LipidClass, c: number, d: number): number {
   return Math.max(0.08, Math.min(1, lik))
 }
 
+/** True curated status from the ingested LIPID MAPS LMSD index (CC BY 4.0). */
+export function isCurated(clsK: string, c: number, d: number): boolean {
+  const e = LMSD_CURATED.classes[clsK]
+  return !!e && e.comps[`${c}:${d}`] > 0
+}
+/** Number of curated LMSD structures sharing this sum composition. */
+export function curatedCount(clsK: string, c: number, d: number): number {
+  return LMSD_CURATED.classes[clsK]?.comps[`${c}:${d}`] ?? 0
+}
+
 export function status(cls: LipidClass, c: number, d: number): Status {
+  if (isCurated(cls.k, c, d)) return 'known' // real LMSD entry
   const lik = likelihood(cls, c, d)
-  const core = c % 2 === 0 && d <= 4 && c >= cls.cRange[0] + 4 && c <= cls.cRange[1] - 4
-  if (core && lik >= 0.62) return 'known'
   if (lik >= 0.24) return 'gap'
   return 'rare'
 }

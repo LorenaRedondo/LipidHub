@@ -19,3 +19,5 @@ dist/
 
 # TS incremental build info
 *.tsbuildinfo
+*.sdf.zip
+structures.sdf

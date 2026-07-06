@@ -87,7 +87,7 @@ measure.
 | Adduct m/z | ✅ computed | same |
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
 | Synthesizability | ⚠️ heuristic placeholders | pathway match + SAScore/retrosynthesis |
-| Known vs. gap status | ⚠️ rule-based demo | real diff vs. LMSD |
+| Known vs. gap status | ✅ real — ingested from LMSD (50,516 structures) | full structures/InChIKeys too |
 | Classes | 17 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |
 | Per-species citations | ⚠️ live Europe PMC search per class | curated refs via DB integration |
