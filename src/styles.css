@@ -350,3 +350,32 @@
   .cc-classes{font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.5}
 
   @media (max-width:900px){ .an-grid{grid-template-columns:1fr} }
+
+  /* ===== search-first view (v6) ===== */
+  .srch-bar{position:relative;margin-bottom:14px}
+  .srch-bar .mag{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:16px}
+  .srch-bar input{width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:10px;
+    color:var(--text);font-family:var(--mono);font-size:14px;padding:12px 14px 12px 40px}
+  .srch-bar input::placeholder{color:var(--faint)}
+
+  .facets{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:16px}
+  .facet{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:10px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  .facet select,.facet input{background:var(--panel2);border:1px solid var(--line2);color:var(--text);
+    border-radius:7px;font-family:var(--mono);font-size:12px;padding:6px 8px;text-transform:none;letter-spacing:0}
+  .facet .rng{display:flex;align-items:center;gap:5px;color:var(--faint)}
+  .facet .rng input{width:56px}
+  .facet input.one{width:70px}
+  .srch-reset{align-self:flex-end;padding:7px 14px}
+
+  .srch-count{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .srch-count b{font-size:16px;color:var(--text)}
+  table.srch-table th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
+  table.srch-table td{padding:9px 14px}
+  .openbtn{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+    border:1px solid var(--line2);background:transparent;color:var(--cyan);border-radius:14px;padding:4px 10px;transition:.12s}
+  .openbtn:hover{border-color:var(--cyan);background:rgba(78,203,198,.1)}
+  .pager{display:flex;align-items:center;gap:16px;justify-content:center;margin-top:18px;
+    font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .pager .cta{padding:7px 14px}
+  .pager .cta:disabled{opacity:.35;cursor:not-allowed}
