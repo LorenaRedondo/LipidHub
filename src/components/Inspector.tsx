@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   FORMATE, KINGDOMS, NH4, PROTON, faFragment, fam, formulaParts, headgroupCharge,
-  isomer, pmcSearchUrl, prefersAmmonium, props, status, synth,
+  isomer, membraneBiophysics, pmcSearchUrl, prefersAmmonium, props, status, synth,
   type LipidClass, type Method, type Persona,
 } from '../lib/lipids'
 import { MAX_PINS, type Cell, type Pin } from '../App'
@@ -188,6 +188,24 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
     </Section>
   )
 
+  const mem = membraneBiophysics(cls, c, d)
+  const secMembrane = mem ? (
+    <Section title="Membrane biophysics" tag="predicted · AFM-measurable" focus={persona === 'biophys'}>
+      <div className="kv">
+        <KV k="Phase at 37 °C" v={mem.phase37} m="predicted" />
+        <KV k="Packing / curvature" v={`${mem.packing} · ${mem.curvature}`} m="predicted" />
+        <KV k="Bilayer thickness" v={mem.thicknessNm} u="nm" m="predicted" />
+        <KV k="Area / lipid" v={mem.areaPerLipid} u="Å²" m="predicted" />
+        <KV k="Breakthrough force" v={mem.breakthroughNn} u="nN" m="predicted" />
+        <KV k="Compressibility Kᴀ" v={mem.compressibilityKa} u="mN/m" m="predicted" />
+      </div>
+      <p className="note" style={{ marginTop: 8 }}>
+        Nanomechanics (breakthrough force, K<sub>A</sub>) and phase behaviour are what AFM force
+        spectroscopy measures directly — these are predictions awaiting that measured tier.
+      </p>
+    </Section>
+  ) : null
+
   const secTax = (
     <Section title="Taxonomy & occurrence" tag="biological">
       <div className="kv">
@@ -218,15 +236,15 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
   )
 
   const sections: Record<Persona, ReactNode[]> = {
-    analyst: [secMS, secMSMS, secBio, secSynth, secTax, secOrigin, secLit, secXref],
-    biophys: [secBio, secTax, secMS, secOrigin, secSynth, secMSMS, secLit, secXref],
-    chem: [secSynth, secOrigin, secTax, secBio, secMS, secLit, secXref, secMSMS],
-    bioinfo: [secXref, secTax, secMS, secOrigin, secSynth, secBio, secLit, secMSMS],
+    analyst: [secMS, secMSMS, secBio, secMembrane, secSynth, secTax, secOrigin, secLit, secXref],
+    biophys: [secMembrane, secBio, secTax, secMS, secOrigin, secSynth, secMSMS, secLit, secXref],
+    chem: [secSynth, secOrigin, secTax, secBio, secMembrane, secMS, secLit, secXref, secMSMS],
+    bioinfo: [secXref, secTax, secMS, secOrigin, secSynth, secBio, secMembrane, secLit, secMSMS],
   }
 
   const tips: Record<Persona, string> = {
     analyst: "Match your feature's m/z + CCS + RT against these predictions to confirm an ID even with no library spectrum.",
-    biophys: 'Scan neighbouring cells: +1 double bond or +2 carbons shows how Tm and logP shift across the class.',
+    biophys: 'Membrane biophysics is up top: phase, curvature, thickness, and AFM nanomechanics (breakthrough force, Kᴀ). Walk cells to see how a double bond softens the membrane.',
     chem: "Look for high chemical + low biosynthetic score — lab-accessible lipids nature doesn't make.",
     bioinfo: 'Every field here is one API call away; origin flag tells you measured vs. predicted before you trust it.',
   }

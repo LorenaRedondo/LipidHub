@@ -331,6 +331,56 @@ export function prefersAmmonium(cls: LipidClass): boolean {
   return cls.n === 3 || ['DG', 'CE', 'MGDG', 'DGDG'].includes(cls.k)
 }
 
+// ── membrane biophysics & nanomechanics ────────────────────────────────────
+// First-class bilayer properties: structure (thickness, area/lipid), packing &
+// curvature phase, phase state, and AFM-style nanomechanics (breakthrough force,
+// area-compressibility modulus). Computed from composition — heuristic placeholders
+// (method: predicted); the measured tier comes from AFM force spectroscopy.
+
+/** Effective headgroup cross-sectional area (Å²) per class. */
+const HEAD_AREA: Record<string, number> = {
+  PC: 68, PE: 52, PS: 55, PG: 66, PI: 75, PA: 50, LPC: 92,
+  DGDG: 75, SQDG: 70, MGDG: 48, SM: 60, Cer: 40, HexCer: 65,
+}
+/** Classes that form / participate in membranes (vs. neutral storage lipids). */
+export const MEMBRANE_CLASSES = new Set(Object.keys(HEAD_AREA))
+
+export interface Membrane {
+  bilayer: boolean
+  thicknessNm: number
+  areaPerLipid: number
+  packing: number
+  curvature: string
+  phase37: string
+  breakthroughNn: number
+  compressibilityKa: number
+}
+
+export function membraneBiophysics(cls: LipidClass, c: number, d: number): Membrane | null {
+  if (!MEMBRANE_CLASSES.has(cls.k)) return null // neutral storage lipids don't form membranes
+  const chains = cls.kind === 'sphingo' ? 2 : cls.n
+  const nc = c / chains // carbons per chain
+  const dpc = d / chains // double bonds per chain
+  const a0 = HEAD_AREA[cls.k] ?? 60
+  const v = chains * (27.4 + 26.9 * nc) // hydrocarbon volume, Å³ (Tanford)
+  const lc = 1.5 + 1.265 * nc // max chain length, Å (Tanford)
+  const packing = v / (a0 * lc) // shape / packing parameter P = v/(a0·lc)
+  const curvature = packing < 0.55 ? 'micellar (positive curvature)'
+    : packing <= 1.0 ? 'lamellar bilayer'
+    : 'inverted hexagonal Hᴵᴵ (negative curvature)'
+  const thicknessNm = Math.round((2 * lc * 0.065 + 0.9 - 0.35 * dpc) * 100) / 100
+  const areaPerLipid = Math.round(a0 + 7 * dpc)
+  const tm = 3.0 * c - 55 - 25 * d // same heuristic as props().tm
+  const phase37 = tm > 37 ? 'gel (ordered)' : 'fluid (liquid-crystalline)'
+  const breakthroughNn = Math.round(Math.max(0.3, 0.32 * nc - 2.0 * dpc - 2.4) * 10) / 10
+  const compressibilityKa = Math.round(180 + 7 * nc - 45 * dpc)
+  return {
+    bilayer: packing >= 0.55 && packing <= 1.05,
+    thicknessNm, areaPerLipid, packing: Math.round(packing * 100) / 100,
+    curvature, phase37, breakthroughNn, compressibilityKa,
+  }
+}
+
 // ── literature ───────────────────────────────────────────────────────────
 
 export interface Ref { authors: string; title: string; journal: string; year: number; doi: string }

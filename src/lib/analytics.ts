@@ -3,7 +3,7 @@
 // offers Pearson correlation and (seeded, deterministic) k-means clustering.
 // All framework-free and pure.
 
-import { CLASSES, PROTON, props, status, synth, type Group } from './lipids'
+import { CLASSES, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
 
 export interface Point {
   id: string
@@ -21,6 +21,9 @@ export interface Point {
   dbonds: number
   bio: number
   chem: number
+  thickness: number | null
+  breakthrough: number | null
+  packing: number | null
 }
 
 /** Even-chain, plausible (non-rare) species across every class. */
@@ -33,10 +36,12 @@ export function buildDataset(): Point[] {
         if (status(cls, c, d) === 'rare') continue
         const p = props(cls, c, d)
         const sy = synth(cls, c, d)
+        const mem = membraneBiophysics(cls, c, d)
         pts.push({
           id: `${cls.k}-${c}-${d}`, clsK: cls.k, group: cls.group, c, d,
           mass: p.M, mz: p.M + PROTON, ccs: p.ccs, rt: p.rt, logp: p.logp, tm: p.tm,
           carbons: c, dbonds: d, bio: sy.bio, chem: sy.chem,
+          thickness: mem?.thicknessNm ?? null, breakthrough: mem?.breakthroughNn ?? null, packing: mem?.packing ?? null,
         })
       }
     }
@@ -44,7 +49,7 @@ export function buildDataset(): Point[] {
   return pts
 }
 
-export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'dbonds' | 'bio' | 'chem'
+export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'dbonds' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
 export interface Feature { key: FeatureKey; label: string; short: string; get: (p: Point) => number | null }
 
 export const FEATURES: Feature[] = [
@@ -58,6 +63,9 @@ export const FEATURES: Feature[] = [
   { key: 'dbonds', label: 'Double bonds', short: 'DB', get: (p) => p.dbonds },
   { key: 'bio', label: 'Biosynthetic score', short: 'bio', get: (p) => p.bio },
   { key: 'chem', label: 'Chemical synth.', short: 'chem', get: (p) => p.chem },
+  { key: 'thickness', label: 'Bilayer thickness (nm)', short: 'thick', get: (p) => p.thickness },
+  { key: 'breakthrough', label: 'Breakthrough force (nN)', short: 'Fb', get: (p) => p.breakthrough },
+  { key: 'packing', label: 'Packing parameter', short: 'pack', get: (p) => p.packing },
 ]
 export const FEATURE_MAP = Object.fromEntries(FEATURES.map((f) => [f.key, f])) as Record<FeatureKey, Feature>
 

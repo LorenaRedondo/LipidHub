@@ -4,8 +4,8 @@
 
 import {
   CLASSES, FORMATE, GRID_D, NH4, PROTON, fmtObj, formulaParts, findClass, headgroupCharge,
-  pmcSearchUrl, prefersAmmonium, props, status, synth,
-  type Group, type Kingdom, type LipidClass,
+  membraneBiophysics, pmcSearchUrl, prefersAmmonium, props, status, synth,
+  type Group, type Kingdom, type LipidClass, type Membrane,
 } from './lipids'
 import { toSmiles } from './smiles'
 
@@ -19,6 +19,7 @@ export interface SpeciesRecord {
   adducts: Record<string, number>
   properties: { ccs: number; rt: number; logP: number; tm: number | null; note: string }
   synthesizability: { biosynthetic: number; chemicalScore: number; saScore: number }
+  membrane: Membrane | null
   headgroupCharge: string
   origin: 'curated' | 'in_silico'
   isGap: boolean
@@ -60,6 +61,7 @@ export function buildRecord(cls: LipidClass, c: number, d: number): SpeciesRecor
     },
     properties: { ccs: p.ccs, rt: p.rt, logP: p.logp, tm: p.tm, note: 'CCS/RT/Tm are heuristic placeholders (see issue #3); mass/formula are exact.' },
     synthesizability: { biosynthetic: sy.bio, chemicalScore: sy.chem, saScore: sy.sa },
+    membrane: membraneBiophysics(cls, c, d),
     headgroupCharge: headgroupCharge(cls),
     origin: st === 'known' ? 'curated' : 'in_silico',
     isGap: st !== 'known',
