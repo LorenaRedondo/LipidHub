@@ -1,0 +1,14 @@
+LIPIDEX
+Copyright (c) 2026 alpibrusl
+
+This product includes data derived from the LIPID MAPS® Structure Database (LMSD).
+LIPID MAPS data is licensed under the Creative Commons Attribution 4.0 International
+License (CC BY 4.0). Source: https://www.lipidmaps.org
+
+The file src/data/lmsdCurated.json is a derived index (curated sum-composition
+membership per lipid class) built from an LMSD structures.sdf release via
+scripts/ingest-lmsd.ts. It contains counts and classification, not full structures.
+
+LIPID MAPS Structure Database (LMSD):
+  Sud M, Fahy E, Cotter D, et al. LMSD: LIPID MAPS structure database.
+  Nucleic Acids Res. 2007;35(Database):D527-D532. doi:10.1093/nar/gkl838

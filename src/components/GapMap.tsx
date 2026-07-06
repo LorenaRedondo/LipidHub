@@ -102,10 +102,10 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
         <div className="it"><span className="sw" style={{ border: '1px solid var(--cyan)', background: 'transparent' }} /> selected</div>
       </div>
       <p className="note">
-        Fill opacity ≈ estimated biological likelihood (even chains &amp; moderate unsaturation score
-        highest). Odd-chain, very-long, and highly-polyunsaturated corners are where reference
-        coverage thins out — the atlas makes those holes explicit and fills them with predicted
-        properties. Use the arrow keys to walk neighbouring cells.
+        <b>Green cells are really in LIPID MAPS</b> — curated status comes from an ingest of the
+        LMSD database (50,516 structures, CC BY 4.0), not a guess. Gold cells are enumerable but
+        uncatalogued gaps, shown with predicted properties. Fill opacity ≈ estimated biological
+        likelihood. Use the arrow keys to walk neighbouring cells.
       </p>
     </>
   )
