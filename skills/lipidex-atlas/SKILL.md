@@ -23,6 +23,8 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 - `identify_by_mz({ mz, ppm?, adduct? })` — candidate species for an observed m/z (default 10 ppm, `[M+H]+`).
 - `compare_lipids({ ids: [...] })` — several species side by side.
 - `find_gaps({ classK?, limit? })` — in-silico-only species (not curated) — the atlas "gaps".
+- `check_lmsd({ id })` — verify a species against the **LIPID MAPS Structure Database** (the
+  authoritative reference): returns `inLMSD`, real LM IDs, and the official classification.
 
 ## How to use it
 
@@ -30,6 +32,10 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 computed exactly. CCS, RT, Tm, and synthesizability are **heuristic placeholders** in this
 research preview — never present them as measured. Each record carries a `properties.note`
 saying so; pass that caveat on.
+
+**Ground-truth before you assert curation.** The `origin` field ("curated" / "in_silico") is a
+rule-based estimate. To *know* whether a species is real, call `check_lmsd` — it queries the
+live LIPID MAPS database and returns real LM IDs. Prefer it whenever curation status matters.
 
 **Identifying a feature from a run.** Call `identify_by_mz` with the observed m/z and the
 ionization adduct. Multiple candidates at the same m/z are usually *isobaric* (e.g. `PC 34:1`

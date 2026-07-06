@@ -21,6 +21,8 @@ npm run api        # http://localhost:8787  (API_PORT to override)
 | `GET /identify?mz=760.585&ppm=10&adduct=[M+H]+` | candidate species for an m/z |
 | `GET /compare?ids=PC-34-1,MGDG-34-2` | several species at once |
 | `GET /gaps?class=SM&limit=50` | in-silico-only "gap" species |
+| `GET /lmsd/:id` | **live LIPID MAPS verification** — real LM IDs + classification |
+| `GET /species/:id?lmsd=1` | species record enriched with LMSD verification |
 
 Search params: `q, classK, group, kingdom, massMin, massMax, carbonsMin, carbonsMax, dbMin, dbMax, origin, minBiosynthetic, maxSaScore, includeRare, page, pageSize`.
 
@@ -38,7 +40,7 @@ claude mcp add lipidex -- npm run mcp
 ```
 
 Tools: `list_lipid_classes`, `get_lipid`, `search_lipids`, `identify_by_mz`,
-`compare_lipids`, `find_gaps`. Smoke-test end-to-end:
+`compare_lipids`, `check_lmsd`, `find_gaps`. Smoke-test end-to-end:
 
 ```bash
 npx tsx mcp/test-client.ts
@@ -63,3 +65,14 @@ src/lib/lipids.ts + smiles.ts   ← model (pure)
 
 In production the MCP server would proxy the REST API rather than importing the service
 directly; for the prototype both call the shared layer so no extra process is required.
+
+## Live LIPID MAPS verification
+
+`check_lmsd` / `GET /lmsd/:id` query the [LIPID MAPS](https://www.lipidmaps.org) REST API
+server-side (the browser can't — CORS) to confirm whether a species is actually curated in
+the Structure Database, returning real **LM IDs** and the authoritative classification
+(core → main class → sub class). Sphingolipids are queried with the `;O2` hydroxyl suffix
+LMSD uses. Results are cached per process.
+
+This is the honest bridge from the prototype's *rule-based* curated/gap guess to ground
+truth; the full bulk ingest is issue #1. Lipid data © LIPID MAPS, **CC BY 4.0**.
