@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import {
-  CLASSES, FORMATE, KINGDOMS, NH4, PROTON, faFragment, fam, formulaParts, headgroupCharge,
+  FORMATE, KINGDOMS, NH4, PROTON, faFragment, fam, formulaParts, headgroupCharge,
   isomer, pmcSearchUrl, prefersAmmonium, props, status, synth,
   type LipidClass, type Method, type Persona,
 } from '../lib/lipids'
 import { MAX_PINS, type Cell, type Pin } from '../App'
+import { useLmsdStructure } from '../lib/lmsdStructures'
 import Structure from './Structure'
 
 function Conf({ m }: { m: Method }) {
@@ -48,6 +49,7 @@ function Formula({ cls, c, d }: { cls: LipidClass; c: number; d: number }) {
 interface Props { cls: LipidClass; sel: Cell | null; persona: Persona; pins: Pin[]; onTogglePin: (pin: Pin) => void }
 
 export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Props) {
+  const real = useLmsdStructure(sel ? `${cls.k}-${sel.c}-${sel.d}` : '')
   if (!sel) {
     return <div className="insp-empty">Select a cell in the map<br />to inspect a species →</div>
   }
@@ -65,9 +67,11 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
     : st === 'gap' ? <span className="badge gap">predicted gap</span>
     : <span className="badge rare">rare / edge</span>
 
-  const idline = st === 'known'
-    ? `LMSD  LMGP0${10 + CLASSES.indexOf(cls)}010${c} · SwissLipids SLM:0000${20000 + c * 7 + d}`
-    : `in-silico id  LEX:${cls.k}-${c}-${d} · not in LMSD`
+  const idline = real
+    ? `${real.lmId} · InChIKey ${real.inchikey}`
+    : st === 'known'
+      ? 'curated in LIPID MAPS'
+      : `in-silico  LEX:${cls.k}-${c}-${d} · not in LMSD`
 
   const secMS = (
     <Section title="Mass spec — identification" tag="predicted from formula" focus={persona === 'analyst'}>
@@ -176,8 +180,9 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
   const secXref = (
     <Section title="Identity & access" tag="provenance" focus={persona === 'bioinfo'}>
       <div className="kv">
-        <KV k="Origin" v={st === 'known' ? 'curated (measured entry exists)' : 'in-silico (enumerated)'} m="measured" />
-        <KV k="InChIKey" v="computed on demand" m="calculated" />
+        <KV k="Origin" v={st === 'known' ? 'curated in LMSD' : 'in-silico (enumerated)'} m="measured" />
+        <KV k="LIPID MAPS ID" v={real ? real.lmId : st === 'known' ? 'curated' : '—'} m="measured" />
+        <KV k="InChIKey" v={real ? real.inchikey : 'computed on demand'} m={real ? 'measured' : 'calculated'} />
         <KV k="API" v={`GET /species/${cls.k}-${c}-${d}`} m="measured" />
       </div>
     </Section>
