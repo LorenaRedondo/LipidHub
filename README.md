@@ -9,12 +9,29 @@ systematically — whether a species is **synthesizable** in nature, in a lab, o
 > formulas/masses from composition; CCS / RT / Tm / logP / synthesizability are
 > illustrative model outputs pending the real pipelines (see [issues](../../issues)).
 
+## Stack
+
+Vite + React 18 + TypeScript. The chemistry and property-inference model lives in
+[`src/lib/lipids.ts`](src/lib/lipids.ts) as pure, typed, framework-free functions; the
+UI in [`src/components/`](src/components) is a thin view over it.
+
+```bash
+npm install
+npm run dev        # local dev server
+npm run build      # tsc -b (strict) + vite build → dist/
+npm run typecheck  # types only
+```
+
+The original single-file vanilla-JS prototype is preserved at
+[`legacy/prototype.html`](legacy/prototype.html).
+
 ## Try it
 
-Open [`index.html`](index.html) in a browser (or via GitHub Pages once enabled).
+Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
 
 - **Atlas tab** — a carbon-number × double-bond *gap map* per lipid class. Click any
-  cell to inspect a species; search `PC 34:1`, `PE 36:2`, `TG 52:3`. The "View as…"
+  cell to inspect a species; search `PC 34:1`, `Cer 40:1`, `TG 52:3`; walk cells with
+  the arrow keys; every selection is deep-linkable (`#PC-34-1`). The "View as…"
   presets reorder the inspector for different audiences.
 - **Pipeline tab** — the data architecture (Ingest → Reconcile → Enumerate → Infer →
   Serve), the core schema, and where provenance lives.
@@ -53,9 +70,16 @@ See [`docs/architecture.md`](docs/architecture.md) for the full data architectur
 ## Layout
 
 ```
-index.html            # the single-file prototype (no build step, no dependencies)
-docs/architecture.md  # data sources, schema, property + synthesizability pipelines
-docs/roadmap.md       # phased plan; mirrors the GitHub issues
+index.html              # Vite entry
+src/
+  main.tsx              # React root
+  App.tsx               # state: view, class, selected cell, persona; keyboard nav + deep links
+  lib/lipids.ts         # typed data model + chemistry + property inference (framework-free)
+  components/            # Header, AtlasView, Rail, GapMap, Inspector, Schematic, Pipeline/Users views
+  styles.css            # the instrument theme
+legacy/prototype.html   # original single-file vanilla-JS prototype
+docs/architecture.md    # data sources, schema, property + synthesizability pipelines
+docs/roadmap.md         # phased plan; mirrors the GitHub issues
 ```
 
 ## Sources

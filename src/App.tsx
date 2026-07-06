@@ -1,0 +1,78 @@
+import { useCallback, useEffect, useState } from 'react'
+import { CLASSES, GRID_D, findClass, type LipidClass, type Persona } from './lib/lipids'
+import Header, { type View } from './components/Header'
+import AtlasView from './components/AtlasView'
+import PipelineView from './components/PipelineView'
+import UsersView from './components/UsersView'
+
+export interface Cell { c: number; d: number }
+
+export default function App() {
+  const [view, setView] = useState<View>('atlas')
+  const [cls, setCls] = useState<LipidClass>(CLASSES[0])
+  const [sel, setSel] = useState<Cell | null>(null)
+  const [persona, setPersona] = useState<Persona>('analyst')
+
+  const select = useCallback((c: number, d: number, c2 = cls) => {
+    setSel({ c, d })
+    try { history.replaceState(null, '', `#${c2.k}-${c}-${d}`) } catch { /* noop */ }
+  }, [cls])
+
+  const selectClass = useCallback((next: LipidClass) => {
+    setCls(next)
+    setSel(null)
+  }, [])
+
+  // deep-link (#PC-34-1) on first mount, else preselect a familiar species
+  useEffect(() => {
+    const m = (location.hash || '').replace('#', '').match(/^([A-Za-z]+)-(\d+)-(\d+)$/)
+    if (m) {
+      const cl = findClass(m[1])
+      const c = +m[2]
+      const d = +m[3]
+      if (cl && c >= cl.cRange[0] && c <= cl.cRange[1] && d <= GRID_D) {
+        setCls(cl)
+        setSel({ c, d })
+        return
+      }
+    }
+    setSel({ c: 34, d: 1 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // arrow-key navigation of the gap map
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (view !== 'atlas' || !sel) return
+      const tag = (e.target as HTMLElement)?.tagName || ''
+      if (/^(INPUT|TEXTAREA)$/.test(tag)) return
+      let { c, d } = sel
+      let moved = false
+      if (e.key === 'ArrowLeft' && c > cls.cRange[0]) { c--; moved = true }
+      else if (e.key === 'ArrowRight' && c < cls.cRange[1]) { c++; moved = true }
+      else if (e.key === 'ArrowUp' && d < GRID_D) { d++; moved = true }
+      else if (e.key === 'ArrowDown' && d > 0) { d--; moved = true }
+      if (moved) { e.preventDefault(); select(c, d) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [view, sel, cls, select])
+
+  return (
+    <div className="app">
+      <Header view={view} onView={setView} />
+      {view === 'atlas' && (
+        <AtlasView
+          cls={cls}
+          onSelectClass={selectClass}
+          sel={sel}
+          onSelect={(c, d) => select(c, d)}
+          persona={persona}
+          onPersona={setPersona}
+        />
+      )}
+      {view === 'pipe' && <PipelineView />}
+      {view === 'users' && <UsersView />}
+    </div>
+  )
+}
