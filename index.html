@@ -279,7 +279,7 @@
           <div class="gridcore">
             <div class="grid" id="grid"></div>
             <div class="xlabels" id="xlabels"></div>
-            <div class="axis-x-title">Total acyl carbons →</div>
+            <div class="axis-x-title" id="xtitle">Total acyl carbons →</div>
           </div>
         </div>
       </div>
@@ -496,12 +496,41 @@
     {k:"TG",name:"Triacylglycerol",cat:"Glycerolipid",bb:{C:3,H:8,O:3,N:0,P:0},n:3,
      cRange:[44,60],pref:"[M+NH₄]⁺",lpOff:-4.0,hasTm:false,
      enz:["DGAT1","DGAT2"],rhea:"RHEA:10868",pw:"Final esterification of DAG by DGAT; the storage-fat endpoint.",
-     hgFrag:{lab:"[M+NH₄−RCOOH]⁺ (acyl loss)",mz:null}}
+     hgFrag:{lab:"[M+NH₄−RCOOH]⁺ (acyl loss)",mz:null}},
+
+    {k:"Cer",name:"Ceramide",cat:"Sphingolipid",kind:"sphingo",n:1,cRange:[32,46],mid:40,
+     pref:"[M+H]⁺",lpOff:10.5,hasTm:true,xlabel:"Total carbons · d18 base + N-acyl",
+     enz:["CERS2","CERS5","DEGS1"],rhea:"RHEA:53424",pw:"De novo from serine + palmitoyl-CoA → dihydroceramide → DEGS desaturase; the hub of sphingolipid metabolism.",
+     hgFrag:{lab:"sphingoid base −H₂O (+)",mz:264.2686}},
+    {k:"SM",name:"Sphingomyelin",cat:"Sphingolipid",kind:"sphingo",subhg:"SM",n:1,cRange:[32,46],mid:40,
+     pref:"[M+H]⁺",lpOff:11.5,hasTm:true,xlabel:"Total carbons · d18 base + N-acyl",
+     enz:["SGMS1","SGMS2"],rhea:"RHEA:18765",pw:"SM synthase transfers phosphocholine from PC onto ceramide at the Golgi.",
+     hgFrag:{lab:"phosphocholine (+)",mz:184.0733}},
+    {k:"HexCer",name:"Hexosylceramide",cat:"Sphingolipid",kind:"sphingo",subhg:"Hex",n:1,cRange:[32,46],mid:40,
+     pref:"[M+H]⁺",lpOff:11.0,hasTm:true,xlabel:"Total carbons · d18 base + N-acyl",
+     enz:["UGCG","UGT8"],rhea:"RHEA:12088",pw:"Glucosyl/galactosylceramide synthase glycosylates ceramide; the entry to glycosphingolipids.",
+     hgFrag:{lab:"−hexose (162) neutral loss (+)",mz:162.0528}},
+    {k:"CE",name:"Cholesteryl ester",cat:"Sterol lipid",kind:"sterolester",n:1,cRange:[12,24],mid:18,
+     pref:"[M+NH₄]⁺",lpOff:-6.0,hasTm:false,xlabel:"N-acyl carbons · cholesterol fixed",
+     enz:["SOAT1","LCAT"],rhea:"RHEA:35807",pw:"ACAT/SOAT (cells) or LCAT (plasma) esterifies cholesterol's 3-OH; the storage/transport form of sterol.",
+     hgFrag:{lab:"cholestene fragment (+)",mz:369.3516}}
   ];
 
   var state={cls:CLASSES[0],sel:null,persona:"analyst"};
 
   function fmtObj(cls,c,d){
+    var kind=cls.kind||"glycero";
+    if(kind==="sphingo"){
+      // c = total carbons (d18 sphingoid base + N-acyl), d = total double bonds
+      var f={C:c, H:1+2*c-2*d, O:3, N:1, P:0};      // ceramide core (validated: Cer d18:1/16:0 = C34H67NO3)
+      if(cls.subhg==="SM"){ f.C+=5; f.H+=12; f.N+=1; f.O+=3; f.P+=1; }   // + phosphocholine
+      else if(cls.subhg==="Hex"){ f.C+=6; f.H+=10; f.O+=5; }             // + hexose
+      return f;
+    }
+    if(kind==="sterolester"){
+      // c = N-acyl carbons; cholesterol backbone fixed at C27 (CE 18:1 = C45H78O2)
+      return {C:27+c, H:44+2*c-2*d, O:2, N:0, P:0};
+    }
     var b=cls.bb, n=cls.n;
     return {C:b.C+c, H:b.H+2*c-2*d-2*n, O:b.O+n, N:b.N||0, P:b.P||0};
   }
@@ -516,7 +545,7 @@
     var lik=1;
     if(c%2!==0) lik-=0.5;                       // odd-chain rare
     var lo=cls.cRange[0], hi=cls.cRange[1];
-    var mid=cls.n===3?52:35;
+    var mid=cls.mid||(cls.n===3?52:35);
     lik-=Math.min(0.4, Math.abs(c-mid)/40);     // length window
     if(d===0) lik-=0.08;
     if(d>3) lik-=(d-3)*0.14;                     // very polyunsat rarer in bulk
@@ -556,6 +585,14 @@
   }
   // split sum composition into a "most abundant" isomer for MS/MS illustration
   function isomer(cls,c,d){
+    var kind=cls.kind||"glycero";
+    if(kind==="sphingo"){
+      var bDB = d>=1?1:0;                 // d18:1 sphingosine (or d18:0 dihydro)
+      return [[18,bDB],[c-18,d-bDB]];     // [sphingoid base, N-acyl]
+    }
+    if(kind==="sterolester"){
+      return [[c,d]];                     // single N-acyl chain
+    }
     if(cls.n===2){
       var c1=16, c2=c-16;
       if(c2<12){c1=Math.floor(c/2);c2=c-c1;}
@@ -573,7 +610,7 @@
     CLASSES.forEach(function(cl){
       var b=document.createElement("button");
       b.className="classbtn"+(cl===state.cls?" on":"");
-      b.innerHTML='<span><span class="abbr">'+cl.k+'</span> <span class="nm">'+cl.name.replace(/^Phosphatidyl/,'Pt-').slice(0,14)+'</span></span><span class="cat">'+(cl.n===3?'×3':'×2')+'</span>';
+      b.innerHTML='<span><span class="abbr">'+cl.k+'</span> <span class="nm">'+cl.name.replace(/^Phosphatidyl/,'Pt-').slice(0,14)+'</span></span><span class="cat">×'+cl.n+'</span>';
       b.onclick=function(){state.cls=cl;state.sel=null;renderAll();};
       host.appendChild(b);
     });
@@ -617,8 +654,10 @@
       '<span><b class="k">'+kKnown+'</b> curated cells</span>'+
       '<span><b class="g">'+kGap+'</b> predicted gaps</span>'+
       '<span><b>'+(kKnown+kGap)+'</b> plausible species in view</span>';
+    document.getElementById("xtitle").textContent=(cls.xlabel||"Total acyl carbons")+" →";
     document.getElementById("clsTitle").textContent=cls.name;
-    document.getElementById("clsSub").textContent=cls.cat+" · "+cls.n+" acyl chains · carbons "+lo+"–"+hi+", 0–"+GRID_D+" double bonds";
+    var chainTxt=(cls.kind==="sphingo")?"d18 sphingoid base + N-acyl":(cls.n+" acyl chain"+(cls.n>1?"s":""));
+    document.getElementById("clsSub").textContent=cls.cat+" · "+chainTxt+" · carbons "+lo+"–"+hi+", 0–"+GRID_D+" double bonds";
   }
 
   /* ---------- structure schematic ---------- */
@@ -658,7 +697,11 @@
   }
 
   /* ---------- inspector ---------- */
-  function select(c,d){ state.sel={c:c,d:d}; renderGrid(); renderInspector(); }
+  function select(c,d){
+    state.sel={c:c,d:d};
+    try{history.replaceState(null,"","#"+state.cls.k+"-"+c+"-"+d);}catch(_){}
+    renderGrid(); renderInspector();
+  }
 
   function confTag(t){return '<span class="conf '+t+'">'+(t==='meas'?'meas':t==='calc'?'calc':'pred')+'</span>';}
 
@@ -680,19 +723,25 @@
       kv("Exact mass (neutral)",p.M.toFixed(4),"Da","calc")+
       kv("[M+H]⁺",(p.M+PROTON).toFixed(4),"m/z","calc")+
       kv("[M−H]⁻",(p.M-PROTON).toFixed(4),"m/z","calc")+
-      kv(cls.n===3||cls.k==="DG"?"[M+NH₄]⁺":"[M+HCOO]⁻",
-         (cls.n===3||cls.k==="DG"?(p.M+NH4):(p.M+FORMATE)).toFixed(4),"m/z","calc")+
+      (function(){var ammon=cls.n===3||cls.k==="DG"||cls.k==="CE";
+        return kv(ammon?"[M+NH₄]⁺":"[M+HCOO]⁻",(ammon?(p.M+NH4):(p.M+FORMATE)).toFixed(4),"m/z","calc");})()+
       kv("CCS "+cls.pref,p.ccs,"Å²","pred")+
       kv("RT (RP-C18, 20 min)",p.rt,"min","pred")), f==="analyst");
 
     var msmsRows="";
     if(cls.hgFrag.mz)msmsRows+='<div class="frag"><span class="lab">'+cls.hgFrag.lab+'</span><span class="mz">'+cls.hgFrag.mz.toFixed(4)+'</span></div>';
     else msmsRows+='<div class="frag"><span class="lab">'+cls.hgFrag.lab+'</span><span class="mz">—</span></div>';
-    iso.forEach(function(ch){
-      var fa=ch[0], fd=ch[1];
+    function faLine(fa,fd){
       var faMass=fa*MASS.C+(2*fa-2*fd-1)*MASS.H+2*MASS.O-PROTON; // [FA-H]-
-      msmsRows+='<div class="frag"><span class="lab">FA '+fa+':'+fd+' [FA−H]⁻</span><span class="mz">'+faMass.toFixed(4)+'</span></div>';
-    });
+      return '<div class="frag"><span class="lab">FA '+fa+':'+fd+' [FA−H]⁻</span><span class="mz">'+faMass.toFixed(4)+'</span></div>';
+    }
+    if((cls.kind||"glycero")==="sphingo"){
+      var base=iso[0], nac=iso[1];
+      msmsRows+='<div class="frag"><span class="lab">sphingoid base d'+base[0]+':'+base[1]+'</span><span class="mz">—</span></div>';
+      msmsRows+=faLine(nac[0],nac[1]);
+    } else {
+      iso.forEach(function(ch){ msmsRows+=faLine(ch[0],ch[1]); });
+    }
     var secMSMS=section("Predicted MS/MS","most abundant isomer",
       '<p class="note" style="margin:-4px 0 10px">Diagnostic fragments for the likely isomer <b>'+iso.map(function(x){return x[0]+':'+x[1];}).join(" / ")+'</b>. Sum composition alone can\'t fix sn-position — flagged, not hidden.</p>'+msmsRows, false);
 
@@ -701,7 +750,7 @@
       (p.tm!==null?kv("Transition T<sub>m</sub>",p.tm,"°C","pred"):kv("Transition T<sub>m</sub>","n/a — neutral lipid","","calc"))+
       kv("logP",p.logp,"","calc")+
       kv("Carbons / DB","C"+c+" · "+d+" =","","calc")+
-      kv("Headgroup",cls.cat==="Glycerolipid"?"neutral":(cls.k==="PC"?"zwitterionic":"anionic"),"","meas")), f==="biophys");
+      kv("Headgroup",(cls.k==="PC"||cls.k==="SM")?"zwitterionic":(cls.cat==="Glycerolipid"||cls.cat==="Sterol lipid"||cls.k==="Cer"||cls.k==="HexCer")?"neutral":"anionic","","meas")), f==="biophys");
 
     var bioVerdict = sy.bio>60? '<span class="ok">✔ biosynthesized</span> — pathway present' :
                      sy.bio>25? '<span class="mid">~ minor / conditional</span> — enzyme exists, species uncommon' :
@@ -760,9 +809,9 @@
 
   /* ---------- search ---------- */
   document.getElementById("search").addEventListener("input",function(e){
-    var m=e.target.value.trim().toUpperCase().match(/([A-Z]{2,3})\s*(\d{1,2})\s*[:\/]\s*(\d{1,2})/);
+    var m=e.target.value.trim().toUpperCase().match(/([A-Z]{2,6})\s*(\d{1,2})\s*[:\/]\s*(\d{1,2})/);
     if(!m)return;
-    var cl=CLASSES.filter(function(x){return x.k===m[1];})[0];
+    var cl=CLASSES.filter(function(x){return x.k.toUpperCase()===m[1];})[0];
     if(!cl)return;
     var c=+m[2], d=+m[3];
     if(c<cl.cRange[0]||c>cl.cRange[1]||d>GRID_D)return;
@@ -789,10 +838,34 @@
     };
   });
 
+  /* ---------- keyboard navigation of the grid ---------- */
+  document.addEventListener("keydown",function(e){
+    if(!document.getElementById("view-atlas").classList.contains("on"))return;
+    if(/^(INPUT|TEXTAREA)$/.test(e.target.tagName||""))return;
+    if(!state.sel)return;
+    var c=state.sel.c, d=state.sel.d, cl=state.cls, moved=false;
+    if(e.key==="ArrowLeft"  && c>cl.cRange[0]){c--;moved=true;}
+    else if(e.key==="ArrowRight" && c<cl.cRange[1]){c++;moved=true;}
+    else if(e.key==="ArrowUp"    && d<GRID_D){d++;moved=true;}
+    else if(e.key==="ArrowDown"  && d>0){d--;moved=true;}
+    if(moved){e.preventDefault();select(c,d);}
+  });
+
+  /* ---------- deep-link: #PC-34-1 ---------- */
+  function applyHash(){
+    var m=(location.hash||"").replace("#","").match(/^([A-Za-z]+)-(\d+)-(\d+)$/);
+    if(!m)return false;
+    var cl=CLASSES.filter(function(x){return x.k.toUpperCase()===m[1].toUpperCase();})[0];
+    if(!cl)return false;
+    var c=+m[2], d=+m[3];
+    if(c<cl.cRange[0]||c>cl.cRange[1]||d>GRID_D)return false;
+    state.cls=cl; renderClasses(); renderGrid(); select(c,d); return true;
+  }
+
   function renderAll(){renderClasses();renderGrid();renderInspector();}
   renderAll();
-  // preselect a familiar species
-  select(34,1);
+  // deep-link if present, else preselect a familiar species
+  if(!applyHash()) select(34,1);
 })();
 </script>
 </body>
