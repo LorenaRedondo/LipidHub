@@ -106,9 +106,16 @@ src/
   components/            # Header, AtlasView, Rail, GapMap, Inspector, Schematic, Pipeline/Users views
   styles.css            # the instrument theme
 legacy/prototype.html   # original single-file vanilla-JS prototype
+docs/vision.md          # product vision, the wedge, and how we become the go-to
 docs/architecture.md    # data sources, schema, property + synthesizability pipelines
+docs/api.md             # REST + MCP + Skill for agents
 docs/roadmap.md         # phased plan; mirrors the GitHub issues
+db/schema.sql           # reconciled data model (Postgres DDL, provenance-first)
 ```
+
+A **canonical page per species** lives at `#/species/PC-34-1` (structure, real-vs-predicted
+properties, biology, identity, cite/download) — the SEO/growth engine (see
+[docs/vision.md](docs/vision.md), milestone *v1*).
 
 ## Sources
 

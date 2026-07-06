@@ -250,6 +250,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
           <Formula cls={cls} c={c} d={d} /> &nbsp;·&nbsp; {p.M.toFixed(4)} Da
         </div>
         <div className="idline">{idline}</div>
+        <a className="fullpage-link" href={`#/species/${cls.k}-${c}-${d}`}>open full page ↗</a>
       </div>
       <div className="schematic"><Structure cls={cls} c={c} d={d} iso={iso} /></div>
       <div className="tip"><b>{persona} view</b>{tips[persona]}</div>

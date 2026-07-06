@@ -8,10 +8,17 @@ import CompareView from './components/CompareView'
 import AnalyticsView from './components/AnalyticsView'
 import ReferencesView from './components/ReferencesView'
 import SearchView from './components/SearchView'
+import SpeciesPage from './components/SpeciesPage'
 
 export interface Cell { c: number; d: number }
 export interface Pin { clsK: string; c: number; d: number }
 export const MAX_PINS = 4
+
+/** Canonical species-page route: #/species/PC-34-1 */
+function matchSpeciesRoute(): string | null {
+  const m = location.hash.match(/^#\/species\/([A-Za-z]+-\d+-\d+)$/)
+  return m ? m[1] : null
+}
 
 export default function App() {
   const [view, setView] = useState<View>('atlas')
@@ -19,6 +26,7 @@ export default function App() {
   const [sel, setSel] = useState<Cell | null>(null)
   const [persona, setPersona] = useState<Persona>('analyst')
   const [pins, setPins] = useState<Pin[]>([])
+  const [speciesRoute, setSpeciesRoute] = useState<string | null>(() => matchSpeciesRoute())
 
   const select = useCallback((c: number, d: number, c2 = cls) => {
     setSel({ c, d })
@@ -82,6 +90,17 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [view, sel, cls, select])
+
+  // canonical species-page routing (#/species/PC-34-1)
+  useEffect(() => {
+    const onHash = () => setSpeciesRoute(matchSpeciesRoute())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  if (speciesRoute) {
+    return <SpeciesPage id={speciesRoute} onBack={() => { location.hash = ''; setSpeciesRoute(null) }} />
+  }
 
   return (
     <div className="app">
