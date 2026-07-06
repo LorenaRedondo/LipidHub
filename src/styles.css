@@ -390,3 +390,31 @@
   .pchip:hover{border-color:var(--line2);color:var(--text)}
   .pchip.on{border-color:var(--amber);background:rgba(240,169,75,.09);color:var(--text)}
   .pchip .ic{font-size:14px}
+
+  /* ===== canonical species page (v8) ===== */
+  .fullpage-link{display:inline-block;margin-top:9px;font-family:var(--mono);font-size:10.5px;color:var(--cyan);
+    letter-spacing:.03em;text-transform:uppercase}
+  .fullpage-link:hover{text-decoration:underline}
+
+  .species-page{max-width:960px;margin:0 auto;padding:26px 30px 80px}
+  .crumb{font-family:var(--mono);font-size:12px;color:var(--muted);background:none;border:none;padding:6px 0;margin-bottom:14px}
+  .crumb:hover{color:var(--text)}
+  .sp-hero{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:20px}
+  .sp-badges{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .sp-title{font-family:var(--mono);font-size:38px;font-weight:650;letter-spacing:.01em;line-height:1}
+  .sp-sub{font-size:16px;color:var(--muted);margin-top:6px}
+  .sp-formula{font-size:15px;color:var(--text);margin-top:12px}
+  .sp-ids{font-size:11.5px;color:var(--faint);margin-top:6px}
+  .sp-struct{background:#f5f6f4;border:1px solid var(--line2);border-radius:12px;padding:16px;margin-bottom:22px;
+    display:flex;justify-content:center}
+  .sp-struct .struct-canvas{background:transparent;border:none;padding:0;min-height:0}
+  .sp-struct .struct-cap{display:none}
+  .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sp-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:18px 20px}
+  .sp-card h3{font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);
+    margin-bottom:14px;font-weight:600}
+  .sp-card .kv{grid-template-columns:auto 1fr}
+  .sp-card .kv .v{text-align:right}
+  .sp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .sp-actions .cta{padding:7px 12px;font-size:12px;text-decoration:none}
+  @media (max-width:720px){ .sp-grid{grid-template-columns:1fr} .sp-title{font-size:30px} }
