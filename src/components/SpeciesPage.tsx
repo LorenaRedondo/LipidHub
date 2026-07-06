@@ -86,6 +86,21 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
             </div>
           </div>
 
+          {rec.membrane && (
+            <div className="sp-card">
+              <h3>Membrane biophysics <span className="pred-model">AFM-measurable</span></h3>
+              <div className="kv">
+                <div className="k">Phase at 37 °C</div><div className="v" style={{ fontSize: 12 }}>{rec.membrane.phase37}</div>
+                <div className="k">Curvature</div><div className="v" style={{ fontSize: 12 }}>{rec.membrane.curvature}</div>
+                <div className="k">Packing param.</div><div className="v">{rec.membrane.packing}</div>
+                <div className="k">Bilayer thickness</div><div className="v">{rec.membrane.thicknessNm} <span className="u">nm</span></div>
+                <div className="k">Area / lipid</div><div className="v">{rec.membrane.areaPerLipid} <span className="u">Å²</span></div>
+                <div className="k">Breakthrough force</div><div className="v">{rec.membrane.breakthroughNn} <span className="u">nN</span></div>
+                <div className="k">Compressibility K<sub>A</sub></div><div className="v">{rec.membrane.compressibilityKa} <span className="u">mN/m</span></div>
+              </div>
+            </div>
+          )}
+
           <div className="sp-card">
             <h3>Biology &amp; occurrence</h3>
             <div className="kingdombadges" style={{ marginTop: 0 }}>

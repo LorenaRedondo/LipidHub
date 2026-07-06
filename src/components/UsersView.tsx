@@ -8,7 +8,7 @@ const PERSONAS: Persona[] = [
     gives: <>Search by <b>mass or CCS window</b>, land on candidate cells, compare <b>predicted vs. their measured</b> RT/CCS/MS-MS to confirm or reject an ID — including for species not in any spectral library because the atlas predicted them.</> },
   { ic: '≋', name: 'Membrane biophysicist', role: 'research · project-driven',
     task: 'Design a model membrane with a target phase-transition temperature and curvature.',
-    gives: <>Filter the map by predicted <b>T<sub>m</sub>, logP, and headgroup geometry</b>; see how one more double bond or two more carbons moves the property — the gradient across the grid <em>is</em> the structure–property relationship.</> },
+    gives: <>Read predicted <b>membrane nanomechanics</b> — phase, curvature, bilayer thickness, area/lipid, and AFM-measurable <b>breakthrough force &amp; K<sub>A</sub></b> — alongside T<sub>m</sub> and logP; see how one more double bond softens the membrane. The gradient across the grid <em>is</em> the structure–property relationship.</> },
   { ic: '⚗', name: 'Synthetic chemist / biotech', role: 'discovery · high-value',
     task: "Find a novel lipid nanoparticle component that's chemically makeable but not naturally abundant.",
     gives: <>Query the space directly: <b>high chemical-synthesizability, low biosynthetic score</b> — i.e. the white space of "lab-only" lipids — with a starting retrosynthetic route and the properties to prioritize candidates.</> },
