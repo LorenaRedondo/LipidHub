@@ -1,21 +1,12 @@
 import { useState } from 'react'
-import { CLASSES, GROUPS, KINGDOMS, type Kingdom, type LipidClass, type Persona } from '../lib/lipids'
-
-const PERSONAS: { id: Persona; ic: string; label: string }[] = [
-  { id: 'analyst', ic: '◎', label: 'Mass-spec analyst' },
-  { id: 'biophys', ic: '≋', label: 'Membrane biophysicist' },
-  { id: 'chem', ic: '⚗', label: 'Synthetic chemist' },
-  { id: 'bioinfo', ic: '⌗', label: 'Bioinformatician' },
-]
+import { CLASSES, GROUPS, KINGDOMS, type Kingdom, type LipidClass } from '../lib/lipids'
 
 interface Props {
   cls: LipidClass
   onSelectClass: (c: LipidClass) => void
-  persona: Persona
-  onPersona: (p: Persona) => void
 }
 
-export default function Rail({ cls, onSelectClass, persona, onPersona }: Props) {
+export default function Rail({ cls, onSelectClass }: Props) {
   const [kingdom, setKingdom] = useState<Kingdom | null>(null)
 
   const visible = kingdom ? CLASSES.filter((c) => c.kingdoms.includes(kingdom)) : CLASSES
@@ -67,20 +58,6 @@ export default function Rail({ cls, onSelectClass, persona, onPersona }: Props) 
             </div>
           )
         })}
-      </div>
-
-      <div className="railgroup">
-        <span className="eyebrow">View as…</span>
-        {PERSONAS.map((p) => (
-          <button
-            key={p.id}
-            className={'persona' + (p.id === persona ? ' on' : '')}
-            onClick={() => onPersona(p.id)}
-          >
-            <span className="ic">{p.ic}</span>
-            <span>{p.label}</span>
-          </button>
-        ))}
       </div>
     </aside>
   )
