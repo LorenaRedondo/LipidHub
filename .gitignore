@@ -1,0 +1,13 @@
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Claude Code local
+.claude/settings.local.json
+
+# data artifacts (large reference dumps live outside git)
+/data/
+*.sdf
+*.parquet
