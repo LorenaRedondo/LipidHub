@@ -418,3 +418,12 @@
   .sp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
   .sp-actions .cta{padding:7px 12px;font-size:12px;text-decoration:none}
   @media (max-width:720px){ .sp-grid{grid-template-columns:1fr} .sp-title{font-size:30px} }
+
+  /* ===== identify workflow (v9) ===== */
+  .idf-inputs{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px;
+    padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .idf-inputs .facet input,.idf-inputs .facet select{font-size:13px;padding:8px 10px}
+  .idf-inputs .facet input:not(.one){width:130px}
+  .conf-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .conf-bar{width:52px;height:6px;border-radius:4px;background:var(--raise);overflow:hidden}
+  .conf-bar i{display:block;height:100%;border-radius:4px}

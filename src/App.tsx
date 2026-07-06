@@ -8,6 +8,7 @@ import CompareView from './components/CompareView'
 import AnalyticsView from './components/AnalyticsView'
 import ReferencesView from './components/ReferencesView'
 import SearchView from './components/SearchView'
+import IdentifyView from './components/IdentifyView'
 import SpeciesPage from './components/SpeciesPage'
 
 export interface Cell { c: number; d: number }
@@ -118,6 +119,7 @@ export default function App() {
         />
       )}
       {view === 'search' && <SearchView onOpen={openInAtlas} />}
+      {view === 'identify' && <IdentifyView onOpen={openInAtlas} />}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
       {view === 'analytics' && <AnalyticsView />}
       {view === 'refs' && <ReferencesView />}
