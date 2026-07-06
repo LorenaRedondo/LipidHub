@@ -1,6 +1,6 @@
 {
   "model_version": "demo-gbm-0.1",
-  "n_species": 1948,
+  "n_species": 2010,
   "features": [
     "mass",
     "carbons",
@@ -14,15 +14,15 @@
   ],
   "note": "Trained on physics-shaped SYNTHETIC targets for the demo. Swap in AllCCS/METLIN-CCS + RT libraries for production.",
   "ccs": {
-    "mae": 2.736,
-    "r2": 0.997,
-    "coverage": 0.9,
-    "ci_halfwidth": 5.759
+    "mae": 2.626,
+    "r2": 0.998,
+    "coverage": 0.898,
+    "ci_halfwidth": 5.685
   },
   "rt": {
-    "mae": 0.392,
-    "r2": 0.988,
-    "coverage": 0.9,
-    "ci_halfwidth": 0.789
+    "mae": 0.362,
+    "r2": 0.989,
+    "coverage": 0.898,
+    "ci_halfwidth": 0.759
   }
 }

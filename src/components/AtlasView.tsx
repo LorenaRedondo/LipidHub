@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { findClass, GRID_D, type LipidClass, type Persona } from '../lib/lipids'
+import { findClass, dMaxOf, type LipidClass, type Persona } from '../lib/lipids'
 import type { Cell, Pin } from '../App'
 import Rail from './Rail'
 import GapMap from './GapMap'
@@ -34,7 +34,7 @@ export default function AtlasView({ cls, onSelectClass, sel, onSelect, persona, 
     if (!cl) return
     const c = +m[2]
     const d = +m[3]
-    if (c < cl.cRange[0] || c > cl.cRange[1] || d > GRID_D) return
+    if (c < cl.cRange[0] || c > cl.cRange[1] || d > dMaxOf(cl)) return
     if (cl.k !== cls.k) onSelectClass(cl)
     // defer selection to next tick so the class change lands first
     setTimeout(() => onSelect(c, d), 0)

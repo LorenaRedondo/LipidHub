@@ -3,7 +3,7 @@
 // offers Pearson correlation and (seeded, deterministic) k-means clustering.
 // All framework-free and pure.
 
-import { CLASSES, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
+import { CLASSES, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
 
 export interface Point {
   id: string
@@ -32,7 +32,7 @@ export function buildDataset(): Point[] {
   for (const cls of CLASSES) {
     const [lo, hi] = cls.cRange
     for (let c = lo % 2 === 0 ? lo : lo + 1; c <= hi; c += 2) {
-      for (let d = 0; d <= 6; d++) {
+      for (let d = 0; d <= dMaxOf(cls); d++) {
         if (status(cls, c, d) === 'rare') continue
         const p = props(cls, c, d)
         const sy = synth(cls, c, d)
