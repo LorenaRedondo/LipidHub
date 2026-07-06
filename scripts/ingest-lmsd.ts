@@ -18,7 +18,7 @@ if (!SDF || !fs.existsSync(SDF)) {
 
 // our 17 classes; sphingolipids carry LMSD's ";O2" hydroxyl suffix
 const SPHINGO = new Set(['Cer', 'SM', 'HexCer'])
-const OURS = new Set(['PC', 'PE', 'PS', 'PG', 'PI', 'PA', 'LPC', 'DG', 'TG', 'MGDG', 'DGDG', 'SQDG', 'Cer', 'SM', 'HexCer', 'CE', 'FA'])
+const OURS = new Set(['PC', 'PE', 'PS', 'PG', 'PI', 'PA', 'LPC', 'LPE', 'DG', 'TG', 'MGDG', 'DGDG', 'SQDG', 'Cer', 'SM', 'HexCer', 'CE', 'FA', 'CL', 'CAR'])
 
 interface ClassEntry { core?: string; mainClass?: string; comps: Record<string, number>; curatedCount: number }
 const classes: Record<string, ClassEntry> = {}

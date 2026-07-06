@@ -35,6 +35,7 @@ const PHOSPHO: Record<string, string> = {
   PA: 'P(=O)(O)O',
   PI: 'P(=O)(O)OC1C(O)C(O)C(O)C(O)C1O',
   LPC: 'P(=O)([O-])OCC[N+](C)(C)C',
+  LPE: 'P(=O)(O)OCCN',
 }
 
 // sugar heads appended after the sn-3  "…CO"
@@ -52,6 +53,15 @@ export function toSmiles(cls: LipidClass, c: number, d: number): string | null {
   const kind = cls.kind ?? 'glycero'
 
   if (kind === 'fattyacyl') return `${alkyl(c - 1, d)}C(=O)O`
+
+  // acylcarnitine: fatty acyl esterified to carnitine
+  if (cls.k === 'CAR') return `${alkyl(c - 1, d)}C(=O)OC(C[N+](C)(C)C)CC([O-])=O`
+
+  // cardiolipin: two diacyl-phosphatidyl arms bridged by a central glycerol
+  if (cls.n === 4) {
+    const [[c1, d1], [c2, d2], [c3, d3], [c4, d4]] = iso
+    return `${acidRev(c1, d1)}OCC(O${acidFwd(c2, d2)})COP(=O)(O)OCC(O)COP(=O)(O)OCC(O${acidFwd(c3, d3)})CO${acidFwd(c4, d4)}`
+  }
 
   if (kind === 'sterolester') return CHOL(`OC(=O)${alkyl(c - 1, d)}`)
 

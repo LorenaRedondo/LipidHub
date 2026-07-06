@@ -88,7 +88,7 @@ measure.
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
 | Synthesizability | ⚠️ heuristic placeholders | pathway match + SAScore/retrosynthesis |
 | Known vs. gap status | ✅ real — ingested from LMSD (50,516 structures) | full structures/InChIKeys too |
-| Classes | 17 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
+| Classes | 20 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |
 | Per-species citations | ⚠️ live Europe PMC search per class | curated refs via DB integration |
 | 2D structures | ✅ SMILES built from composition, drawn by OpenChemLib | canonical SVGs cached server-side (RDKit) |

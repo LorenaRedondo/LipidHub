@@ -28,7 +28,7 @@ export default function Header({ view, onView, compareCount }: { view: View; onV
       </nav>
       <div className="status">
         <span className="dot" />
-        <span>Research preview · 17 classes · curated status from LMSD</span>
+        <span>Research preview · 20 classes · curated status from LMSD</span>
       </div>
     </header>
   )
