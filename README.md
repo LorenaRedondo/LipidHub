@@ -29,10 +29,16 @@ The original single-file vanilla-JS prototype is preserved at
 
 Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
 
-- **Atlas tab** — a carbon-number × double-bond *gap map* per lipid class. Click any
-  cell to inspect a species; search `PC 34:1`, `Cer 40:1`, `TG 52:3`; walk cells with
-  the arrow keys; every selection is deep-linkable (`#PC-34-1`). The "View as…"
-  presets reorder the inspector for different audiences.
+- **Atlas tab** — a carbon-number × double-bond *gap map* per lipid class. Classes are
+  grouped by taxonomy and filterable by the **kingdom** they occur in. Click any cell to
+  inspect a species (formula, adducts, predicted CCS/RT/Tm/logP, synthesizability,
+  **biological taxonomy & occurrence**, and a live literature link); search `PC 34:1`,
+  `MGDG 34:6`, `TG 52:3`; walk cells with the arrow keys; every selection is
+  deep-linkable (`#PC-34-1`). The "View as…" presets reorder the inspector per audience.
+- **Compare tab** — pin up to four species (`+ compare` in the inspector) and line their
+  properties up side by side.
+- **References tab** — foundational papers the atlas is built on, plus a live Europe PMC
+  search per class.
 - **Pipeline tab** — the data architecture (Ingest → Reconcile → Enumerate → Infer →
   Serve), the core schema, and where provenance lives.
 - **Who it's for** — six audiences and the concrete task each brings.
@@ -63,7 +69,9 @@ measure.
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
 | Synthesizability | ⚠️ heuristic placeholders | pathway match + SAScore/retrosynthesis |
 | Known vs. gap status | ⚠️ rule-based demo | real diff vs. LMSD |
-| Classes | 12: 8 glycero/glycerophospho + Cer/SM/HexCer + CE | + free sterols, oxysterols, … |
+| Classes | 17 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
+| Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |
+| Per-species citations | ⚠️ live Europe PMC search per class | curated refs via DB integration |
 
 See [`docs/architecture.md`](docs/architecture.md) for the full data architecture.
 

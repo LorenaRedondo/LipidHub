@@ -46,7 +46,7 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
       <div className="headline">
         <h2>{cls.name}</h2>
         <span className="sub">
-          {cls.cat} · {chainTxt} · carbons {lo}–{hi}, 0–{GRID_D} double bonds
+          {cls.category} · {chainTxt} · carbons {lo}–{hi}, 0–{GRID_D} double bonds
         </span>
       </div>
       <div className="counts">

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import {
-  CLASSES, FORMATE, NH4, PROTON, faFragment, fam, formulaParts, headgroupCharge,
-  isomer, props, status, synth, type LipidClass, type Method, type Persona,
+  CLASSES, FORMATE, KINGDOMS, NH4, PROTON, faFragment, fam, formulaParts, headgroupCharge,
+  isomer, pmcSearchUrl, prefersAmmonium, props, status, synth,
+  type LipidClass, type Method, type Persona,
 } from '../lib/lipids'
-import type { Cell } from '../App'
+import { MAX_PINS, type Cell, type Pin } from '../App'
 import Schematic from './Schematic'
 
 function Conf({ m }: { m: Method }) {
@@ -44,7 +45,9 @@ function Formula({ cls, c, d }: { cls: LipidClass; c: number; d: number }) {
   )
 }
 
-export default function Inspector({ cls, sel, persona }: { cls: LipidClass; sel: Cell | null; persona: Persona }) {
+interface Props { cls: LipidClass; sel: Cell | null; persona: Persona; pins: Pin[]; onTogglePin: (pin: Pin) => void }
+
+export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Props) {
   if (!sel) {
     return <div className="insp-empty">Select a cell in the map<br />to inspect a species →</div>
   }
@@ -53,7 +56,9 @@ export default function Inspector({ cls, sel, persona }: { cls: LipidClass; sel:
   const sy = synth(cls, c, d)
   const st = status(cls, c, d)
   const iso = isomer(cls, c, d)
-  const ammon = cls.n === 3 || cls.k === 'DG' || cls.k === 'CE'
+  const ammon = prefersAmmonium(cls)
+  const isPinned = pins.some((x) => x.clsK === cls.k && x.c === c && x.d === d)
+  const compareFull = pins.length >= MAX_PINS && !isPinned
 
   const badge =
     st === 'known' ? <span className="badge known">curated · LMSD</span>
@@ -178,11 +183,40 @@ export default function Inspector({ cls, sel, persona }: { cls: LipidClass; sel:
     </Section>
   )
 
+  const secTax = (
+    <Section title="Taxonomy & occurrence" tag="biological">
+      <div className="kv">
+        <KV k="LIPID MAPS category" v={cls.category} />
+        <KV k="Group" v={cls.group} />
+      </div>
+      <div className="kingdombadges">
+        {KINGDOMS.map((kg) => (
+          <span key={kg} className={'kbadge' + (cls.kingdoms.includes(kg) ? ' on' : '')}>{kg}</span>
+        ))}
+      </div>
+      <p className="occ">{cls.occurrence}</p>
+    </Section>
+  )
+
+  const secLit = (
+    <Section title="Literature" tag="Europe PMC">
+      <p className="note" style={{ margin: '-2px 0 10px' }}>
+        Real papers where <b>{cls.k}</b> species appear — opens a live Europe PMC search (no fabricated citations).
+      </p>
+      <a className="litlink" href={pmcSearchUrl(cls)} target="_blank" rel="noreferrer">
+        Search “{cls.name}” on Europe PMC →
+      </a>
+      <p className="note" style={{ marginTop: 10 }}>
+        Curated per-species citations arrive with database integration (#5, #7).
+      </p>
+    </Section>
+  )
+
   const sections: Record<Persona, ReactNode[]> = {
-    analyst: [secMS, secMSMS, secBio, secSynth, secOrigin, secXref],
-    biophys: [secBio, secMS, secOrigin, secSynth, secMSMS, secXref],
-    chem: [secSynth, secOrigin, secBio, secMS, secXref, secMSMS],
-    bioinfo: [secXref, secMS, secOrigin, secSynth, secBio, secMSMS],
+    analyst: [secMS, secMSMS, secBio, secSynth, secTax, secOrigin, secLit, secXref],
+    biophys: [secBio, secTax, secMS, secOrigin, secSynth, secMSMS, secLit, secXref],
+    chem: [secSynth, secOrigin, secTax, secBio, secMS, secLit, secXref, secMSMS],
+    bioinfo: [secXref, secTax, secMS, secOrigin, secSynth, secBio, secLit, secMSMS],
   }
 
   const tips: Record<Persona, string> = {
@@ -195,7 +229,17 @@ export default function Inspector({ cls, sel, persona }: { cls: LipidClass; sel:
   return (
     <>
       <div className="insp-head">
-        <div className="cls">{badge}<span className="eyebrow">{cls.cat}</span></div>
+        <div className="cls">
+          {badge}<span className="eyebrow">{cls.group}</span>
+          <button
+            className={'pinbtn' + (isPinned ? ' on' : '')}
+            disabled={compareFull}
+            onClick={() => onTogglePin({ clsK: cls.k, c, d })}
+            title={compareFull ? `Compare is full (${MAX_PINS})` : 'Add to side-by-side comparison'}
+          >
+            {isPinned ? '✓ comparing' : compareFull ? 'compare full' : '+ compare'}
+          </button>
+        </div>
         <h3>{cls.k} {fam(c, d)}</h3>
         <div className="formula em">
           <Formula cls={cls} c={c} d={d} /> &nbsp;·&nbsp; {p.M.toFixed(4)} Da
