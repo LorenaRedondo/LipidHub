@@ -21,3 +21,10 @@ dist/
 *.tsbuildinfo
 *.sdf.zip
 structures.sdf
+
+# ML generated dataset (regenerate via npm run export:dataset)
+ml/dataset.csv
+
+# python
+__pycache__/
+*.pyc

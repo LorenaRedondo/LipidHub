@@ -7,6 +7,9 @@ import {
   compare, findGaps, getSpecies, identifyByMz, listClasses, search,
 } from '../src/lib/service'
 import { enrichWithLmsd } from '../src/lib/lmsd'
+import predData from '../src/data/predictions.json'
+
+const PRED = predData as unknown as { model_version: string; unit: Record<string, string>; predictions: Record<string, { ccs: { v: number; lo: number; hi: number }; rt: { v: number; lo: number; hi: number } }> }
 
 const app = new Hono()
 app.use('/*', cors())
@@ -27,6 +30,7 @@ app.get('/', (c) =>
       'GET /identify?mz=760.585&ppm=10&adduct=[M+H]+',
       'GET /compare?ids=PC-34-1,MGDG-34-2',
       'GET /gaps?class=PC&limit=50',
+      'GET /predict/:id             (ML CCS/RT with 90% uncertainty intervals)',
     ],
   }),
 )
@@ -87,6 +91,14 @@ app.get('/compare', (c) => {
 })
 
 app.get('/gaps', (c) => c.json({ gaps: findGaps(c.req.query('class'), num(c.req.query('limit')) ?? 50) }))
+
+// ML property predictions with calibrated uncertainty (from ml/train.py)
+app.get('/predict/:id', (c) => {
+  const p = PRED.predictions[c.req.param('id')]
+  if (!p) return c.json({ error: 'no prediction for this id', hint: 'only plausible enumerated species are precomputed' }, 404)
+  return c.json({ id: c.req.param('id'), model_version: PRED.model_version, method: 'predicted', units: PRED.unit,
+    ccs: p.ccs, rt: p.rt, note: 'demo model trained on synthetic targets (issue #33); 90% conformal intervals' })
+})
 
 const port = Number(process.env.API_PORT) || 8787
 serve({ fetch: app.fetch, port }, (info) => {

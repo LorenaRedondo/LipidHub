@@ -9,6 +9,9 @@ import {
   compare, findGaps, getSpecies, identifyByMz, listClasses, search,
 } from '../src/lib/service'
 import { enrichWithLmsd } from '../src/lib/lmsd'
+import predData from '../src/data/predictions.json'
+
+const PRED = predData as unknown as { model_version: string; predictions: Record<string, unknown> }
 
 const server = new McpServer({ name: 'lipidex', version: '0.1.0' })
 
@@ -76,6 +79,20 @@ server.registerTool(
     inputSchema: { ids: z.array(z.string()).describe('species ids, e.g. ["PC-34-1","MGDG-34-2"]') },
   },
   async ({ ids }) => json({ species: compare(ids) }),
+)
+
+server.registerTool(
+  'predict_properties',
+  {
+    title: 'Predict CCS & RT with uncertainty',
+    description: 'Return ML-predicted collision cross-section (CCS) and retention time (RT) for a species, each with a 90% calibrated uncertainty interval and the model version. Precomputed by the property engine.',
+    inputSchema: { id: z.string().describe('species id, e.g. PC-34-1') },
+  },
+  async ({ id }) => {
+    const p = PRED.predictions[id]
+    return p ? json({ id, model_version: PRED.model_version, method: 'predicted', ...p, note: '90% conformal intervals; demo model (issue #33)' })
+      : json({ error: 'no prediction for this id (only plausible enumerated species are precomputed)' })
+  },
 )
 
 server.registerTool(

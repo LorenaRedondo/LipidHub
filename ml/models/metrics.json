@@ -1,0 +1,28 @@
+{
+  "model_version": "demo-gbm-0.1",
+  "n_species": 1673,
+  "features": [
+    "mass",
+    "carbons",
+    "dbonds",
+    "mean_chain",
+    "unsat_index",
+    "packing",
+    "hg_zwitterionic",
+    "hg_anionic",
+    "hg_neutral"
+  ],
+  "note": "Trained on physics-shaped SYNTHETIC targets for the demo. Swap in AllCCS/METLIN-CCS + RT libraries for production.",
+  "ccs": {
+    "mae": 2.657,
+    "r2": 0.994,
+    "coverage": 0.899,
+    "ci_halfwidth": 5.703
+  },
+  "rt": {
+    "mae": 0.341,
+    "r2": 0.989,
+    "coverage": 0.899,
+    "ci_halfwidth": 0.725
+  }
+}
