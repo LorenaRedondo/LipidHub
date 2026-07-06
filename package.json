@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:seo": "npm run build && tsx scripts/prerender-species.ts",
+    "prerender": "tsx scripts/prerender-species.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "validate:smiles": "tsx scripts/validate-smiles.ts",

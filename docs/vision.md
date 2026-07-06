@@ -62,7 +62,12 @@ Deferred to v2+:
 1. **A canonical, linkable, indexable page per species.** `/{species}` → structure,
    real-vs-predicted properties with error bars, biology, pathway, LM ID/xrefs, literature,
    cite/download. 1M indexable pages ⇒ we're the top Google result for "PC 34:1 CCS". This is
-   how PubChem/UniProt became reflexes. (Needs SSR/prerender for real SEO.)
+   how PubChem/UniProt became reflexes.
+   - *Interactive:* `#/species/PC-34-1` in the SPA.
+   - *Crawlable:* `npm run build:seo` prerenders standalone static HTML per curated species
+     (`dist/s/<id>.html`) with `<title>`, meta description, **JSON-LD `ChemicalSubstance`**,
+     OpenGraph, canonical link, and full server-rendered content — plus `dist/sitemap.xml`.
+     Production: extend to on-demand SSR for the full enumerated space + path-based routing.
 2. **Open → citations → infrastructure.** Whatever everyone integrates with becomes the standard.
 3. **Freshness by auto-ingest.** More current & better-integrated than any single source.
 4. **Be a dependency, not a website.** R/Python packages, MCP/agents, plugins into MS-DIAL /
