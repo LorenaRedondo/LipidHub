@@ -54,18 +54,23 @@ app.get('/lmsd/:id', async (c) => {
 
 app.get('/search', (c) => {
   const q = c.req.query()
-  return c.json(
-    search({
-      q: q.q, group: q.group, kingdom: q.kingdom,
-      massMin: num(q.massMin), massMax: num(q.massMax),
-      carbonsMin: num(q.carbonsMin), carbonsMax: num(q.carbonsMax),
-      dbMin: num(q.dbMin), dbMax: num(q.dbMax),
-      origin: q.origin as 'curated' | 'in_silico' | undefined,
-      minBiosynthetic: num(q.minBiosynthetic), maxSaScore: num(q.maxSaScore),
-      includeRare: q.includeRare === 'true',
-      page: num(q.page), pageSize: num(q.pageSize),
-    }),
-  )
+  const params = {
+    q: q.q, group: q.group, kingdom: q.kingdom,
+    massMin: num(q.massMin), massMax: num(q.massMax),
+    carbonsMin: num(q.carbonsMin), carbonsMax: num(q.carbonsMax),
+    dbMin: num(q.dbMin), dbMax: num(q.dbMax),
+    origin: q.origin as 'curated' | 'in_silico' | undefined,
+    minBiosynthetic: num(q.minBiosynthetic), maxSaScore: num(q.maxSaScore),
+    includeRare: q.includeRare === 'true',
+    page: num(q.page), pageSize: q.format === 'csv' ? 5000 : num(q.pageSize),
+  }
+  const res = search(params)
+  if (q.format === 'csv') {
+    const head = 'id,shorthand,group,formula,exact_mass,ccs_pred,rt_pred,logp,origin,biosynthetic,sascore'
+    const rows = res.results.map((r) => [r.id, r.shorthand, r.class.group, r.formula, r.exactMass, r.properties.ccs, r.properties.rt, r.properties.logP, r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore].join(','))
+    return c.body([head, ...rows].join('\n'), 200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lipidex-search.csv"' })
+  }
+  return c.json(res)
 })
 
 app.get('/identify', (c) => {

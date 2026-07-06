@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { GROUPS, KINGDOMS, type Kingdom } from '../lib/lipids'
 import { search, type SearchParams } from '../lib/service'
+import { downloadCSV } from '../lib/download'
 
 const PAGE = 25
 
@@ -33,6 +34,13 @@ export default function SearchView({ onOpen }: Props) {
   const filterKey = JSON.stringify({ ...params, page: 0 })
   const result = useMemo(() => search({ ...JSON.parse(filterKey), page, pageSize: PAGE }), [filterKey, page])
   const pages = Math.max(1, Math.ceil(result.total / PAGE))
+
+  function exportCsv() {
+    const all = search({ ...JSON.parse(filterKey), page: 1, pageSize: 5000 }).results
+    downloadCSV('lipidex-search.csv',
+      ['id', 'shorthand', 'group', 'category', 'formula', 'exact_mass', 'ccs_pred', 'rt_pred', 'logp', 'tm', 'origin', 'biosynthetic', 'sascore', 'kingdoms'],
+      all.map((r) => [r.id, r.shorthand, r.class.group, r.class.category, r.formula, r.exactMass, r.properties.ccs, r.properties.rt, r.properties.logP, r.properties.tm ?? '', r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore, r.class.kingdoms.join('|')]))
+  }
 
   function reset() {
     setQ(''); setGroup(''); setKingdom(''); setOrigin(''); setMassMin(''); setMassMax('')
@@ -105,6 +113,7 @@ export default function SearchView({ onOpen }: Props) {
         <div className="srch-count">
           <b className="num">{result.total.toLocaleString()}</b> species match
           <span className="an-sub"> · showing {result.results.length ? (page - 1) * PAGE + 1 : 0}–{(page - 1) * PAGE + result.results.length}</span>
+          {result.total > 0 && <button className="dl-link" onClick={exportCsv}>download CSV ↓</button>}
         </div>
 
         <div className="cmp-scroll">

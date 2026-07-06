@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { identifyByMz } from '../lib/service'
+import { downloadCSV } from '../lib/download'
 
 interface Props { onOpen: (clsK: string, c: number, d: number) => void }
 
@@ -72,6 +73,11 @@ export default function IdentifyView({ onOpen }: Props) {
         <div className="srch-count">
           <b className="num">{results.length}</b> candidate{results.length === 1 ? '' : 's'} within tolerance
           {isobaric && <span className="an-sub"> · isobaric — use CCS/RT to disambiguate</span>}
+          {results.length > 0 && (
+            <button className="dl-link" onClick={() => downloadCSV('lipidex-identify.csv',
+              ['shorthand', 'formula', 'adduct', 'adduct_mz', 'error_ppm', 'ccs_pred', 'rt_pred', 'origin', 'confidence'],
+              results.map(({ cand, s }) => [cand.record.shorthand, cand.record.formula, cand.adduct, cand.adductMz.toFixed(4), cand.errorPpm.toFixed(2), cand.record.properties.ccs, cand.record.properties.rt, cand.record.origin, s.conf]))}>download CSV ↓</button>
+          )}
         </div>
 
         <div className="cmp-scroll">

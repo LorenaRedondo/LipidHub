@@ -2,6 +2,7 @@ import { Fragment, useEffect } from 'react'
 import { findClass, isomer } from '../lib/lipids'
 import { getSpecies } from '../lib/service'
 import { useLmsdStructure } from '../lib/lmsdStructures'
+import { downloadJSON, downloadSVG } from '../lib/download'
 import Structure from './Structure'
 
 /** A canonical, shareable, indexable page for one species — the growth engine. */
@@ -34,12 +35,7 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   const iso = isomer(cls, c, d)
   const adductRows = Object.entries(rec.adducts)
 
-  function download() {
-    const blob = new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `${rec!.id}.json`; a.click()
-    URL.revokeObjectURL(url)
-  }
+  const downloadStructure = () => downloadSVG(`${rec!.id}.svg`, document.querySelector('.sp-struct .struct-canvas svg'))
   const cite = `LIPIDEX. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}Retrieved from lipidex, ${location.origin}/#/species/${rec.id}`
 
   return (
@@ -108,7 +104,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
               <div className="k">API</div><div className="v" style={{ fontSize: 11 }}>GET /species/{rec.id}</div>
             </div>
             <div className="sp-actions">
-              <button className="cta ghost" onClick={download}>Download JSON</button>
+              <button className="cta ghost" onClick={() => downloadJSON(`${rec.id}.json`, rec)}>Download JSON</button>
+              <button className="cta ghost" onClick={downloadStructure}>Structure SVG</button>
               <button className="cta ghost" onClick={() => navigator.clipboard?.writeText(cite)}>Copy citation</button>
               <a className="cta ghost" href={rec.literatureSearch} target="_blank" rel="noreferrer">Literature ↗</a>
             </div>
