@@ -4,6 +4,7 @@ import { getSpecies } from '../lib/service'
 import { useLmsdStructure } from '../lib/lmsdStructures'
 import { downloadJSON, downloadSVG } from '../lib/download'
 import Structure from './Structure'
+import PredictionCard from './PredictionCard'
 
 /** A canonical, shareable, indexable page for one species — the growth engine. */
 export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => void }) {
@@ -71,6 +72,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
               <div className="k">Diagnostic fragment</div><div className="v" style={{ fontSize: 12 }}>{rec.msmsHeadgroup.label}</div>
             </div>
           </div>
+
+          <PredictionCard cls={cls} c={c} d={d} />
 
           <div className="sp-card">
             <h3>Physical &amp; synthesizability</h3>

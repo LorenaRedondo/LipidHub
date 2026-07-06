@@ -432,3 +432,9 @@
   .dl-link{margin-left:14px;font-family:var(--mono);font-size:11px;color:var(--cyan);background:none;
     border:none;letter-spacing:.03em;cursor:pointer;padding:2px 4px}
   .dl-link:hover{text-decoration:underline}
+
+  /* ===== prediction card (v11) ===== */
+  .pred-model{margin-left:auto;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:10px;
+    border:1px solid var(--cyan-dim);color:var(--cyan);letter-spacing:.03em}
+  .sp-card h3{display:flex;align-items:center}
+  .ci{font-family:var(--mono);font-size:11px;color:var(--faint)}

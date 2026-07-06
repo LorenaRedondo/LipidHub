@@ -29,6 +29,9 @@ console.log('find_gaps SM ->', gaps.gaps.map((g: { shorthand: string }) => g.sho
 const lmsd = await call('check_lmsd', { id: 'PC-34-1' })
 console.log('check_lmsd PC-34-1 -> inLMSD', lmsd.lmsd.inLMSD, '| LM IDs', lmsd.lmsd.lmIds.slice(0, 2).join(', '), '|', lmsd.lmsd.classification?.subClass)
 
+const pp = await call('predict_properties', { id: 'PC-34-1' })
+console.log('predict_properties PC-34-1 ->', pp.model_version, '| CCS', pp.ccs.v, `[${pp.ccs.lo}-${pp.ccs.hi}]`, '| RT', pp.rt.v)
+
 await client.close()
 console.log('\n✓ MCP server responds correctly over stdio')
 process.exit(0)
