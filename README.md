@@ -38,6 +38,9 @@ Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
   deep-linkable (`#PC-34-1`). The "View as…" presets reorder the inspector per audience.
 - **Compare tab** — pin up to four species (`+ compare` in the inspector) and line their
   properties up side by side.
+- **Analytics tab** — every plausible species as one point: a property **correlation
+  matrix** (Pearson r), an interactive **scatter** for any property pair, and **k-means
+  clustering** that groups species by their whole property profile.
 - **References tab** — foundational papers the atlas is built on, plus a live Europe PMC
   search per class.
 - **Pipeline tab** — the data architecture (Ingest → Reconcile → Enumerate → Infer →

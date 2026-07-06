@@ -5,6 +5,7 @@ import AtlasView from './components/AtlasView'
 import PipelineView from './components/PipelineView'
 import UsersView from './components/UsersView'
 import CompareView from './components/CompareView'
+import AnalyticsView from './components/AnalyticsView'
 import ReferencesView from './components/ReferencesView'
 
 export interface Cell { c: number; d: number }
@@ -88,6 +89,7 @@ export default function App() {
         />
       )}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
+      {view === 'analytics' && <AnalyticsView />}
       {view === 'refs' && <ReferencesView />}
       {view === 'pipe' && <PipelineView />}
       {view === 'users' && <UsersView />}
