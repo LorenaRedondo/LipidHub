@@ -1,3 +1,8 @@
+# dependencies / build
+node_modules/
+dist/
+*.local
+
 # OS / editor
 .DS_Store
 *.swp
@@ -11,3 +16,6 @@
 /data/
 *.sdf
 *.parquet
+
+# TS incremental build info
+*.tsbuildinfo
