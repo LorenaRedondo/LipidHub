@@ -31,3 +31,6 @@ db/lipidex.sqlite*
 # python
 __pycache__/
 *.pyc
+ml/.venv/
+mlruns/
+mlartifacts/

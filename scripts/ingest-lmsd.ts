@@ -16,9 +16,26 @@ if (!SDF || !fs.existsSync(SDF)) {
   process.exit(1)
 }
 
-// our 17 classes; sphingolipids carry LMSD's ";O2" hydroxyl suffix
+// our classes; some carry an LMSD hydroxyl/oxygen-count suffix instead of a plain "c:d".
+// sphingolipids always use ";O2"; free sterols use ";O" (native 3-OH) and oxysterols use
+// ";O2" too — but LMSD's own token for BOTH is "ST", so we disambiguate our two classes
+// (ST vs OxST) purely by which suffix a given "ST c:d;..." record carries.
 const SPHINGO = new Set(['Cer', 'SM', 'HexCer'])
-const OURS = new Set(['PC', 'PE', 'PS', 'PG', 'PI', 'PA', 'LPC', 'LPE', 'DG', 'TG', 'MGDG', 'DGDG', 'SQDG', 'Cer', 'SM', 'HexCer', 'CE', 'FA', 'CL', 'CAR'])
+const OURS = new Set(['PC', 'PE', 'PS', 'PG', 'PI', 'PA', 'LPC', 'LPE', 'DG', 'TG', 'MGDG', 'DGDG', 'SQDG', 'Cer', 'SM', 'HexCer', 'CE', 'FA', 'CL', 'CAR', 'ST', 'OxST'])
+
+/** Map an LMSD abbreviation token to our app class code + resolve its "c:d" suffix. */
+function resolveToken(lmToken: string, rest: string): { appClass: string; cd: string } | null {
+  if (SPHINGO.has(lmToken)) {
+    return rest.endsWith(';O2') ? { appClass: lmToken, cd: rest.slice(0, -3) } : null
+  }
+  if (lmToken === 'ST') {
+    if (rest.endsWith(';O2')) return { appClass: 'OxST', cd: rest.slice(0, -3) }
+    if (rest.endsWith(';O')) return { appClass: 'ST', cd: rest.slice(0, -2) }
+    return null
+  }
+  if (rest.includes(';') || rest.includes('-') || rest.includes('O')) return null // skip ether/oxidised variants
+  return OURS.has(lmToken) ? { appClass: lmToken, cd: rest } : null
+}
 
 interface ClassEntry { core?: string; mainClass?: string; comps: Record<string, number>; curatedCount: number }
 const classes: Record<string, ClassEntry> = {}
@@ -34,25 +51,18 @@ function commit() {
   if (!abbrev) return
   const sp = abbrev.indexOf(' ')
   if (sp < 0) return
-  const token = abbrev.slice(0, sp)
-  if (!OURS.has(token)) return
+  const lmToken = abbrev.slice(0, sp)
   const rest = abbrev.slice(sp + 1)
-  const isSphingo = SPHINGO.has(token)
-  let cd: string
-  if (isSphingo) {
-    if (!rest.endsWith(';O2')) return
-    cd = rest.slice(0, -3)
-  } else {
-    if (rest.includes(';') || rest.includes('-') || rest.includes('O')) return // skip ether/oxidised variants
-    cd = rest
-  }
+  const resolved = resolveToken(lmToken, rest)
+  if (!resolved) return
+  const { appClass, cd } = resolved
   if (!/^\d+:\d+$/.test(cd)) return
-  const e = (classes[token] ??= { comps: {}, curatedCount: 0 })
+  const e = (classes[appClass] ??= { comps: {}, curatedCount: 0 })
   if (!e.comps[cd]) e.curatedCount++
   e.comps[cd] = (e.comps[cd] || 0) + 1
   if (!e.core && category) { e.core = category; e.mainClass = mainClass }
 
-  const id = `${token}-${cd.replace(':', '-')}`
+  const id = `${appClass}-${cd.replace(':', '-')}`
   if (lmId && smiles && !structures[id]) structures[id] = { lmId, inchikey, smiles } // first-wins
 }
 

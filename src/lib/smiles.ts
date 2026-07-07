@@ -65,6 +65,12 @@ export function toSmiles(cls: LipidClass, c: number, d: number): string | null {
 
   if (kind === 'sterolester') return CHOL(`OC(=O)${alkyl(c - 1, d)}`)
 
+  // free sterols/oxysterols: no acyl chain, so there's no combinatorial rule to build a
+  // structure from composition alone (unlike every other kind here). Real structures come
+  // from the LMSD-ingested lmsdStructures.json for curated cells; gaps fall back to the
+  // cartoon in Structure.tsx rather than a fabricated ring system.
+  if (kind === 'sterol') return null
+
   if (kind === 'sphingo') {
     const [[, bDB], [na, nd]] = iso // [base, N-acyl]
     const sn1 =

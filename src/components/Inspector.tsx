@@ -89,10 +89,11 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
   )
 
   const secMSMS = (
-    <Section title="Predicted MS/MS" tag="most abundant isomer">
+    <Section title="Predicted MS/MS" tag={cls.kind === 'sterol' ? 'fixed structure' : 'most abundant isomer'}>
       <p className="note" style={{ margin: '-4px 0 10px' }}>
-        Diagnostic fragments for the likely isomer <b>{iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')}</b>.
-        Sum composition alone can't fix sn-position — flagged, not hidden.
+        {cls.kind === 'sterol'
+          ? <>The ring system's carbon:double-bond count fixes a single real structure — no sn-position or chain-split ambiguity to flag here.</>
+          : <>Diagnostic fragments for the likely isomer <b>{iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')}</b>. Sum composition alone can't fix sn-position — flagged, not hidden.</>}
       </p>
       <div className="frag">
         <span className="lab">{cls.hgFrag.lab}</span>
@@ -109,6 +110,11 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
             <span className="mz">{faFragment(iso[1][0], iso[1][1]).toFixed(4)}</span>
           </div>
         </>
+      ) : cls.kind === 'sterol' ? (
+        <p className="note" style={{ margin: '4px 0 0' }}>
+          No acyl chain to fragment — the ring system's dehydration ion above is the
+          characteristic diagnostic fragment for free sterols/oxysterols.
+        </p>
       ) : (
         iso.map((ch, i) => (
           <div className="frag" key={i}>

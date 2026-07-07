@@ -298,6 +298,9 @@
     display:flex;align-items:center;justify-content:center;min-height:120px}
   .struct-canvas svg{max-width:100%;height:auto;display:block}
   .struct-cap{font-family:var(--mono);font-size:10px;color:var(--faint);line-height:1.5}
+  .struct-placeholder{border:1px dashed var(--line2);border-radius:8px;padding:20px 16px;
+    min-height:88px;display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:12px;color:var(--faint);line-height:1.5}
 
   /* ===== analytics (v5) ===== */
   .an-grid{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(0,1.05fr);gap:18px;margin-bottom:22px}
