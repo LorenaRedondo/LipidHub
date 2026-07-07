@@ -28,7 +28,8 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 - `check_lmsd({ id })` — verify a species against the **LIPID MAPS Structure Database** (the
   authoritative reference): returns `inLMSD`, real LM IDs, and the official classification.
 - `check_pathway({ classK })` — live-verify a class's declared enzymes (UniProt) and reaction
-  (Rhea): confirms the biosynthetic pathway is real, not assumed.
+  (Rhea), and discover the real, complete enzyme set + substrate/product names UniProt/Rhea
+  report for that reaction — grounded biology, not our own guess.
 - `find_lab_only({ limit? })` — the "valuable quadrant": high chemical accessibility (low
   SAScore), low biosynthetic accessibility — lab-makeable lipids nature doesn't produce.
 

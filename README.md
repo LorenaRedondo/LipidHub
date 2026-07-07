@@ -91,7 +91,8 @@ measure.
 | Formula & exact mass | ✅ computed exactly from backbone + acyl chains | same |
 | Adduct m/z | ✅ computed | same |
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
-| Synthesizability | ✅ chemical: real RDKit SAScore. ✅ biosynthetic: live UniProt/Rhea pathway verification × composition heuristic. ⚠️ frontend still shows the heuristic (server/API/MCP only, see `docs/api.md`). | retrosynthesis route (e.g. AiZynthFinder) |
+| Synthesizability | ✅ chemical: real RDKit SAScore. ✅ biosynthetic: live UniProt/Rhea pathway verification × composition heuristic. ⚠️ frontend still shows the heuristic scores (server/API/MCP only, see `docs/api.md`). | retrosynthesis route (e.g. AiZynthFinder) |
+| Origin & pathway graph | ✅ real — enzymes discovered from UniProt's catalytic-activity annotations per Rhea reaction (not SwissLipids, see `docs/architecture.md` §04); shown in the Inspector | per-species (not per-class) enzyme specificity |
 | Known vs. gap status | ✅ real — ingested from LMSD (50,516 structures) | full structures/InChIKeys too |
 | Classes | 20 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |

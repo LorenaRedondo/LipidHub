@@ -127,7 +127,7 @@ server.registerTool(
   'check_pathway',
   {
     title: 'Verify a class\'s biosynthetic pathway',
-    description: 'Live-check a lipid class\'s declared enzymes (UniProt, reviewed human genes) and reaction (Rhea, approved + balanced). Grounds the biosynthetic accessibility score in real pathway data rather than a fabricated guess.',
+    description: 'Live-check a lipid class\'s declared enzymes (UniProt, reviewed human genes) and reaction (Rhea, approved + balanced), and discover the real, complete enzyme set UniProt annotates for that reaction plus its real substrate/product names — not just a verification of a hand-picked guess (#5).',
     inputSchema: { classK: z.string().describe('class code, e.g. PC, MGDG, SM') },
   },
   async ({ classK }) => {

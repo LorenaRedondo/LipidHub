@@ -141,29 +141,59 @@ const overlaySa = db.transaction(() => {
 })
 overlaySa()
 
-// ── overlay: live UniProt/Rhea pathway verification scales bio_score (#4) ──
-// Best-effort: if UniProt is unreachable (offline build), every class's bio_score
-// stays the heuristic-only fallback already inserted above.
+// ── overlay: live UniProt/Rhea pathway verification scales bio_score (#4) and
+// populates the `pathway` table + src/data/pathwayGraph.json with the real,
+// discovered enzyme/reaction graph (#5) — not the hand-picked cls.enz/rhea.
+// Best-effort: if UniProt is unreachable (offline build), bio_score stays the
+// heuristic-only fallback and pathwayGraph.json is left untouched.
 const updateBio = db.prepare(`UPDATE synth SET bio_score = ?, bio_method = 'calculated', bio_model_version = 'pathway-verified-v1' WHERE species_id = ?`)
+const insertPathway = db.prepare(
+  `INSERT INTO pathway (species_id, enzyme_uniprot, rhea_rxn, direction, source)
+   VALUES (@species_id, @enzyme_uniprot, @rhea_rxn, NULL, 'UniProt (Swiss-Prot) + Rhea, live, precomputed at db:build (#5)')`,
+)
 let classesVerified = 0
+let pathwayRows = 0
+const PATHWAY_GRAPH_MODEL_VERSION = 'uniprot-rhea-live-v1'
+const pathwayGraph: Record<string, {
+  rheaId: string
+  equation?: string
+  enzymes: { accession: string; gene?: string; proteinName?: string }[]
+  substrates: { chebiId: string; name: string }[]
+  products: { chebiId: string; name: string }[]
+}> = {}
+
 const live = (await verifyEnzyme('INS')).found // probe with a gene guaranteed to exist
 if (live) {
   for (const cls of CLASSES) {
     const v = await verifyPathway(cls)
     if (v.confidence <= 0) continue // no verified signal for this class; leave heuristic fallback
     classesVerified++
+    pathwayGraph[cls.k] = {
+      rheaId: cls.rhea, equation: v.reaction.equation,
+      enzymes: v.discoveredEnzymes, substrates: v.substrates, products: v.products,
+    }
+
     const [lo, hi] = cls.cRange
     const updateClass = db.transaction(() => {
       for (let c = lo; c <= hi; c++) {
         for (let d = 0; d <= dMaxOf(cls); d++) {
-          updateBio.run(Math.round(bioAttainability(cls, c, d) * v.confidence), `${cls.k}-${c}-${d}`)
+          const id = `${cls.k}-${c}-${d}`
+          updateBio.run(Math.round(bioAttainability(cls, c, d) * v.confidence), id)
+          for (const enz of v.discoveredEnzymes) {
+            insertPathway.run({ species_id: id, enzyme_uniprot: enz.accession, rhea_rxn: cls.rhea })
+            pathwayRows++
+          }
         }
       }
     })
     updateClass()
   }
+  fs.writeFileSync(
+    path.join(HERE, '../src/data/pathwayGraph.json'),
+    JSON.stringify({ model_version: PATHWAY_GRAPH_MODEL_VERSION, method: 'calculated', classes: pathwayGraph }),
+  )
 } else {
-  console.warn('  pathway verification: UniProt unreachable — bio_score stays heuristic-only')
+  console.warn('  pathway verification: UniProt unreachable — bio_score stays heuristic-only, pathwayGraph.json left untouched')
 }
 
 db.close()
@@ -174,4 +204,5 @@ console.log(`  species:              ${speciesCount}  (curated ${curatedCount} /
 console.log(`  ML predictions:       ${predictionsOverlaid} species (ccs+rt replaced; model ${PRED.model_version})`)
 console.log(`  SAScore (RDKit):      ${saOverlaid} species (chem_sascore replaced; model ${SYNTH.model_version})`)
 console.log(`  Pathway verification: ${live ? `${classesVerified}/${CLASSES.length} classes verified (bio_score scaled)` : 'skipped (offline)'}`)
+console.log(`  Pathway graph (#5):   ${live ? `${pathwayRows} pathway rows, ${Object.values(pathwayGraph).reduce((n, c) => n + c.enzymes.length, 0)} distinct enzyme links across ${classesVerified} classes` : 'skipped (offline)'}`)
 console.log(`  LMSD structures:      ${structuresOverlaid} species (smiles/inchikey/lm_id + xref)`)

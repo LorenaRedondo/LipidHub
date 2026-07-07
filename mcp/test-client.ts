@@ -34,6 +34,8 @@ console.log('predict_properties PC-34-1 ->', pp.model_version, '| CCS', pp.ccs.v
 
 const pathway = await call('check_pathway', { classK: 'PC' })
 console.log('check_pathway PC -> confidence', pathway.confidence, '| enzymes found', pathway.enzymes.filter((e: { found: boolean }) => e.found).length, '/', pathway.enzymes.length, '| reaction', pathway.reaction.found, pathway.reaction.approved, pathway.reaction.balanced)
+console.log('  discovered enzymes ->', pathway.discoveredEnzymes.map((e: { gene?: string }) => e.gene).join(', '))
+console.log('  substrates ->', pathway.substrates.map((p: { name: string }) => p.name).join(' + '), '-> products ->', pathway.products.map((p: { name: string }) => p.name).join(' + '))
 
 const labOnly = await call('find_lab_only', { limit: 3 })
 console.log('find_lab_only ->', labOnly.species.map((s: { shorthand: string; synthesizability: { saScore: number; biosynthetic: number } }) => `${s.shorthand} (sa=${s.synthesizability.saScore}, bio=${s.synthesizability.biosynthetic})`).join(' | '))

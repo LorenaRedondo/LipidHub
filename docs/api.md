@@ -30,7 +30,7 @@ npm run api        # http://localhost:8787  (API_PORT to override)
 | `GET /gaps?class=SM&limit=50` | in-silico-only "gap" species |
 | `GET /lmsd/:id` | **live LIPID MAPS verification** — real LM IDs + classification |
 | `GET /species/:id?lmsd=1` | species record enriched with LMSD verification |
-| `GET /pathway/:class` | **live UniProt/Rhea verification** of a class's enzymes + reaction |
+| `GET /pathway/:class` | **live UniProt/Rhea verification** + the real discovered enzyme set and reaction participants (#5) |
 | `GET /lab-only?limit=50` | the "valuable quadrant" — high chemical, low biosynthetic accessibility |
 | `GET /predict/:id` | ML CCS/RT with 90% uncertainty intervals |
 

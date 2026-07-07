@@ -13,8 +13,8 @@ flows left to right; every stored value knows how it was produced.
 |---|---|---|
 | LIPID MAPS **LMSD** | ~48k curated known species, structures, classification | bulk SDF, REST |
 | LIPID MAPS **LMISSD / COMP_DB** | ~1.1M in-silico enumerated species | bulk |
-| **SwissLipids** | lipid ↔ enzyme ↔ reaction ↔ pathway | SPARQL, bulk |
-| **Rhea** + **UniProt** | reaction definitions, enzyme accessions | API |
+| ~~SwissLipids~~ | lipid ↔ enzyme ↔ reaction ↔ pathway | not viable — undocumented private API (see #5) |
+| **Rhea** + **UniProt** | reaction definitions, real discovered enzyme accessions | REST, live (see #4/#5) |
 | **HMDB**, **ChEBI** | biological/clinical context, ontology | bulk, API |
 
 ## 02 · Reconcile — normalize & dedup
@@ -71,9 +71,34 @@ The valuable quadrant is **high chemical, low biosynthetic** — lab-accessible 
 nature doesn't make (e.g. novel LNP components); surfaced via `GET /lab-only` and the
 `find_lab_only` MCP tool.
 
-This lands server-side only (REST + MCP + the SQLite store) — the frontend's Atlas/
-Compare/Analytics views still call the client-side heuristic `synth()` directly, same
-scope boundary as the SQLite store below.
+The synthesizability *scores* land server-side only (REST + MCP + the SQLite store) —
+the frontend's Atlas/Compare/Analytics views still call the client-side heuristic
+`synth()` directly. The *pathway graph* (below) is the exception: it's precomputed at
+build time into a committed JSON artifact, so the Inspector shows it too.
+
+### Origin & pathway graph (#5)
+
+Real enzyme/reaction links, not the hand-authored `LipidClass.enz`/`.rhea`/`.pw` prose.
+SwissLipids turned out not to be viable (its REST API is an undocumented Angular-app
+backend with no public schema) — UniProt + Rhea, already integrated for synthesizability
+above, cover this better:
+
+- `discoverEnzymes()` (`src/lib/pathway.ts`) queries UniProt's `cc_catalytic_activity:
+  "RHEA:{id}"` — every reviewed human enzyme UniProt itself annotates as catalyzing that
+  reaction. This *discovers* the real enzyme set (e.g. PC's reaction resolves to 7 real
+  enzymes — `LPCAT1-4`, `MBOAT1/2`, and `PRDX6`, a documented moonlighting LPCAT
+  activity), rather than only verifying our hand-picked 3-gene guess.
+- `reactionParticipants()` parses Rhea's `htmlequation` for real ChEBI substrate/product
+  names — not our paraphrased pathway description.
+- `scripts/build-db.ts` populates the `pathway` table (one row per species × discovered
+  enzyme — the class-level fact replicated per species, same honest granularity as
+  `bio_score`) and writes `src/data/pathwayGraph.json`, which the Inspector's "Origin &
+  biosynthesis" section loads (lazy, code-split, same pattern as `predictions.json`) to
+  show the real enzymes + equation alongside the existing curated prose.
+- Reaction `direction` (which side is the biosynthetic product) is not determined — Rhea's
+  canonical orientation isn't necessarily the biosynthetic one; stored `null` rather than
+  guessed. True per-species enzyme specificity (e.g. which LPCAT isoform for which chain
+  length) isn't modeled either — the class-level reaction is the honest granularity here.
 
 ## 05 · Serve — access layer
 
@@ -115,9 +140,9 @@ TABLE property (
   source        text           -- DOI / DB accession
 );
 
-TABLE pathway (species_id, enzyme_uniprot, rhea_rxn, direction);
+TABLE pathway (species_id, enzyme_uniprot, rhea_rxn, direction);  -- populated: real UniProt/Rhea discovery (#5)
 TABLE synth   (species_id, bio_score, chem_sascore, route_json);
-TABLE xref    (species_id, db, accession);   -- LMSD, SwissLipids, HMDB…
+TABLE xref    (species_id, db, accession);   -- LMSD, HMDB… (SwissLipids not viable, see #5)
 ```
 
 ## Non-negotiables
