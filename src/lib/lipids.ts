@@ -297,14 +297,28 @@ export function props(cls: LipidClass, c: number, d: number): Props {
 }
 
 export interface Synth { bio: number; sa: number; chem: number }
-export function synth(cls: LipidClass, c: number, d: number): Synth {
+
+/**
+ * Composition-based biosynthetic attainability (0–100): does this sum
+ * composition sit within what a real enzyme's substrate preference would
+ * plausibly make, independent of whether the pathway itself exists? Odd
+ * chains, very long chains, and highly polyunsaturated compositions are
+ * penalized. Server-side, this is scaled by a live UniProt/Rhea pathway
+ * verification (src/lib/pathway.ts) to get the full biosynthetic score (#4).
+ */
+export function bioAttainability(cls: LipidClass, c: number, d: number): number {
   let bio = 90
   if (c % 2 !== 0) bio -= 45
   if (d > 4) bio -= (d - 4) * 14
   const perChain = c / cls.n
   if (perChain > 24) bio -= (perChain - 24) * 6
   if (perChain < 12) bio -= (12 - perChain) * 5
-  bio = Math.max(4, Math.min(97, Math.round(bio)))
+  return Math.max(4, Math.min(97, Math.round(bio)))
+}
+
+export function synth(cls: LipidClass, c: number, d: number): Synth {
+  const bio = bioAttainability(cls, c, d)
+  const perChain = c / cls.n
   let sa = 2.6 + d * 0.28 + (c % 2 !== 0 ? 0.4 : 0) + Math.max(0, perChain - 22) * 0.08
   if (cls.kind === 'glyco') sa += 0.6 // glycosidic + regiochem
   sa = Math.round(Math.min(8.6, sa) * 10) / 10

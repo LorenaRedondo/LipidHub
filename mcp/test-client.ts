@@ -32,6 +32,12 @@ console.log('check_lmsd PC-34-1 -> inLMSD', lmsd.lmsd.inLMSD, '| LM IDs', lmsd.l
 const pp = await call('predict_properties', { id: 'PC-34-1' })
 console.log('predict_properties PC-34-1 ->', pp.model_version, '| CCS', pp.ccs.v, `[${pp.ccs.lo}-${pp.ccs.hi}]`, '| RT', pp.rt.v)
 
+const pathway = await call('check_pathway', { classK: 'PC' })
+console.log('check_pathway PC -> confidence', pathway.confidence, '| enzymes found', pathway.enzymes.filter((e: { found: boolean }) => e.found).length, '/', pathway.enzymes.length, '| reaction', pathway.reaction.found, pathway.reaction.approved, pathway.reaction.balanced)
+
+const labOnly = await call('find_lab_only', { limit: 3 })
+console.log('find_lab_only ->', labOnly.species.map((s: { shorthand: string; synthesizability: { saScore: number; biosynthetic: number } }) => `${s.shorthand} (sa=${s.synthesizability.saScore}, bio=${s.synthesizability.biosynthetic})`).join(' | '))
+
 await client.close()
 console.log('\n✓ MCP server responds correctly over stdio')
 process.exit(0)

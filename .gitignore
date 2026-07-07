@@ -25,6 +25,9 @@ structures.sdf
 # ML generated dataset (regenerate via npm run export:dataset)
 ml/dataset.csv
 
+# SQLite dev store (regenerate via npm run db:build)
+db/lipidex.sqlite*
+
 # python
 __pycache__/
 *.pyc

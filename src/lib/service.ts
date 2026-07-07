@@ -18,7 +18,7 @@ export interface SpeciesRecord {
   exactMass: number
   adducts: Record<string, number>
   properties: { ccs: number; rt: number; logP: number; tm: number | null; note: string }
-  synthesizability: { biosynthetic: number; chemicalScore: number; saScore: number }
+  synthesizability: { biosynthetic: number; chemicalScore: number; saScore: number; note?: string }
   membrane: Membrane | null
   headgroupCharge: string
   origin: 'curated' | 'in_silico'
