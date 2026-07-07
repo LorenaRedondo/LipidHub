@@ -7,12 +7,7 @@ import {
 import { MAX_PINS, type Cell, type Pin } from '../App'
 import { useLmsdStructure } from '../lib/lmsdStructures'
 import Structure from './Structure'
-
-function Conf({ m }: { m: Method }) {
-  const cls = m === 'measured' ? 'meas' : m === 'calculated' ? 'calc' : 'pred'
-  const label = m === 'measured' ? 'meas' : m === 'calculated' ? 'calc' : 'pred'
-  return <span className={`conf ${cls}`}>{label}</span>
-}
+import ConfBadge, { ProvenanceLegend } from './ConfBadge'
 
 function KV({ k, v, u, m }: { k: ReactNode; v: ReactNode; u?: string; m?: Method }) {
   return (
@@ -21,7 +16,7 @@ function KV({ k, v, u, m }: { k: ReactNode; v: ReactNode; u?: string; m?: Method
       <div className="v">
         {v}
         {u && <span className="u"> {u}</span>}
-        {m && <Conf m={m} />}
+        {m && <ConfBadge m={m} />}
       </div>
     </>
   )
@@ -272,6 +267,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
       </div>
       <div className="schematic"><Structure cls={cls} c={c} d={d} iso={iso} /></div>
       <div className="tip"><b>{persona} view</b>{tips[persona]}</div>
+      <ProvenanceLegend />
       {sections[persona].map((node, i) => <div key={i}>{node}</div>)}
     </>
   )

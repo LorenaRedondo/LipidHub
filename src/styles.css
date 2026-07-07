@@ -102,9 +102,11 @@
   .cell{
     aspect-ratio:1;border-radius:3px;border:1px solid transparent;position:relative;
     background:var(--panel2);transition:transform .08s, box-shadow .08s;cursor:pointer;
+    appearance:none;padding:0;margin:0;font:inherit;display:block;width:100%;
   }
   .cell:hover{transform:scale(1.18);z-index:5;box-shadow:0 3px 12px rgba(0,0,0,.5)}
   .cell.sel{box-shadow:0 0 0 2px var(--cyan),0 4px 14px rgba(0,0,0,.55);transform:scale(1.12);z-index:6}
+  .cell:focus-visible{outline:2px solid var(--cyan);outline-offset:1px;z-index:7}
   .xlabels{display:grid;margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center}
   .xlabels span{overflow:hidden}
   .axis-x-title{text-align:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;margin-top:4px}
@@ -438,3 +440,10 @@
     border:1px solid var(--cyan-dim);color:var(--cyan);letter-spacing:.03em}
   .sp-card h3{display:flex;align-items:center}
   .ci{font-family:var(--mono);font-size:11px;color:var(--faint)}
+
+  /* ===== provenance legend + a11y (v12) ===== */
+  .prov-legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 22px;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.015);font-size:11.5px;color:var(--muted)}
+  .prov-legend-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .prov-legend span{display:flex;align-items:center;gap:5px}

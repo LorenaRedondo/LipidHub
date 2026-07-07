@@ -1,5 +1,6 @@
 import { usePredictions, predictionFor } from '../lib/predictions'
 import type { LipidClass } from '../lib/lipids'
+import ConfBadge from './ConfBadge'
 
 /**
  * ML property predictions with calibrated uncertainty (from ml/train.py), plus a
@@ -32,9 +33,9 @@ export default function PredictionCard({ cls, c, d }: { cls: LipidClass; c: numb
     <div className="sp-card">
       <h3>Predicted properties <span className="pred-model">{file.model_version}</span></h3>
       <div className="kv">
-        <div className="k">CCS <span className="conf pred">pred</span></div>
+        <div className="k">CCS <ConfBadge m="predicted" /></div>
         <div className="v">{pred.ccs.v} <span className="u">Å²</span> <span className="ci">[{pred.ccs.lo}–{pred.ccs.hi}]</span></div>
-        <div className="k">RT <span className="conf pred">pred</span></div>
+        <div className="k">RT <ConfBadge m="predicted" /></div>
         <div className="v">{pred.rt.v} <span className="u">min</span> <span className="ci">[{pred.rt.lo}–{pred.rt.hi}]</span></div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="predicted CCS vs chain length" style={{ marginTop: 6 }}>

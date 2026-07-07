@@ -15,13 +15,14 @@ export default function Rail({ cls, onSelectClass }: Props) {
     <aside className="rail">
       <div className="railgroup">
         <span className="eyebrow">Occurs in kingdom</span>
-        <div className="kchips">
-          <button className={'kchip' + (kingdom === null ? ' on' : '')} onClick={() => setKingdom(null)}>All</button>
+        <div className="kchips" role="group" aria-label="Filter classes by kingdom">
+          <button aria-pressed={kingdom === null} className={'kchip' + (kingdom === null ? ' on' : '')} onClick={() => setKingdom(null)}>All</button>
           {KINGDOMS.map((kg) => {
             const count = CLASSES.filter((c) => c.kingdoms.includes(kg)).length
             return (
               <button
                 key={kg}
+                aria-pressed={kingdom === kg}
                 className={'kchip' + (kingdom === kg ? ' on' : '') + (count === 0 ? ' empty' : '')}
                 onClick={() => setKingdom(kingdom === kg ? null : kg)}
                 disabled={count === 0}
@@ -45,6 +46,7 @@ export default function Rail({ cls, onSelectClass }: Props) {
               {members.map((cl) => (
                 <button
                   key={cl.k}
+                  aria-current={cl.k === cls.k ? 'true' : undefined}
                   className={'classbtn' + (cl.k === cls.k ? ' on' : '')}
                   onClick={() => onSelectClass(cl)}
                 >

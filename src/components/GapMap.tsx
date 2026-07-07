@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { fam, dMaxOf, likelihood, status, type LipidClass } from '../lib/lipids'
 import type { Cell } from '../App'
 
@@ -14,7 +14,18 @@ const FILL: Record<string, string> = {
   rare: 'var(--rare)',
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  known: 'curated in LIPID MAPS',
+  gap: 'predicted gap, uncatalogued',
+  rare: 'rare, unlikely composition',
+}
+
 export default function GapMap({ cls, sel, onSelect }: Props) {
+  const selRef = useRef<HTMLButtonElement>(null)
+  // roving-tabindex grid: move DOM focus to follow the selected cell (e.g. after
+  // arrow-key nav or a jump from Search/Identify) so keyboard users stay on it.
+  useEffect(() => { selRef.current?.focus() }, [sel?.c, sel?.d, cls.k])
+
   const [lo, hi] = cls.cRange
   const cols = useMemo(() => {
     const a: number[] = []
@@ -66,17 +77,23 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
             {rows.map((d) => <span key={d}>{d}</span>)}
           </div>
           <div className="gridcore">
-            <div className="grid" style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}>
+            <div className="grid" role="grid" aria-label={`${cls.name} composition map`} style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}>
               {rows.map((d) =>
                 cols.map((c) => {
                   const st = status(cls, c, d)
                   const lik = likelihood(cls, c, d)
                   const isSel = sel?.c === c && sel?.d === d
                   return (
-                    <div
+                    <button
                       key={`${c}-${d}`}
+                      ref={isSel ? selRef : undefined}
+                      type="button"
+                      role="gridcell"
                       className={'cell' + (isSel ? ' sel' : '')}
                       title={`${cls.k} ${fam(c, d)}`}
+                      aria-label={`${cls.k} ${fam(c, d)}, ${STATUS_LABEL[st]}`}
+                      aria-selected={isSel}
+                      tabIndex={isSel ? 0 : -1}
                       onClick={() => onSelect(c, d)}
                       style={{
                         background: FILL[st],
