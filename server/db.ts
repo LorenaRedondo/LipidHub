@@ -17,6 +17,11 @@ import {
 } from '../src/lib/lipids'
 import { toSmiles } from '../src/lib/smiles'
 import type { SearchParams, SpeciesRecord } from '../src/lib/service'
+import pathwayGraphData from '../src/data/pathwayGraph.json'
+
+const PATHWAY_GRAPH = (pathwayGraphData as unknown as {
+  classes: Record<string, { rheaId: string; equation?: string; enzymes: { accession: string; gene?: string; proteinName?: string }[] }>
+}).classes
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DB_PATH = process.env.LIPIDEX_DB ?? path.join(HERE, '../db/lipidex.sqlite')
@@ -42,6 +47,17 @@ function synthNote(row: SpeciesRow): string {
 }
 
 const propsForIdStmt = db.prepare(`SELECT key, value, model_version, ci_low, ci_high FROM property_best WHERE species_id = ?`)
+const pathwayForIdStmt = db.prepare(`SELECT enzyme_uniprot, rhea_rxn FROM pathway WHERE species_id = ?`)
+
+/** Real enzyme/reaction links for a species — the `pathway` table (#5), enzyme names resolved from pathwayGraph.json. */
+export function getPathwayLinks(speciesId: string, classCode: string): NonNullable<SpeciesRecord['pathway']> {
+  const rows = pathwayForIdStmt.all(speciesId) as { enzyme_uniprot: string; rhea_rxn: string }[]
+  const classGraph = PATHWAY_GRAPH[classCode]
+  return rows.map((r) => {
+    const enz = classGraph?.enzymes.find((e) => e.accession === r.enzyme_uniprot)
+    return { enzymeUniprot: r.enzyme_uniprot, gene: enz?.gene, proteinName: enz?.proteinName, rheaRxn: r.rhea_rxn, equation: classGraph?.equation }
+  })
+}
 
 /** Assemble the full SpeciesRecord contract from a DB row + its property_best rows. */
 function assembleRecord(row: SpeciesRow): SpeciesRecord {
@@ -51,6 +67,7 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
   const byKey = Object.fromEntries(propRows.map((p) => [p.key, p]))
   const ammon = prefersAmmonium(cls)
   const M = row.exact_mass
+  const pathway = getPathwayLinks(row.id, row.class_code)
 
   return {
     id: row.id,
@@ -81,6 +98,7 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
     smiles: toSmiles(cls, c, d),
     msmsHeadgroup: { label: cls.hgFrag.lab, mz: cls.hgFrag.mz },
     literatureSearch: pmcSearchUrl(cls),
+    pathway: pathway.length ? pathway : undefined,
   }
 }
 

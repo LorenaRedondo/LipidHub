@@ -6,6 +6,7 @@ import {
 } from '../lib/lipids'
 import { MAX_PINS, type Cell, type Pin } from '../App'
 import { useLmsdStructure } from '../lib/lmsdStructures'
+import { pathwayForClass, usePathwayGraph } from '../lib/pathwayGraph'
 import Structure from './Structure'
 import ConfBadge, { ProvenanceLegend } from './ConfBadge'
 
@@ -45,6 +46,8 @@ interface Props { cls: LipidClass; sel: Cell | null; persona: Persona; pins: Pin
 
 export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Props) {
   const real = useLmsdStructure(sel ? `${cls.k}-${sel.c}-${sel.d}` : '')
+  const pathwayGraph = usePathwayGraph()
+  const realPathway = pathwayForClass(pathwayGraph, cls.k)
   if (!sel) {
     return <div className="insp-empty">Select a cell in the map<br />to inspect a species →</div>
   }
@@ -159,16 +162,31 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
   )
 
   const secOrigin = (
-    <Section title="Origin & biosynthesis" tag="SwissLipids · Rhea">
+    <Section title="Origin & biosynthesis" tag="UniProt · Rhea">
       <p className="pathway">
         {cls.pw}<br />
-        <span style={{ color: 'var(--faint)' }}>Enzymes:</span>{' '}
+        <span style={{ color: 'var(--faint)' }}>Enzymes (documented):</span>{' '}
         {cls.enz.map((e, i) => (
           <span key={e}>{i > 0 && ' · '}<span className="enz">{e}</span></span>
         ))}
         <br />
         <span style={{ color: 'var(--faint)' }}>Reaction:</span> <span className="enz">{cls.rhea}</span>
       </p>
+      {realPathway && (
+        <p className="pathway">
+          <span style={{ color: 'var(--faint)' }}>Enzymes (discovered — live UniProt catalytic-activity match, precomputed at build):</span>{' '}
+          {realPathway.enzymes.map((e, i) => (
+            <span key={e.accession}>{i > 0 && ' · '}<span className="enz" title={e.proteinName}>{e.gene ?? e.accession}</span></span>
+          ))}
+          {realPathway.equation && (
+            <>
+              <br />
+              <span style={{ color: 'var(--faint)' }}>Reaction (Rhea):</span>{' '}
+              {realPathway.substrates.map((p) => p.name).join(' + ')} ⇌ {realPathway.products.map((p) => p.name).join(' + ')}
+            </>
+          )}
+        </p>
+      )}
     </Section>
   )
 

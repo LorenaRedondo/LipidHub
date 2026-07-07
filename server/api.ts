@@ -33,7 +33,7 @@ app.get('/', (c) =>
       'GET /compare?ids=PC-34-1,MGDG-34-2',
       'GET /gaps?class=PC&limit=50',
       'GET /predict/:id             (ML CCS/RT with 90% uncertainty intervals)',
-      'GET /pathway/:class          (live UniProt/Rhea verification of a class\'s enzymes + reaction)',
+      'GET /pathway/:class          (live UniProt/Rhea pathway verification + the real discovered enzyme/reaction graph, #5)',
       'GET /lab-only?limit=50       (the "valuable quadrant": high chemical accessibility, low biosynthetic)',
     ],
   }),

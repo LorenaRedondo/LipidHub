@@ -26,6 +26,8 @@ export interface SpeciesRecord {
   smiles: string | null
   msmsHeadgroup: { label: string; mz: number | null }
   literatureSearch: string
+  /** Real enzyme/reaction links, live-discovered from UniProt/Rhea (#5). Server-only — absent client-side. */
+  pathway?: { enzymeUniprot: string; gene?: string; proteinName?: string; rheaRxn: string; equation?: string }[]
 }
 
 export function formulaString(cls: LipidClass, c: number, d: number): string {

@@ -79,8 +79,9 @@ export default function PipelineView() {
             <h3><span className="chip">novel</span> Synthesizability as a real column</h3>
             <p>
               No lipid DB systematically answers "can I make this?". We split it: a <b>biosynthetic
-              score</b> (does an enzyme + pathway exist in SwissLipids/Rhea?) and a <b>chemical score</b>{' '}
-              (SAScore/RAScore + a retrosynthesis pass, e.g. AiZynthFinder). That single distinction —
+              score</b> (live-verified enzyme + reaction match against UniProt/Rhea) and a{' '}
+              <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis pass, e.g. AiZynthFinder,
+              is not yet implemented). That single distinction —
               nature-accessible vs. lab-accessible vs. neither — is defensible and, as far as the
               reference DBs go, unoccupied.
             </p>
