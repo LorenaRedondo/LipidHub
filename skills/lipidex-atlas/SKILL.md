@@ -15,23 +15,31 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 
 ## Tools
 
-- `list_lipid_classes` — the 17 classes with their group, LIPID MAPS category, and kingdoms.
+- `list_lipid_classes` — the 20 classes with their group, LIPID MAPS category, and kingdoms.
 - `get_lipid({ id })` — one species by id/shorthand (`PC-34-1` or `"PC 34:1"`): formula, exact
-  mass, adduct m/z, predicted CCS/RT/logP/Tm, synthesizability, taxonomy, SMILES, literature link.
+  mass, adduct m/z, CCS/RT/logP/Tm, synthesizability, taxonomy, SMILES, literature link.
 - `search_lipids({ q?, classK?, group?, kingdom?, massMin?, massMax?, origin?, minBiosynthetic?, maxSaScore?, pageSize? })`
   — faceted search; returns a total and a page of records.
 - `identify_by_mz({ mz, ppm?, adduct? })` — candidate species for an observed m/z (default 10 ppm, `[M+H]+`).
 - `compare_lipids({ ids: [...] })` — several species side by side.
 - `find_gaps({ classK?, limit? })` — in-silico-only species (not curated) — the atlas "gaps".
+- `predict_properties({ id })` — ML-predicted CCS/RT with a 90% calibrated uncertainty interval
+  and model version, where a trained model is available (falls back to the heuristic otherwise).
 - `check_lmsd({ id })` — verify a species against the **LIPID MAPS Structure Database** (the
   authoritative reference): returns `inLMSD`, real LM IDs, and the official classification.
+- `check_pathway({ classK })` — live-verify a class's declared enzymes (UniProt) and reaction
+  (Rhea): confirms the biosynthetic pathway is real, not assumed.
+- `find_lab_only({ limit? })` — the "valuable quadrant": high chemical accessibility (low
+  SAScore), low biosynthetic accessibility — lab-makeable lipids nature doesn't produce.
 
 ## How to use it
 
 **Always trust exact values, flag predicted ones.** Formula, exact mass, and adduct m/z are
-computed exactly. CCS, RT, Tm, and synthesizability are **heuristic placeholders** in this
-research preview — never present them as measured. Each record carries a `properties.note`
-saying so; pass that caveat on.
+computed exactly. `properties.note` and `synthesizability.note` say exactly how each value
+was produced (trained ML model vs. heuristic placeholder, live-verified pathway vs. heuristic)
+— read and pass on that caveat rather than presenting anything as measured. Prefer
+`predict_properties` over the CCS/RT in `get_lipid`/`search_lipids` when a real model version
+is available; both surface the same value, but `predict_properties` is explicit about it.
 
 **Ground-truth before you assert curation.** The `origin` field ("curated" / "in_silico") is a
 rule-based estimate. To *know* whether a species is real, call `check_lmsd` — it queries the
@@ -42,9 +50,10 @@ ionization adduct. Multiple candidates at the same m/z are usually *isobaric* (e
 and `PE 37:1`) — do not pick one silently; report the alternatives and suggest orthogonal
 evidence (CCS, RT, MS/MS headgroup fragment from `get_lipid`) to disambiguate.
 
-**"Is this makeable / natural?"** Read `synthesizability`: `biosynthetic` (0–100, does a
-pathway exist) vs `saScore` (1 easy–10 hard to synthesise chemically). "Lab-only" candidates
-are low biosynthetic + low SAScore — search with `origin:"in_silico"` and `maxSaScore`.
+**"Is this makeable / natural?"** Read `synthesizability`: `biosynthetic` (0–100, scaled by a
+live UniProt/Rhea pathway verification) vs `saScore` (1 easy–10 hard, the real RDKit SAScore).
+Call `check_pathway` to see the actual verified enzymes/reaction behind a class's biosynthetic
+score. For lab-only candidates, prefer `find_lab_only` over hand-rolling the filter.
 
 **Where a lipid occurs.** `class.kingdoms` and `class.occurrence` give the biological context;
 filter searches by `kingdom` (e.g. plant photosynthetic lipids: `group:"Glycolipids", kingdom:"Plants"`).
@@ -52,8 +61,22 @@ filter searches by `kingdom` (e.g. plant photosynthetic lipids: `group:"Glycolip
 **Discovery.** `find_gaps` surfaces enumerated-but-uncatalogued species; combine with mass and
 synthesizability filters to shortlist novel-but-plausible targets.
 
+## Example prompts → tool sequences
+
+- *"What's PC 34:1 near m/z 760.585?"* → `identify_by_mz({ mz: 760.585, ppm: 10 })` → report
+  all candidates (isobars), not just the top hit → `get_lipid` on the top candidate for CCS/RT/
+  MS-MS fragment to help disambiguate → `check_lmsd` to confirm it's actually curated.
+- *"Find lipids we could make in the lab that nature doesn't."* → `find_lab_only({ limit: 20 })`
+  → for the most interesting hit, `check_pathway({ classK })` to show why it scores low
+  biosynthetically (which enzyme/reaction step is missing or unverified).
+- *"Annotate this list of features: m/z 786.6, 704.5, 662.4 (positive mode)."* → loop
+  `identify_by_mz` per m/z → for each, `check_lmsd` to flag which are real vs. gaps → summarize
+  as a table with candidates, ppm error, and curation status.
+
 ## Don't
 
 - Don't invent species ids — validate via `get_lipid`; ids are `CLASS-carbons-doublebonds`.
 - Don't state a double-bond position or sn-position as known — sum composition doesn't fix them.
 - Don't treat predicted CCS/RT/Tm as ground truth.
+- Don't claim a retrosynthesis route exists — route generation isn't implemented yet (`synth
+  .route_json` is always null).
