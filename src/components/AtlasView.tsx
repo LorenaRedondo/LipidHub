@@ -63,15 +63,16 @@ export default function AtlasView({ cls, onSelectClass, sel, onSelect, persona, 
           <div className="insp-scroll">
             <div className="persona-bar">
               <span className="persona-bar-label">View as</span>
-              <div className="persona-chips">
+              <div className="persona-chips" role="group" aria-label="View inspector as">
                 {PERSONAS.map((p) => (
                   <button
                     key={p.id}
+                    aria-pressed={p.id === persona}
                     className={'pchip' + (p.id === persona ? ' on' : '')}
                     onClick={() => onPersona(p.id)}
                     title={p.label}
                   >
-                    <span className="ic">{p.ic}</span>
+                    <span className="ic" aria-hidden="true">{p.ic}</span>
                     <span>{p.short}</span>
                   </button>
                 ))}

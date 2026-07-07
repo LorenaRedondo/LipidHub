@@ -114,9 +114,9 @@ export default function AnalyticsView() {
             <div className="an-ctrls">
               <label>X<select value={xKey} onChange={(e) => setXKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
               <label>Y<select value={yKey} onChange={(e) => setYKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
-              <div className="seg">
-                <button className={colorBy === 'group' ? 'on' : ''} onClick={() => setColorBy('group')}>by class</button>
-                <button className={colorBy === 'cluster' ? 'on' : ''} onClick={() => setColorBy('cluster')}>by cluster</button>
+              <div className="seg" role="group" aria-label="Colour points by">
+                <button aria-pressed={colorBy === 'group'} className={colorBy === 'group' ? 'on' : ''} onClick={() => setColorBy('group')}>by class</button>
+                <button aria-pressed={colorBy === 'cluster'} className={colorBy === 'cluster' ? 'on' : ''} onClick={() => setColorBy('cluster')}>by cluster</button>
               </div>
               {colorBy === 'cluster' && (
                 <label className="kctrl">k

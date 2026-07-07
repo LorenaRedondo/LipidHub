@@ -88,10 +88,10 @@ export default function SearchView({ onOpen, pins, onTogglePin }: Props) {
             </select>
           </label>
           <div className="facet">Origin
-            <div className="seg">
-              <button className={origin === '' ? 'on' : ''} onClick={() => onFilter(() => setOrigin(''))}>any</button>
-              <button className={origin === 'curated' ? 'on' : ''} onClick={() => onFilter(() => setOrigin('curated'))}>curated</button>
-              <button className={origin === 'in_silico' ? 'on' : ''} onClick={() => onFilter(() => setOrigin('in_silico'))}>gaps</button>
+            <div className="seg" role="group" aria-label="Filter by origin">
+              <button aria-pressed={origin === ''} className={origin === '' ? 'on' : ''} onClick={() => onFilter(() => setOrigin(''))}>any</button>
+              <button aria-pressed={origin === 'curated'} className={origin === 'curated' ? 'on' : ''} onClick={() => onFilter(() => setOrigin('curated'))}>curated</button>
+              <button aria-pressed={origin === 'in_silico'} className={origin === 'in_silico' ? 'on' : ''} onClick={() => onFilter(() => setOrigin('in_silico'))}>gaps</button>
             </div>
           </div>
           <label className="facet">Mass

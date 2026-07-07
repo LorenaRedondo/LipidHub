@@ -4,6 +4,7 @@ import {
   prefersAmmonium, props, status, synth, type LipidClass,
 } from '../lib/lipids'
 import type { Pin } from '../App'
+import ConfBadge from './ConfBadge'
 
 interface Resolved { pin: Pin; cls: LipidClass }
 
@@ -60,7 +61,7 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
         <h2 style={{ marginTop: 8 }}>Side-by-side</h2>
         <p className="lede" style={{ marginBottom: 22 }}>
           Property values are computed live from each species' composition. Anything marked
-          <span className="conf pred" style={{ margin: '0 4px' }}>pred</span> is a model estimate, not a measurement.
+          <span style={{ margin: '0 4px' }}><ConfBadge m="predicted" /></span> is a model estimate, not a measurement.
         </p>
 
         <div className="cmp-scroll">

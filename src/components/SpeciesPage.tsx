@@ -5,6 +5,7 @@ import { useLmsdStructure } from '../lib/lmsdStructures'
 import { downloadJSON, downloadSVG } from '../lib/download'
 import Structure from './Structure'
 import PredictionCard from './PredictionCard'
+import ConfBadge, { ProvenanceLegend } from './ConfBadge'
 
 /** A canonical, shareable, indexable page for one species — the growth engine. */
 export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => void }) {
@@ -67,8 +68,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
             <div className="kv">
               <div className="k">Exact mass</div><div className="v">{rec.exactMass} <span className="u">Da</span></div>
               {adductRows.map(([a, m]) => (<Fragment key={a}><div className="k">{a}</div><div className="v">{m} <span className="u">m/z</span></div></Fragment>))}
-              <div className="k">CCS <span className="conf pred">pred</span></div><div className="v">{rec.properties.ccs} <span className="u">Å²</span></div>
-              <div className="k">RT (RP-C18) <span className="conf pred">pred</span></div><div className="v">{rec.properties.rt} <span className="u">min</span></div>
+              <div className="k">CCS <ConfBadge m="predicted" /></div><div className="v">{rec.properties.ccs} <span className="u">Å²</span></div>
+              <div className="k">RT (RP-C18) <ConfBadge m="predicted" /></div><div className="v">{rec.properties.rt} <span className="u">min</span></div>
               <div className="k">Diagnostic fragment</div><div className="v" style={{ fontSize: 12 }}>{rec.msmsHeadgroup.label}</div>
             </div>
           </div>
@@ -78,8 +79,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
           <div className="sp-card">
             <h3>Physical &amp; synthesizability</h3>
             <div className="kv">
-              <div className="k">logP <span className="conf calc">calc</span></div><div className="v">{rec.properties.logP}</div>
-              <div className="k">T<sub>m</sub> {rec.properties.tm != null && <span className="conf pred">pred</span>}</div><div className="v">{rec.properties.tm ?? 'n/a'} {rec.properties.tm != null && <span className="u">°C</span>}</div>
+              <div className="k">logP <ConfBadge m="calculated" /></div><div className="v">{rec.properties.logP}</div>
+              <div className="k">T<sub>m</sub> {rec.properties.tm != null && <ConfBadge m="predicted" />}</div><div className="v">{rec.properties.tm ?? 'n/a'} {rec.properties.tm != null && <span className="u">°C</span>}</div>
               <div className="k">Headgroup</div><div className="v">{rec.headgroupCharge}</div>
               <div className="k">Biosynthetic</div><div className="v">{rec.synthesizability.biosynthetic}<span className="u">/100</span></div>
               <div className="k">Chemical (SAScore)</div><div className="v">{rec.synthesizability.saScore}</div>
@@ -130,7 +131,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
           </div>
         </div>
 
-        <p className="note" style={{ marginTop: 22 }}>
+        <ProvenanceLegend />
+        <p className="note" style={{ marginTop: 10 }}>
           Formula, exact mass, and adduct m/z are computed exactly. CCS, RT, T<sub>m</sub>, and
           synthesizability are heuristic placeholders in this research preview (trained models: issue #3).
           Curated status is ingested from LIPID MAPS (CC BY 4.0).
