@@ -69,12 +69,19 @@ CREATE TABLE pathway (
 );
 
 -- ── synthesizability (the novel column) ─────────────────────────────────────
+-- bio and chem carry separate provenance: they come from independent pipelines
+-- (live UniProt/Rhea pathway verification vs. RDKit SAScore) that can succeed
+-- or fall back to a heuristic independently — one shared model_version
+-- couldn't express that (see #4).
 CREATE TABLE synth (
-  species_id    uuid PRIMARY KEY REFERENCES species(id) ON DELETE CASCADE,
-  bio_score     numeric,                       -- 0–100: does a pathway exist?
-  chem_sascore  numeric,                       -- 1(easy)–10(hard)
-  route_json    jsonb,                         -- retrosynthesis route
-  model_version text
+  species_id         uuid PRIMARY KEY REFERENCES species(id) ON DELETE CASCADE,
+  bio_score          numeric,                  -- 0–100: pathway attainability
+  bio_method         text CHECK (bio_method IN ('measured','calculated','predicted')),
+  bio_model_version  text,                     -- 'pathway-verified-v1' or 'heuristic-v0'
+  chem_sascore       numeric,                  -- 1(easy)–10(hard)
+  chem_method        text CHECK (chem_method IN ('measured','calculated','predicted')),
+  chem_model_version text,                     -- 'rdkit-<ver>-sascorer' or 'heuristic-v0'
+  route_json         jsonb                     -- retrosynthesis route; not yet populated (#4)
 );
 
 -- ── cross-references & literature ───────────────────────────────────────────

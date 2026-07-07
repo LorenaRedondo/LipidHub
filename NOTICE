@@ -12,3 +12,12 @@ scripts/ingest-lmsd.ts. It contains counts and classification, not full structur
 LIPID MAPS Structure Database (LMSD):
   Sud M, Fahy E, Cotter D, et al. LMSD: LIPID MAPS structure database.
   Nucleic Acids Res. 2007;35(Database):D527-D532. doi:10.1093/nar/gkl838
+
+This product includes ml/sascorer.py and ml/fpscores.pkl.gz, vendored unmodified
+from the RDKit project's Contrib/SA_Score (BSD 3-Clause License).
+Source: https://github.com/rdkit/rdkit/tree/master/Contrib/SA_Score
+
+Synthetic accessibility score:
+  Ertl P, Schuffenhauer A. Estimation of synthetic accessibility score of
+  drug-like molecules based on molecular complexity and fragment contributions.
+  J Cheminform. 2009;1:8. doi:10.1186/1758-2946-1-8

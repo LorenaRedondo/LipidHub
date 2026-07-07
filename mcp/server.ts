@@ -1,14 +1,17 @@
 // ── LIPIDEX MCP server ─────────────────────────────────────────────────────
 // Exposes the atlas to agents. Run: npm run mcp  (stdio transport).
-// Calls the shared service layer directly (in production it would proxy the
-// REST API). Add to Claude Code with:  claude mcp add lipidex -- npm run mcp
+// Queries the SQLite-backed adapter (same layer server/api.ts uses; in
+// production it would proxy the REST API). Add to Claude Code with:
+//   claude mcp add lipidex -- npm run mcp
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import {
-  compare, findGaps, getSpecies, identifyByMz, listClasses, search,
-} from '../src/lib/service'
+  compare, findGaps, findLabOnly, getSpecies, identifyByMz, listClasses, search,
+} from '../server/db'
 import { enrichWithLmsd } from '../src/lib/lmsd'
+import { verifyPathway } from '../src/lib/pathway'
+import { findClass } from '../src/lib/lipids'
 import predData from '../src/data/predictions.json'
 
 const PRED = predData as unknown as { model_version: string; predictions: Record<string, unknown> }
@@ -118,6 +121,30 @@ server.registerTool(
     inputSchema: { classK: z.string().optional().describe('restrict to a class, e.g. SM'), limit: z.number().optional() },
   },
   async ({ classK, limit }) => json({ gaps: findGaps(classK, limit ?? 50) }),
+)
+
+server.registerTool(
+  'check_pathway',
+  {
+    title: 'Verify a class\'s biosynthetic pathway',
+    description: 'Live-check a lipid class\'s declared enzymes (UniProt, reviewed human genes) and reaction (Rhea, approved + balanced). Grounds the biosynthetic accessibility score in real pathway data rather than a fabricated guess.',
+    inputSchema: { classK: z.string().describe('class code, e.g. PC, MGDG, SM') },
+  },
+  async ({ classK }) => {
+    const cls = findClass(classK)
+    if (!cls) return json({ error: 'not found', hint: 'class looks like PC, MGDG, SM' })
+    return json(await verifyPathway(cls))
+  },
+)
+
+server.registerTool(
+  'find_lab_only',
+  {
+    title: 'Find lab-only lipids (the valuable quadrant)',
+    description: 'Return species with high chemical accessibility (low SAScore) but low biosynthetic accessibility — lab-makeable lipids nature doesn\'t produce (e.g. candidate novel LNP components).',
+    inputSchema: { limit: z.number().optional() },
+  },
+  async ({ limit }) => json({ species: findLabOnly(limit ?? 50) }),
 )
 
 const transport = new StdioServerTransport()

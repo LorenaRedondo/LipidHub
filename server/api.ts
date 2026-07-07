@@ -4,9 +4,11 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import {
-  compare, findGaps, getSpecies, identifyByMz, listClasses, search,
-} from '../src/lib/service'
+  compare, findGaps, findLabOnly, getSpecies, identifyByMz, listClasses, search,
+} from './db'
 import { enrichWithLmsd } from '../src/lib/lmsd'
+import { verifyPathway } from '../src/lib/pathway'
+import { findClass } from '../src/lib/lipids'
 import predData from '../src/data/predictions.json'
 
 const PRED = predData as unknown as { model_version: string; unit: Record<string, string>; predictions: Record<string, { ccs: { v: number; lo: number; hi: number }; rt: { v: number; lo: number; hi: number } }> }
@@ -31,6 +33,8 @@ app.get('/', (c) =>
       'GET /compare?ids=PC-34-1,MGDG-34-2',
       'GET /gaps?class=PC&limit=50',
       'GET /predict/:id             (ML CCS/RT with 90% uncertainty intervals)',
+      'GET /pathway/:class          (live UniProt/Rhea verification of a class\'s enzymes + reaction)',
+      'GET /lab-only?limit=50       (the "valuable quadrant": high chemical accessibility, low biosynthetic)',
     ],
   }),
 )
@@ -91,6 +95,16 @@ app.get('/compare', (c) => {
 })
 
 app.get('/gaps', (c) => c.json({ gaps: findGaps(c.req.query('class'), num(c.req.query('limit')) ?? 50) }))
+
+// live UniProt/Rhea verification of a class's declared enzymes + reaction (issue #4)
+app.get('/pathway/:class', async (c) => {
+  const cls = findClass(c.req.param('class'))
+  if (!cls) return c.json({ error: 'not found', hint: 'class looks like PC, MGDG, SM' }, 404)
+  return c.json(await verifyPathway(cls))
+})
+
+// the "valuable quadrant" (#4): high chemical accessibility, low biosynthetic
+app.get('/lab-only', (c) => c.json({ species: findLabOnly(num(c.req.query('limit')) ?? 50) }))
 
 // ML property predictions with calibrated uncertainty (from ml/train.py)
 app.get('/predict/:id', (c) => {

@@ -28,14 +28,19 @@ The original single-file vanilla-JS prototype is preserved at
 ### API & agent access
 
 The atlas is also consumable programmatically and by agents — a **REST API**, an **MCP
-server**, and a **Claude Skill**, all over one shared service layer. See
-[`docs/api.md`](docs/api.md).
+server**, and a **Claude Skill**. The frontend keeps computing client-side (works
+standalone, e.g. GitHub Pages); the REST API and MCP server are backed by a real
+SQLite store (`db/schema.sqlite.sql`, see [`docs/architecture.md`](docs/architecture.md))
+instead of recomputing the space per request. Build it once before running either:
 
 ```bash
+npm run db:build                     # build db/lipidex.sqlite (regenerate any time)
 npm run api                          # REST at http://localhost:8787
 npm run mcp                          # MCP server (stdio)
 claude mcp add lipidex -- npm run mcp
 ```
+
+See [`docs/api.md`](docs/api.md) for endpoints/tools.
 
 ## Try it
 
@@ -86,7 +91,7 @@ measure.
 | Formula & exact mass | ✅ computed exactly from backbone + acyl chains | same |
 | Adduct m/z | ✅ computed | same |
 | CCS / RT / logP / Tm | ⚠️ heuristic placeholders | trained ML + RDKit |
-| Synthesizability | ⚠️ heuristic placeholders | pathway match + SAScore/retrosynthesis |
+| Synthesizability | ✅ chemical: real RDKit SAScore. ✅ biosynthetic: live UniProt/Rhea pathway verification × composition heuristic. ⚠️ frontend still shows the heuristic (server/API/MCP only, see `docs/api.md`). | retrosynthesis route (e.g. AiZynthFinder) |
 | Known vs. gap status | ✅ real — ingested from LMSD (50,516 structures) | full structures/InChIKeys too |
 | Classes | 20 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |

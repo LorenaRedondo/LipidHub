@@ -14,12 +14,14 @@
     "typecheck": "tsc -b --noEmit",
     "validate:smiles": "tsx scripts/validate-smiles.ts",
     "ingest:lmsd": "tsx scripts/ingest-lmsd.ts",
+    "db:build": "tsx scripts/build-db.ts",
     "api": "tsx server/api.ts",
     "mcp": "tsx mcp/server.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.8",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^12.11.1",
     "hono": "^4.12.27",
     "openchemlib": "^9.24.0",
     "react": "^18.3.1",
@@ -27,6 +29,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.19.43",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

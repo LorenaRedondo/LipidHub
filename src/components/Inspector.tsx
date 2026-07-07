@@ -153,7 +153,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
       </div>
       <p className="verdict">
         {bioVerdict}<br />
-        {chemVerdict} — SAScore {sy.sa}, retrosynthesis route available.
+        {chemVerdict} — SAScore {sy.sa}. Retrosynthesis route generation not yet implemented (issue #4).
       </p>
     </Section>
   )
