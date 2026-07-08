@@ -1,6 +1,6 @@
 {
   "model_version": "gbm-v2-optuna-real-anchored",
-  "n_species": 2010,
+  "n_species": 2090,
   "features": [
     "mass",
     "carbons",
@@ -22,40 +22,40 @@
   "n_real_holdout_points": 4,
   "ccs": {
     "synthetic_test": {
-      "mae": 3.066,
+      "mae": 3.088,
       "r2": 0.996,
-      "coverage": 0.896,
-      "ci_halfwidth": 6.606,
-      "n": 402
+      "coverage": 0.9,
+      "ci_halfwidth": 6.251,
+      "n": 418
     },
     "best_params": {
-      "n_estimators": 418,
-      "max_depth": 4,
-      "learning_rate": 0.0690864581297906,
-      "subsample": 0.6501495733731578,
-      "min_samples_leaf": 13
+      "n_estimators": 296,
+      "max_depth": 3,
+      "learning_rate": 0.08266656974129535,
+      "subsample": 0.6554974232719911,
+      "min_samples_leaf": 11
     },
     "real_holdout_test": {
-      "mae": 3.834,
-      "r2": 0.977,
+      "mae": 3.788,
+      "r2": 0.982,
       "coverage": 0.75,
-      "ci_halfwidth": 6.606,
+      "ci_halfwidth": 6.251,
       "n": 4
     }
   },
   "rt": {
     "synthetic_test": {
-      "mae": 0.36,
-      "r2": 0.989,
-      "coverage": 0.856,
-      "ci_halfwidth": 0.721,
-      "n": 402
+      "mae": 0.372,
+      "r2": 0.987,
+      "coverage": 0.902,
+      "ci_halfwidth": 0.793,
+      "n": 418
     },
     "best_params": {
-      "n_estimators": 283,
+      "n_estimators": 293,
       "max_depth": 5,
-      "learning_rate": 0.023690740444586217,
-      "subsample": 0.6043956756975085,
+      "learning_rate": 0.06522920379224931,
+      "subsample": 0.6609137270187132,
       "min_samples_leaf": 7
     }
   }
