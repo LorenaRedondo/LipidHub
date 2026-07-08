@@ -3,3 +3,5 @@ pandas>=2.0
 scikit-learn>=1.4
 matplotlib>=3.7
 rdkit>=2025.3
+mlflow>=2.14
+optuna>=3.6
