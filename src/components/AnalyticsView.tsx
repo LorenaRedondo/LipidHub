@@ -1,21 +1,20 @@
 import { useMemo, useState } from 'react'
 import {
-  CLUSTER_COLORS, CLUSTER_FEATURES, FEATURES, FEATURE_MAP, GROUP_COLORS,
-  buildDataset, correlate, kmeans, type FeatureKey,
+  FEATURES, FEATURE_MAP, GROUP_COLORS,
+  buildDataset, correlate, trendFor, type FeatureKey,
 } from '../lib/analytics'
+import { usePredictions } from '../lib/predictions'
 import { downloadSVG } from '../lib/download'
 
-type ColorBy = 'group' | 'cluster'
-
 export default function AnalyticsView() {
-  const data = useMemo(() => buildDataset(), [])
+  const pred = usePredictions()
+  const data = useMemo(() => buildDataset(pred), [pred])
   const [xKey, setXKey] = useState<FeatureKey>('carbons')
   const [yKey, setYKey] = useState<FeatureKey>('logp')
-  const [colorBy, setColorBy] = useState<ColorBy>('group')
-  const [k, setK] = useState(5)
 
-  const clusters = useMemo(() => kmeans(data, CLUSTER_FEATURES, k), [data, k])
   const r = useMemo(() => correlate(data, xKey, yKey), [data, xKey, yKey])
+  const trend = useMemo(() => trendFor(xKey, yKey), [xKey, yKey])
+  const predictedCount = useMemo(() => data.filter((p) => p.predicted).length, [data])
 
   // correlation matrix (complete-case per pair)
   const matrix = useMemo(
@@ -37,23 +36,25 @@ export default function AnalyticsView() {
   const ticks = (min: number, max: number) => Array.from({ length: 5 }, (_, i) => min + ((max - min) * i) / 4)
   const fmt = (v: number) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10)
 
-  const colorOf = (i: number, group: string) => (colorBy === 'cluster' ? CLUSTER_COLORS[clusters[i] % CLUSTER_COLORS.length] : GROUP_COLORS[group])
-
-  // cluster composition summary
-  const clusterInfo = useMemo(() => {
-    const info = Array.from({ length: k }, () => ({ size: 0, byClass: {} as Record<string, number>, byGroup: {} as Record<string, number> }))
-    data.forEach((p, i) => {
-      const c = info[clusters[i]]
-      c.size++
-      c.byClass[p.clsK] = (c.byClass[p.clsK] || 0) + 1
-      c.byGroup[p.group] = (c.byGroup[p.group] || 0) + 1
-    })
-    return info.map((c) => ({
-      size: c.size,
-      topClasses: Object.entries(c.byClass).sort((a, b) => b[1] - a[1]).slice(0, 4).map((e) => e[0]),
-      topGroup: Object.entries(c.byGroup).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—',
-    }))
-  }, [data, clusters, k])
+  // trend curve, fit in the pair's *natural* orientation (trend.x/trend.y) then re-oriented
+  // onto whichever axis the user currently has it plotted on
+  const trendPath = useMemo(() => {
+    if (!trend) return null
+    const swapped = trend.x !== xKey // xKey must be trend.y if not trend.x, since trendFor() matched
+    const fitXs = swapped ? ys : xs, fitYs = swapped ? xs : ys
+    if (fitXs.length < 3) return null
+    const f = trend.fit(fitXs, fitYs)
+    const lo = swapped ? ymin : xmin, hi = swapped ? ymax : xmax
+    const steps = 40
+    const path: string[] = []
+    for (let i = 0; i <= steps; i++) {
+      const t = lo + ((hi - lo) * i) / steps
+      const val = f(t)
+      const [px, py] = swapped ? [val, t] : [t, val]
+      path.push(`${i ? 'L' : 'M'} ${sx(px).toFixed(1)} ${sy(py).toFixed(1)}`)
+    }
+    return path.join(' ')
+  }, [trend, xKey, xs, ys, xmin, xmax, ymin, ymax])
 
   const corrColor = (v: number) =>
     v >= 0 ? `rgba(240,169,75,${(0.12 + 0.88 * v).toFixed(3)})` : `rgba(78,203,198,${(0.12 + 0.88 * -v).toFixed(3)})`
@@ -63,13 +64,17 @@ export default function AnalyticsView() {
     <section className="view on">
       <div className="doc wide">
         <span className="eyebrow">Analytics</span>
-        <h2 style={{ marginTop: 8 }}>Explore correlations &amp; find groups</h2>
+        <h2 style={{ marginTop: 8 }}>Explore correlations</h2>
         <p className="lede">
           Every plausible species in the atlas as one point, with its computed properties.
-          The matrix shows how properties co-vary; the scatter lets you drill into any pair; and
-          k-means groups species by their whole property profile — a test of whether unsupervised
-          structure recovers the known lipid classes.{' '}
-          <span style={{ color: 'var(--faint)' }}>({data.length} species · predicted properties.)</span>
+          The matrix shows Pearson r for every property pair — a correlation strength, not a
+          fitted model. The scatter lets you drill into any pair; a trend curve is only drawn
+          when the pair has an established physical basis (see caption), so we never imply a
+          relationship the data doesn't support.{' '}
+          <span style={{ color: 'var(--faint)' }}>
+            ({data.length} species · {predictedCount} with real ML-predicted CCS/RT
+            {pred ? ` (${pred.model_version})` : ''}, rest from the composition formula.)
+          </span>
         </p>
 
         <div className="an-grid">
@@ -114,17 +119,6 @@ export default function AnalyticsView() {
             <div className="an-ctrls">
               <label>X<select value={xKey} onChange={(e) => setXKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
               <label>Y<select value={yKey} onChange={(e) => setYKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
-              <div className="seg" role="group" aria-label="Colour points by">
-                <button aria-pressed={colorBy === 'group'} className={colorBy === 'group' ? 'on' : ''} onClick={() => setColorBy('group')}>by class</button>
-                <button aria-pressed={colorBy === 'cluster'} className={colorBy === 'cluster' ? 'on' : ''} onClick={() => setColorBy('cluster')}>by cluster</button>
-              </div>
-              {colorBy === 'cluster' && (
-                <label className="kctrl">k
-                  <button onClick={() => setK(Math.max(2, k - 1))}>−</button>
-                  <b>{k}</b>
-                  <button onClick={() => setK(Math.min(8, k + 1))}>+</button>
-                </label>
-              )}
               <button className="dl-link" onClick={() => downloadSVG(`lipidex-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
             </div>
 
@@ -132,6 +126,7 @@ export default function AnalyticsView() {
               r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
               <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
             </div>
+            {trend && <div className="an-sub" style={{ marginTop: -6, marginBottom: 8 }}>trend curve: {trend.reason}</div>}
 
             <div className="scatter-wrap">
               <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="property scatter plot">
@@ -148,43 +143,21 @@ export default function AnalyticsView() {
                   </g>
                 ))}
                 {pts.map((o) => (
-                  <circle key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={2.7} fill={colorOf(o.i, o.p.group)} fillOpacity={0.72}>
+                  <circle key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={2.7} fill={GROUP_COLORS[o.p.group]} fillOpacity={0.72}>
                     <title>{`${o.p.clsK} ${o.p.c}:${o.p.d} · ${fx.short} ${fmt(o.x)} · ${fy.short} ${fmt(o.y)}`}</title>
                   </circle>
                 ))}
+                {trendPath && <path d={trendPath} fill="none" stroke="var(--text)" strokeWidth={1.6} strokeDasharray="4 3" opacity={0.85} />}
                 <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" className="axtitle">{fx.label}</text>
                 <text transform={`translate(14 ${(M.t + H - M.b) / 2}) rotate(-90)`} textAnchor="middle" className="axtitle">{fy.label}</text>
               </svg>
             </div>
 
             <div className="an-legend">
-              {colorBy === 'group'
-                ? Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)
-                : clusterInfo.map((ci, i) => <span key={i} className="lg"><span className="dot2" style={{ background: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }} />cluster {i + 1} ({ci.size})</span>)}
+              {Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)}
             </div>
           </div>
         </div>
-
-        {colorBy === 'cluster' && (
-          <div className="clusters">
-            <h3 className="an-h" style={{ marginBottom: 12 }}>What each cluster captured <span className="an-sub">k-means on 8 standardized properties</span></h3>
-            <div className="cluster-cards">
-              {clusterInfo.map((ci, i) => (
-                <div className="cluster-card" key={i}>
-                  <div className="cc-head"><span className="dot2" style={{ background: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }} />Cluster {i + 1}</div>
-                  <div className="cc-size num">{ci.size} species</div>
-                  <div className="cc-group">mostly {ci.topGroup}</div>
-                  <div className="cc-classes">{ci.topClasses.join(' · ')}</div>
-                </div>
-              ))}
-            </div>
-            <p className="note" style={{ marginTop: 14 }}>
-              Clusters are driven mostly by size/hydrophobicity (mass, carbons, logP, CCS all co-vary),
-              so they track lipid families loosely rather than perfectly — a useful reminder that
-              MS-friendly properties don't fully determine biological class.
-            </p>
-          </div>
-        )}
       </div>
     </section>
   )

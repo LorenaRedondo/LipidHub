@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LipidClass } from '../lib/lipids'
 import { toSmiles } from '../lib/smiles'
 import { useLmsdStructure } from '../lib/lmsdStructures'
+import { downloadSVG } from '../lib/download'
 import Schematic from './Schematic'
 
 interface Props { cls: LipidClass; c: number; d: number; iso: [number, number][] }
@@ -15,6 +16,7 @@ export default function Structure({ cls, c, d, iso }: Props) {
   const real = useLmsdStructure(`${cls.k}-${c}-${d}`)
   const smiles = real?.smiles ?? toSmiles(cls, c, d)
   const [svg, setSvg] = useState<string | null>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -54,11 +56,18 @@ export default function Structure({ cls, c, d, iso }: Props) {
 
   return (
     <div className="structure">
-      <div className="struct-canvas" dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="struct-canvas" ref={canvasRef} dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="struct-cap">
         {real
           ? <>Real structure from <b>LIPID MAPS</b> · {real.lmId}</>
           : <>Predicted 2D structure of the likely isomer {iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')} · double-bond positions illustrative</>}
+        <button
+          className="dl-link"
+          style={{ marginLeft: 10 }}
+          onClick={() => downloadSVG(`${cls.k}-${c}-${d}.svg`, canvasRef.current?.querySelector('svg') ?? null)}
+        >
+          SVG ↓
+        </button>
       </div>
     </div>
   )

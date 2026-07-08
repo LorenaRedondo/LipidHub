@@ -329,9 +329,6 @@
   .seg{display:flex;border:1px solid var(--line2);border-radius:7px;overflow:hidden}
   .seg button{background:var(--panel2);color:var(--muted);border:none;font-family:var(--mono);font-size:11px;padding:5px 10px}
   .seg button.on{background:var(--raise);color:var(--text)}
-  .kctrl{gap:4px!important}
-  .kctrl button{width:22px;height:22px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:6px;font-size:13px;line-height:1}
-  .kctrl b{min-width:14px;text-align:center;font-family:var(--mono)}
 
   .rline{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:baseline;gap:8px}
   .rline b{font-size:17px}
@@ -344,15 +341,6 @@
   .an-legend{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px;font-size:11px;color:var(--muted)}
   .lg{display:flex;align-items:center;gap:5px}
   .dot2{width:9px;height:9px;border-radius:50%;flex:none}
-
-  /* cluster cards */
-  .clusters{margin-top:6px}
-  .cluster-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-  .cluster-card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 13px}
-  .cc-head{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;margin-bottom:6px}
-  .cc-size{font-family:var(--mono);font-size:11px;color:var(--muted)}
-  .cc-group{font-size:11.5px;color:var(--cyan);margin:3px 0 6px}
-  .cc-classes{font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.5}
 
   @media (max-width:900px){ .an-grid{grid-template-columns:1fr} }
 

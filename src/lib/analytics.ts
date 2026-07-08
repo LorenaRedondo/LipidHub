@@ -1,9 +1,12 @@
-// ── Analytics: property correlations + clustering ─────────────────────────
-// Builds a dataset of plausible species with their computed properties, then
-// offers Pearson correlation and (seeded, deterministic) k-means clustering.
+// ── Analytics: property correlations ───────────────────────────────────────
+// Builds a dataset of plausible species with their computed properties (using
+// the real trained-model CCS/RT predictions where available — same numbers the
+// per-species Inspector shows — falling back to the composition formula only
+// for species outside the model's coverage) and offers Pearson correlation.
 // All framework-free and pure.
 
-import { CLASSES, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
+import { CLASSES, chainsOf, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
+import type { PredFile } from './predictions'
 
 export interface Point {
   id: string
@@ -15,9 +18,11 @@ export interface Point {
   mz: number
   ccs: number
   rt: number
+  predicted: boolean // true if ccs/rt came from the trained model, false if from the composition formula
   logp: number
   tm: number | null
   carbons: number
+  carbonsPerChain: number | null // acyl-chain length normalized by chain count — the physically comparable unit across classes
   dbonds: number
   bio: number
   chem: number
@@ -27,20 +32,26 @@ export interface Point {
 }
 
 /** Even-chain, plausible (non-rare) species across every class. */
-export function buildDataset(): Point[] {
+export function buildDataset(pred?: PredFile | null): Point[] {
   const pts: Point[] = []
   for (const cls of CLASSES) {
     const [lo, hi] = cls.cRange
+    const chains = chainsOf(cls)
     for (let c = lo % 2 === 0 ? lo : lo + 1; c <= hi; c += 2) {
       for (let d = 0; d <= dMaxOf(cls); d++) {
         if (status(cls, c, d) === 'rare') continue
+        const id = `${cls.k}-${c}-${d}`
         const p = props(cls, c, d)
         const sy = synth(cls, c, d)
         const mem = membraneBiophysics(cls, c, d)
+        const ml = pred?.predictions[id]
         pts.push({
-          id: `${cls.k}-${c}-${d}`, clsK: cls.k, group: cls.group, c, d,
-          mass: p.M, mz: p.M + PROTON, ccs: p.ccs, rt: p.rt, logp: p.logp, tm: p.tm,
-          carbons: c, dbonds: d, bio: sy.bio, chem: sy.chem,
+          id, clsK: cls.k, group: cls.group, c, d,
+          mass: p.M, mz: p.M + PROTON,
+          ccs: ml?.ccs.v ?? p.ccs, rt: ml?.rt.v ?? p.rt, predicted: ml != null,
+          logp: p.logp, tm: p.tm,
+          carbons: c, carbonsPerChain: chains > 0 ? Math.round((c / chains) * 100) / 100 : null, dbonds: d,
+          bio: sy.bio, chem: sy.chem,
           thickness: mem?.thicknessNm ?? null, breakthrough: mem?.breakthroughNn ?? null, packing: mem?.packing ?? null,
         })
       }
@@ -49,7 +60,7 @@ export function buildDataset(): Point[] {
   return pts
 }
 
-export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'dbonds' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
+export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'carbonsPerChain' | 'dbonds' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
 export interface Feature { key: FeatureKey; label: string; short: string; get: (p: Point) => number | null }
 
 export const FEATURES: Feature[] = [
@@ -59,7 +70,8 @@ export const FEATURES: Feature[] = [
   { key: 'rt', label: 'RT (min)', short: 'RT', get: (p) => p.rt },
   { key: 'logp', label: 'logP', short: 'logP', get: (p) => p.logp },
   { key: 'tm', label: 'Tm (°C)', short: 'Tm', get: (p) => p.tm },
-  { key: 'carbons', label: 'Acyl carbons', short: 'C', get: (p) => p.carbons },
+  { key: 'carbons', label: 'Acyl carbons (total)', short: 'C', get: (p) => p.carbons },
+  { key: 'carbonsPerChain', label: 'Carbons per chain', short: 'C/chain', get: (p) => p.carbonsPerChain },
   { key: 'dbonds', label: 'Double bonds', short: 'DB', get: (p) => p.dbonds },
   { key: 'bio', label: 'Biosynthetic score', short: 'bio', get: (p) => p.bio },
   { key: 'chem', label: 'Chemical synth.', short: 'chem', get: (p) => p.chem },
@@ -68,9 +80,6 @@ export const FEATURES: Feature[] = [
   { key: 'packing', label: 'Packing parameter', short: 'pack', get: (p) => p.packing },
 ]
 export const FEATURE_MAP = Object.fromEntries(FEATURES.map((f) => [f.key, f])) as Record<FeatureKey, Feature>
-
-/** Features every point has (Tm is null for neutral lipids) — used for clustering. */
-export const CLUSTER_FEATURES: FeatureKey[] = ['mass', 'ccs', 'rt', 'logp', 'carbons', 'dbonds', 'bio', 'chem']
 
 export function pearson(a: number[], b: number[]): number {
   const n = a.length
@@ -93,51 +102,55 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
   return pearson(xs, ys)
 }
 
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
+// ── Theoretically-motivated trend curves ────────────────────────────────────
+// A fitted line is only ever drawn for a pair with a real physical/established
+// basis — otherwise the scatter shows points + Pearson r and nothing else, so
+// we never imply a model that isn't there. Two curated relationships:
+//
+//  - CCS vs mass: Mason–Schamp mobility scaling, CCS ∝ mass^0.635 — the same
+//    fixed exponent ml/features.py calibrates its baseline against (α is a
+//    literature constant, not fit per-plot; only the scale factor is fit here).
+//  - thickness vs carbonsPerChain: Tanford's hydrocarbon-chain-length rule
+//    (lc = 1.5 + 1.265·nc), which membraneBiophysics() already implements —
+//    linear once carbons are normalized per chain, which is why this pair
+//    uses `carbonsPerChain` rather than raw `carbons` (raw carbons conflates
+//    1-, 2-, 3- and 4-chain classes into separate parallel bands).
+export interface Trend {
+  x: FeatureKey // the curve's natural independent axis
+  y: FeatureKey // the curve's natural dependent axis
+  reason: string
+  fit: (xs: number[], ys: number[]) => (x: number) => number
 }
-const dist2 = (a: number[], b: number[]) => { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d } return s }
 
-/** Deterministic k-means (k-means++ init) on z-scored features. Returns per-point cluster ids. */
-export function kmeans(points: Point[], featureKeys: FeatureKey[], k: number, seed = 42): number[] {
-  const rows = points.map((p) => featureKeys.map((f) => FEATURE_MAP[f].get(p) as number))
-  const nF = featureKeys.length
-  const means = Array(nF).fill(0), sds = Array(nF).fill(0)
-  for (const r of rows) for (let j = 0; j < nF; j++) means[j] += r[j]
-  for (let j = 0; j < nF; j++) means[j] /= rows.length
-  for (const r of rows) for (let j = 0; j < nF; j++) { const dx = r[j] - means[j]; sds[j] += dx * dx }
-  for (let j = 0; j < nF; j++) sds[j] = Math.sqrt(sds[j] / rows.length) || 1
-  const Z = rows.map((r) => r.map((v, j) => (v - means[j]) / sds[j]))
+const CCS_MASS_EXPONENT = 0.635 // matches ml/features.py — literature range ~0.6–0.7
 
-  const rand = mulberry32(seed)
-  const centroids: number[][] = [Z[Math.floor(rand() * Z.length)].slice()]
-  while (centroids.length < k) {
-    const d2 = Z.map((z) => Math.min(...centroids.map((c) => dist2(z, c))))
-    const sum = d2.reduce((a, b) => a + b, 0)
-    let r = rand() * sum, idx = 0
-    for (; idx < d2.length - 1; idx++) { r -= d2[idx]; if (r <= 0) break }
-    centroids.push(Z[idx].slice())
-  }
+function fitPowerFixedExponent(xs: number[], ys: number[], alpha: number): (x: number) => number {
+  // y = scale * x^alpha ⇒ fit scale by least squares on y / x^alpha (single free parameter)
+  let num = 0, den = 0
+  for (let i = 0; i < xs.length; i++) { const xa = Math.pow(xs[i], alpha); num += xa * ys[i]; den += xa * xa }
+  const scale = den ? num / den : 0
+  return (x) => scale * Math.pow(x, alpha)
+}
 
-  const assign = new Array(Z.length).fill(0)
-  for (let iter = 0; iter < 60; iter++) {
-    let changed = false
-    for (let i = 0; i < Z.length; i++) {
-      let best = 0, bd = Infinity
-      for (let cI = 0; cI < k; cI++) { const dd = dist2(Z[i], centroids[cI]); if (dd < bd) { bd = dd; best = cI } }
-      if (assign[i] !== best) { assign[i] = best; changed = true }
-    }
-    const sums = Array.from({ length: k }, () => Array(nF).fill(0)), counts = Array(k).fill(0)
-    for (let i = 0; i < Z.length; i++) { counts[assign[i]]++; for (let j = 0; j < nF; j++) sums[assign[i]][j] += Z[i][j] }
-    for (let cI = 0; cI < k; cI++) if (counts[cI]) centroids[cI] = sums[cI].map((s) => s / counts[cI])
-    if (!changed) break
-  }
-  return assign
+function fitLinear(xs: number[], ys: number[]): (x: number) => number {
+  const n = xs.length
+  let mx = 0, my = 0
+  for (let i = 0; i < n; i++) { mx += xs[i]; my += ys[i] }
+  mx /= n; my /= n
+  let num = 0, den = 0
+  for (let i = 0; i < n; i++) { const dx = xs[i] - mx; num += dx * (ys[i] - my); den += dx * dx }
+  const slope = den ? num / den : 0, intercept = my - slope * mx
+  return (x) => slope * x + intercept
+}
+
+const TRENDS: Trend[] = [
+  { x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here)', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT) },
+  { x: 'carbonsPerChain', y: 'thickness', reason: "Tanford's rule: bilayer half-thickness ∝ chain length", fit: fitLinear },
+]
+
+/** A curve is only offered for the pair actually being plotted (either axis order). */
+export function trendFor(fx: FeatureKey, fy: FeatureKey): Trend | null {
+  return TRENDS.find((t) => (t.x === fx && t.y === fy) || (t.x === fy && t.y === fx)) ?? null
 }
 
 export const GROUP_COLORS: Record<string, string> = {
@@ -148,4 +161,3 @@ export const GROUP_COLORS: Record<string, string> = {
   'Sterol lipids': '#e8705a',
   'Fatty acyls': '#e6b34d',
 }
-export const CLUSTER_COLORS = ['#4ecbc6', '#f0a94b', '#5fca8b', '#b98cff', '#e8705a', '#e6b34d', '#6aa3ff', '#ff8fb0']
