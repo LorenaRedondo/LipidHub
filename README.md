@@ -94,7 +94,7 @@ measure.
 | Synthesizability | ✅ chemical: real RDKit SAScore. ✅ biosynthetic: live UniProt/Rhea pathway verification × composition heuristic. ⚠️ frontend still shows the heuristic scores (server/API/MCP only, see `docs/api.md`). | retrosynthesis route (e.g. AiZynthFinder) |
 | Origin & pathway graph | ✅ real — enzymes discovered from UniProt's catalytic-activity annotations per Rhea reaction (not SwissLipids, see `docs/architecture.md` §04); shown in the Inspector | per-species (not per-class) enzyme specificity |
 | Known vs. gap status | ✅ real — ingested from LMSD (50,516 structures) | full structures/InChIKeys too |
-| Classes | 20 across 6 groups (GP, GL, glycolipids, SP, ST, FA) | + free sterols, oxysterols, archaeal/prenol, gangliosides, … |
+| Classes | 22 across 6 groups (GP, GL, glycolipids, SP, ST, FA) — incl. free sterols & oxysterols | + archaeal/prenol ether lipids, gangliosides, … |
 | Biological taxonomy | ✅ kingdom occurrence per class (curated) | per-species, from HMDB/literature |
 | Per-species citations | ⚠️ live Europe PMC search per class | curated refs via DB integration |
 | 2D structures | ✅ SMILES built from composition, drawn by OpenChemLib | canonical SVGs cached server-side (RDKit) |

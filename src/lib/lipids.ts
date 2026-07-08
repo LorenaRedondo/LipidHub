@@ -16,7 +16,7 @@ export const LMSD_CURATED = curatedData as unknown as LmsdIndex
 
 export type Elem = 'C' | 'H' | 'O' | 'N' | 'P' | 'S'
 export type Formula = Record<Elem, number>
-export type Kind = 'glycero' | 'sphingo' | 'sterolester' | 'glyco' | 'fattyacyl'
+export type Kind = 'glycero' | 'sphingo' | 'sterolester' | 'glyco' | 'fattyacyl' | 'sterol'
 export type SubHead = 'SM' | 'Hex' | 'MGDG' | 'DGDG' | 'SQDG'
 export type Persona = 'analyst' | 'biophys' | 'chem' | 'bioinfo'
 export type Status = 'known' | 'gap' | 'rare'
@@ -54,6 +54,7 @@ export interface LipidClass {
   hasTm: boolean
   xlabel?: string
   subhg?: SubHead
+  oxyCount?: number // total oxygens on a free-sterol ring system (1 = native 3-OH, 2 = oxysterol)
   enz: string[]
   rhea: string
   pw: string
@@ -171,6 +172,18 @@ export const CLASSES: LipidClass[] = [
     xlabel: 'N-acyl carbons · cholesterol fixed', enz: ['SOAT1', 'LCAT'], rhea: 'RHEA:35807',
     pw: "ACAT/SOAT (cells) or LCAT (plasma) esterifies cholesterol's 3-OH; the storage/transport form of sterol.",
     hgFrag: { lab: 'cholestene fragment (+)', mz: 369.3516 } },
+  { k: 'ST', name: 'Sterol', group: 'Sterol lipids', category: 'ST · Sterol lipids (free sterol)',
+    kingdoms: ['Animals', 'Plants', 'Fungi'], occurrence: 'The free (non-esterified) sterol itself — cholesterol in animals, ergosterol in fungi, phytosterols (sitosterol, stigmasterol, campesterol) in plants. The dominant membrane-rigidifying lipid; ergosterol is the target of azole antifungals.',
+    kind: 'sterol', oxyCount: 1, n: 0, cRange: [24, 31], dMax: 4, mid: 28, pref: '[M+H-H₂O]⁺', lpOff: -3.0, hasTm: false,
+    xlabel: 'Ring-system carbons · dMax = C=C + ring unsaturation', enz: ['DHCR7', 'DHCR24', 'CYP51', 'ERG6'], rhea: 'RHEA:36783',
+    pw: 'Cyclized from squalene via lanosterol (animals/fungi) or cycloartenol (plants), then tailored by demethylation/desaturation — DHCR7 makes the final animal step (cholesterol); CYP51/ERG genes build ergosterol.',
+    hgFrag: { lab: '[M+H−H₂O]⁺ dehydration', mz: 18.0106 } },
+  { k: 'OxST', name: 'Oxysterol', group: 'Sterol lipids', category: 'ST · Sterol lipids (oxysterol; our own split of LIPID MAPS ST01)',
+    kingdoms: ['Animals'], occurrence: 'A sterol bearing a second oxygen (extra hydroxyl or keto group) beyond the native 3-OH — potent signalling lipids (LXR/oxysterol-receptor ligands, e.g. 25-hydroxycholesterol, 27-hydroxycholesterol) and oxidative-stress markers (7-ketocholesterol).',
+    kind: 'sterol', oxyCount: 2, n: 0, cRange: [24, 31], dMax: 4, mid: 28, pref: '[M+H]⁺', lpOff: -4.0, hasTm: false,
+    xlabel: 'Ring-system carbons · dMax = C=C + ring unsaturation', enz: ['CH25H', 'CYP27A1', 'CYP7B1'], rhea: 'RHEA:50292',
+    pw: 'Cholesterol hydroxylases (CH25H, CYP27A1, CYP46A1) or non-enzymatic oxidation add the second oxygen; the resulting oxysterols are LXR ligands and cholesterol-homeostasis signals.',
+    hgFrag: { lab: '[M+H−H₂O]⁺ dehydration', mz: 18.0106 } },
 
   // ── Fatty acyls ───────────────────────────────────────────────────────
   { k: 'FA', name: 'Fatty acid', group: 'Fatty acyls', category: 'FA · Fatty acyls',
@@ -227,6 +240,13 @@ export function fmtObj(cls: LipidClass, c: number, d: number): Formula {
     // free fatty acid CnH(2n-2d)O2 (palmitic C16H32O2, oleic C18H34O2).
     return { ...empty, C: c, H: 2 * c - 2 * d, O: 2 }
   }
+  if (kind === 'sterol') {
+    // tetracyclic ring system; d = C=C double bonds + ring-fusion unsaturation folded
+    // into the constant. Verified against live LIPID MAPS: cholesterol ST 27:1;O =
+    // C27H46O, ergosterol ST 28:3;O = C28H44O, 25-OH-cholesterol-class ST 27:1;O2 =
+    // C27H46O2 (extra O from hydroxylation costs no H — confirmed against real entries).
+    return { ...empty, C: c, H: 2 * c - 2 * d - 6, O: cls.oxyCount ?? 1 }
+  }
   const b = cls.bb!
   const n = cls.n
   return {
@@ -255,7 +275,9 @@ export function formulaParts(f: Formula): { el: string; n: number }[] {
 
 export function likelihood(cls: LipidClass, c: number, d: number): number {
   let lik = 1
-  if (c % 2 !== 0) lik -= 0.5
+  // sterols are built by single-carbon methylation (squalene cyclization + tailoring),
+  // not 2-carbon fatty-acid elongation — odd carbon counts are entirely normal.
+  if (cls.kind !== 'sterol' && c % 2 !== 0) lik -= 0.5
   const [lo, hi] = cls.cRange
   const mid = cls.mid ?? (cls.n === 3 ? 52 : 35)
   lik -= Math.min(0.4, Math.abs(c - mid) / 40)
@@ -308,19 +330,23 @@ export interface Synth { bio: number; sa: number; chem: number }
  */
 export function bioAttainability(cls: LipidClass, c: number, d: number): number {
   let bio = 90
-  if (c % 2 !== 0) bio -= 45
+  if (cls.kind !== 'sterol' && c % 2 !== 0) bio -= 45
   if (d > 4) bio -= (d - 4) * 14
-  const perChain = c / cls.n
-  if (perChain > 24) bio -= (perChain - 24) * 6
-  if (perChain < 12) bio -= (12 - perChain) * 5
+  if (cls.n > 0) {
+    const perChain = c / cls.n
+    if (perChain > 24) bio -= (perChain - 24) * 6
+    if (perChain < 12) bio -= (12 - perChain) * 5
+  }
   return Math.max(4, Math.min(97, Math.round(bio)))
 }
 
 export function synth(cls: LipidClass, c: number, d: number): Synth {
   const bio = bioAttainability(cls, c, d)
-  const perChain = c / cls.n
-  let sa = 2.6 + d * 0.28 + (c % 2 !== 0 ? 0.4 : 0) + Math.max(0, perChain - 22) * 0.08
+  const oddPenalty = cls.kind !== 'sterol' && c % 2 !== 0 ? 0.4 : 0
+  const perChainOver = cls.n > 0 ? Math.max(0, c / cls.n - 22) : 0
+  let sa = 2.6 + d * 0.28 + oddPenalty + perChainOver * 0.08
   if (cls.kind === 'glyco') sa += 0.6 // glycosidic + regiochem
+  if (cls.kind === 'sterol') sa += 1.4 // fused polycyclic ring system — genuinely harder to build than a linear chain
   sa = Math.round(Math.min(8.6, sa) * 10) / 10
   const chem = Math.round(Math.max(8, 100 - (sa - 2.6) * 15))
   return { bio, sa, chem }
@@ -333,7 +359,7 @@ export function isomer(cls: LipidClass, c: number, d: number): [number, number][
     const bDB = d >= 1 ? 1 : 0
     return [[18, bDB], [c - 18, d - bDB]]
   }
-  if (kind === 'sterolester' || kind === 'fattyacyl' || cls.n === 1) return [[c, d]]
+  if (kind === 'sterolester' || kind === 'fattyacyl' || kind === 'sterol' || cls.n === 1) return [[c, d]]
   if (cls.n === 4) {
     const base = Math.floor(c / 4)
     const cs = [base, base, base, c - 3 * base]
