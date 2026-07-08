@@ -35,7 +35,22 @@ export default function Structure({ cls, c, d, iso }: Props) {
     return () => { cancelled = true }
   }, [smiles])
 
-  if (!svg) return <Schematic cls={cls} iso={iso} />
+  if (!svg) {
+    // sterols have no acyl chain, so the generic cartoon (which draws a fake chain from
+    // `iso`) would be actively misleading here rather than just approximate — for an
+    // uncurated sterol gap we have no real ring-system structure to show at all.
+    if (cls.kind === 'sterol') {
+      return (
+        <div className="structure">
+          <div className="struct-placeholder">
+            No structure available — this is a predicted gap with no acyl chain to draw
+            a cartoon from. A real depiction would come from a curated LIPID MAPS entry.
+          </div>
+        </div>
+      )
+    }
+    return <Schematic cls={cls} iso={iso} />
+  }
 
   return (
     <div className="structure">
