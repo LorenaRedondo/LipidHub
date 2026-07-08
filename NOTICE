@@ -21,3 +21,10 @@ Synthetic accessibility score:
   Ertl P, Schuffenhauer A. Estimation of synthetic accessibility score of
   drug-like molecules based on molecular complexity and fragment contributions.
   J Cheminform. 2009;1:8. doi:10.1186/1758-2946-1-8
+
+This product includes ml/data/raw/pnnl_ccs_compendium.tsv, the "Unified CCS Compendium"
+from Pacific Northwest National Laboratory (Baker lab), licensed under the Apache
+License, Version 2.0. Source: https://github.com/PNNL-Comp-Mass-Spec/MetabolomicsCCS
+Used as real, drift-tube-measured collision cross section data to calibrate and
+validate the CCS property model (ml/data_prep.py, ml/train.py) — not modified beyond
+filtering/reshaping into ml/data/processed/real_lipid_ccs.csv.

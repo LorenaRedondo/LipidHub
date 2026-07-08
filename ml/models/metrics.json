@@ -1,5 +1,5 @@
 {
-  "model_version": "demo-gbm-0.1",
+  "model_version": "gbm-v2-optuna-real-anchored",
   "n_species": 2090,
   "features": [
     "mass",
@@ -12,17 +12,51 @@
     "hg_anionic",
     "hg_neutral"
   ],
-  "note": "Trained on physics-shaped SYNTHETIC targets for the demo. Swap in AllCCS/METLIN-CCS + RT libraries for production.",
+  "ccs_baseline_coefficients": {
+    "scale": 4.490932373224984,
+    "hg_neutral": 9.197886686345111,
+    "hg_anionic": -5.074502887808807,
+    "dbond": -6.64415877062435
+  },
+  "n_real_anchor_points": 6,
+  "n_real_holdout_points": 4,
   "ccs": {
-    "mae": 2.753,
-    "r2": 0.997,
-    "coverage": 0.9,
-    "ci_halfwidth": 5.949
+    "synthetic_test": {
+      "mae": 3.088,
+      "r2": 0.996,
+      "coverage": 0.9,
+      "ci_halfwidth": 6.251,
+      "n": 418
+    },
+    "best_params": {
+      "n_estimators": 296,
+      "max_depth": 3,
+      "learning_rate": 0.08266656974129535,
+      "subsample": 0.6554974232719911,
+      "min_samples_leaf": 11
+    },
+    "real_holdout_test": {
+      "mae": 3.788,
+      "r2": 0.982,
+      "coverage": 0.75,
+      "ci_halfwidth": 6.251,
+      "n": 4
+    }
   },
   "rt": {
-    "mae": 0.379,
-    "r2": 0.987,
-    "coverage": 0.9,
-    "ci_halfwidth": 0.794
+    "synthetic_test": {
+      "mae": 0.372,
+      "r2": 0.987,
+      "coverage": 0.902,
+      "ci_halfwidth": 0.793,
+      "n": 418
+    },
+    "best_params": {
+      "n_estimators": 293,
+      "max_depth": 5,
+      "learning_rate": 0.06522920379224931,
+      "subsample": 0.6609137270187132,
+      "min_samples_leaf": 7
+    }
   }
 }

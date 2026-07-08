@@ -32,5 +32,11 @@ db/lipidex.sqlite*
 __pycache__/
 *.pyc
 ml/.venv/
+
+# MLflow local tracking store + artifacts (regenerate via `python ml/train.py`)
+ml/mlflow.db
+ml/mlruns/
+ml/mlartifacts/
+ml/*_residuals.png
 mlruns/
 mlartifacts/
