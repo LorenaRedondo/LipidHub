@@ -1,0 +1,22 @@
+# never copy host build artifacts / native modules into the linux build context —
+# node_modules in particular carries a macOS-arm64 better-sqlite3 binding that is
+# ABI-incompatible with the linux/arm64 container.
+node_modules
+dist
+db/lipidex.sqlite*
+
+# ML: heavy/regenerable, not needed to run the app
+ml/.venv
+ml/mlflow.db
+ml/mlruns
+ml/mlartifacts
+ml/*_residuals.png
+ml/data/raw
+
+# local / editor / vcs
+.git
+.github
+.claude
+.DS_Store
+*.tsbuildinfo
+legacy
