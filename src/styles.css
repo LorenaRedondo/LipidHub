@@ -97,7 +97,7 @@
   .axis-y-title{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
   .grid-shell{display:flex;gap:8px;align-items:stretch}
   .ylabels{display:flex;flex-direction:column;justify-content:space-between;padding:2px 0;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;min-width:20px}
-  .gridcore{flex:1;min-width:0}
+  .gridcore{flex:1;min-width:0;max-width:calc(var(--cols) * 27px + (var(--cols) - 1) * 3px)}
   .grid{display:grid;gap:3px}
   .cell{
     aspect-ratio:1;border-radius:3px;border:1px solid transparent;position:relative;
