@@ -46,6 +46,19 @@ See [`docs/api.md`](docs/api.md) for endpoints/tools.
 
 Run `npm run dev`, or open the built `dist/` (via GitHub Pages once enabled).
 
+Or via Docker Compose (builds the frontend + REST API, runs natively on Apple
+Silicon — no emulation needed):
+
+```
+docker compose up --build
+```
+
+- web (nginx, static build) → http://localhost:5174
+- api (Hono/Node) → http://localhost:8787
+
+The `db:build` step (SQLite + ML predictions + SAScore + pathway graph) runs
+during the image build, so both services start with a fully populated dataset.
+
 - **Atlas tab** — a carbon-number × double-bond *gap map* per lipid class. Classes are
   grouped by taxonomy and filterable by the **kingdom** they occur in. Click any cell to
   inspect a species (a **2D chemical structure** built from its composition, formula,

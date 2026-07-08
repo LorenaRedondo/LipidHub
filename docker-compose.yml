@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8787:8787"
+    environment:
+      API_PORT: "8787"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "5174:80"
+    restart: unless-stopped
