@@ -71,9 +71,12 @@ during the image build, so both services start with a fully populated dataset.
   by class; each result opens in the Atlas. Runs over the same service layer as the API/MCP.
 - **Compare tab** — pin up to four species (`+ compare` in the inspector) and line their
   properties up side by side.
-- **Analytics tab** — every plausible species as one point: a property **correlation
-  matrix** (Pearson r), an interactive **scatter** for any property pair, and **k-means
-  clustering** that groups species by their whole property profile.
+- **Analytics tab** — every plausible species as one point, using the real trained CCS/RT
+  model's predictions where available (same numbers as the Inspector, not a placeholder
+  formula): a property **correlation matrix** (Pearson r), and an interactive **scatter**
+  for any property pair. A trend curve is only drawn where there's an established physical
+  basis (e.g. Mason–Schamp CCS-vs-mass scaling, Tanford chain-length-vs-thickness) — we
+  don't fit a line just because two axes were picked.
 - **References tab** — foundational papers the atlas is built on, plus a live Europe PMC
   search per class.
 - **Pipeline tab** — the data architecture (Ingest → Reconcile → Enumerate → Infer →

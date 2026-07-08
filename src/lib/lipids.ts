@@ -423,9 +423,12 @@ export interface Membrane {
   compressibilityKa: number
 }
 
+/** Acyl-chain count for per-chain geometry (sphingoid base + N-acyl count as 2, else cls.n). */
+export function chainsOf(cls: LipidClass): number { return cls.kind === 'sphingo' ? 2 : cls.n }
+
 export function membraneBiophysics(cls: LipidClass, c: number, d: number): Membrane | null {
   if (!MEMBRANE_CLASSES.has(cls.k)) return null // neutral storage lipids don't form membranes
-  const chains = cls.kind === 'sphingo' ? 2 : cls.n
+  const chains = chainsOf(cls)
   const nc = c / chains // carbons per chain
   const dpc = d / chains // double bonds per chain
   const a0 = HEAD_AREA[cls.k] ?? 60
