@@ -1,16 +1,16 @@
 ---
-name: lipidex-atlas
+name: lipiverse-atlas
 description: >
-  Query the LIPIDEX lipidome atlas — identify lipids from mass-spec m/z, look up a
+  Query the LIPIVERSE lipidome atlas — identify lipids from mass-spec m/z, look up a
   species' properties and structure, search/filter the enumerated lipidome, compare
   species, and find in-silico "gap" lipids. Use when a task involves identifying,
   looking up, comparing, or discovering lipids (phospholipids, glycolipids,
   sphingolipids, sterols, fatty acids) or interpreting lipidomics data.
 ---
 
-# LIPIDEX atlas
+# LIPIVERSE atlas
 
-You have access to the LIPIDEX MCP server, which exposes a lipidome atlas: known and
+You have access to the LIPIVERSE MCP server, which exposes a lipidome atlas: known and
 enumerated lipid species with computed properties, biological taxonomy, and structures.
 
 ## Tools

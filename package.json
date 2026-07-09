@@ -1,9 +1,9 @@
 {
-  "name": "lipidex",
+  "name": "lipiverse",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "LIPIDEX — an interactive atlas of the known & predicted lipidome",
+  "description": "LIPIVERSE — an interactive atlas of the known & predicted lipidome",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

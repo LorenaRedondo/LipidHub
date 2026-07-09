@@ -1,8 +1,8 @@
-// ── LIPIDEX MCP server ─────────────────────────────────────────────────────
+// ── LIPIVERSE MCP server ────────────────────────────────────────────────────
 // Exposes the atlas to agents. Run: npm run mcp  (stdio transport).
 // Queries the SQLite-backed adapter (same layer server/api.ts uses; in
 // production it would proxy the REST API). Add to Claude Code with:
-//   claude mcp add lipidex -- npm run mcp
+//   claude mcp add lipiverse -- npm run mcp
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
@@ -16,7 +16,7 @@ import predData from '../src/data/predictions.json'
 
 const PRED = predData as unknown as { model_version: string; predictions: Record<string, unknown> }
 
-const server = new McpServer({ name: 'lipidex', version: '0.1.0' })
+const server = new McpServer({ name: 'lipiverse', version: '0.1.0' })
 
 const json = (data: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] })
 
@@ -150,4 +150,4 @@ server.registerTool(
 const transport = new StdioServerTransport()
 await server.connect(transport)
 // eslint-disable-next-line no-console
-console.error('LIPIDEX MCP server ready (stdio)')
+console.error('LIPIVERSE MCP server ready (stdio)')

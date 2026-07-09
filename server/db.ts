@@ -1,4 +1,4 @@
-// ── LIPIDEX SQLite-backed service adapter ──────────────────────────────────
+// ── LIPIVERSE SQLite-backed service adapter ─────────────────────────────────
 // Server-only. Same exported names/shapes as src/lib/service.ts, backed by
 // db/lipidex.sqlite (built with `npm run db:build`) instead of recomputing the
 // full enumerated space on every request. The frontend never imports this —

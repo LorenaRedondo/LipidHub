@@ -1,4 +1,4 @@
-// ── LIPIDEX service layer ──────────────────────────────────────────────────
+// ── LIPIVERSE service layer ─────────────────────────────────────────────────
 // Pure query/record functions over the model. Shared by the REST API and the
 // MCP server so agents and HTTP clients return identical records.
 

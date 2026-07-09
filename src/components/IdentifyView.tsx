@@ -74,7 +74,7 @@ export default function IdentifyView({ onOpen }: Props) {
           <b className="num">{results.length}</b> candidate{results.length === 1 ? '' : 's'} within tolerance
           {isobaric && <span className="an-sub"> · isobaric — use CCS/RT to disambiguate</span>}
           {results.length > 0 && (
-            <button className="dl-link" onClick={() => downloadCSV('lipidex-identify.csv',
+            <button className="dl-link" onClick={() => downloadCSV('lipiverse-identify.csv',
               ['shorthand', 'formula', 'adduct', 'adduct_mz', 'error_ppm', 'ccs_pred', 'rt_pred', 'origin', 'confidence'],
               results.map(({ cand, s }) => [cand.record.shorthand, cand.record.formula, cand.adduct, cand.adductMz.toFixed(4), cand.errorPpm.toFixed(2), cand.record.properties.ccs, cand.record.properties.rt, cand.record.origin, s.conf]))}>download CSV ↓</button>
           )}

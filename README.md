@@ -1,4 +1,4 @@
-# LIPIDEX — an atlas of the known & predicted lipidome
+# LIPIVERSE — an atlas of the known & predicted lipidome
 
 A navigable atlas that unifies the **known** lipids (from reference databases), the
 **enumerated but uncatalogued** ones (the *gaps*), their **properties inferred from
@@ -37,7 +37,7 @@ instead of recomputing the space per request. Build it once before running eithe
 npm run db:build                     # build db/lipidex.sqlite (regenerate any time)
 npm run api                          # REST at http://localhost:8787
 npm run mcp                          # MCP server (stdio)
-claude mcp add lipidex -- npm run mcp
+claude mcp add lipiverse -- npm run mcp
 ```
 
 See [`docs/api.md`](docs/api.md) for endpoints/tools.
@@ -88,7 +88,7 @@ during the image build, so both services start with a fully populated dataset.
 Reference databases already own *"the list"* — [LIPID MAPS](https://www.lipidmaps.org/)
 (~48k curated), its in-silico set (~1.1M enumerated), and
 [SwissLipids](https://www.swisslipids.org/) (enzyme/pathway links). Competing on
-catalogue size is a losing game. LIPIDEX competes on **integration + inference + two
+catalogue size is a losing game. LIPIVERSE competes on **integration + inference + two
 missing layers**:
 
 1. **A systematic synthesizability column** — biosynthetic accessibility (does an

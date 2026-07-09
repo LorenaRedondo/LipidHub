@@ -1,4 +1,4 @@
-// ── LIPIDEX data model ────────────────────────────────────────────────────
+// ── LIPIVERSE data model ───────────────────────────────────────────────────
 // Pure, framework-free chemistry + property inference + biological taxonomy.
 // Formulas/masses are computed exactly from composition; CCS/RT/logP/Tm/
 // synthesizability are clearly-labelled heuristic model outputs pending the
