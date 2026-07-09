@@ -332,6 +332,10 @@
 
   .rline{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:baseline;gap:8px}
   .rline b{font-size:17px}
+  .trend-basis{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;
+    border-radius:20px;padding:2px 8px;border:1px solid}
+  .trend-basis.validation{color:var(--known);border-color:var(--known-dim);background:rgba(95,202,139,.08)}
+  .trend-basis.formula{color:var(--faint);border-color:var(--line2);background:var(--raise)}
 
   .scatter-wrap{border:1px solid var(--line);border-radius:9px;background:#0c161b;padding:6px}
   .scatter-wrap .ax{fill:var(--muted);font-family:var(--mono);font-size:9px}

@@ -127,6 +127,9 @@ export default function AnalyticsView() {
                 <div className="rline">
                   r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
                   <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
+                  <span className={'trend-basis ' + trend.basis}>
+                    {trend.basis === 'validation' ? 'tested vs. real model output' : 'formula reference, not independent data'}
+                  </span>
                 </div>
                 <div className="an-sub" style={{ marginTop: -6, marginBottom: 8 }}>trend curve: {trend.reason}</div>
               </>
