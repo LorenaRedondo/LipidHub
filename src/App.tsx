@@ -123,7 +123,7 @@ export default function App() {
       {view === 'search' && <SearchView onOpen={openInAtlas} pins={pins} onTogglePin={togglePin} />}
       {view === 'identify' && <IdentifyView onOpen={openInAtlas} />}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
-      {view === 'analytics' && <AnalyticsView />}
+      {view === 'analytics' && <AnalyticsView persona={persona} onPersona={setPersona} onOpen={openInAtlas} />}
       {view === 'refs' && <ReferencesView />}
       {view === 'pipe' && <PipelineView />}
       {view === 'users' && <UsersView />}

@@ -5,7 +5,7 @@
 // for species outside the model's coverage) and offers Pearson correlation.
 // All framework-free and pure.
 
-import { CLASSES, chainsOf, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group } from './lipids'
+import { CLASSES, chainsOf, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group, type Persona } from './lipids'
 import type { PredFile } from './predictions'
 
 export interface Point {
@@ -179,6 +179,34 @@ const TRENDS: Trend[] = [
 /** A curve is only offered for the pair actually being plotted (either axis order). */
 export function trendFor(fx: FeatureKey, fy: FeatureKey): Trend | null {
   return TRENDS.find((t) => (t.x === fx && t.y === fy) || (t.x === fy && t.y === fx)) ?? null
+}
+
+// ── Persona defaults ─────────────────────────────────────────────────────
+// Each of the four "who am I" personas (shared with the Atlas inspector, see
+// PERSONAS in lipids.ts) wants a different default lens on property
+// relationships — not the same generic scatter for everyone. Selecting a
+// persona sets a sensible starting pair; the axis pickers stay fully
+// overridable, this is just a starting point, not a lock.
+export const PERSONA_ANALYTICS: Record<Persona, { x: FeatureKey; y: FeatureKey; framing: string }> = {
+  analyst: { x: 'mass', y: 'ccs', framing: "Validate an unknown ID: does its CCS sit where mass alone would predict?" },
+  biophys: { x: 'carbonsPerChain', y: 'thickness', framing: 'See how acyl-chain length drives bilayer structure — the composition → membrane-property gradient.' },
+  chem: { x: 'bio', y: 'chem', framing: 'Find the lab-only white space: chemically easy to make, rare or absent in nature.' },
+  bioinfo: { x: 'mass', y: 'ccs', framing: 'Sanity-check property relationships across the whole atlas before building on them.' },
+}
+
+// The "valuable quadrant" (matches /lab-only and find_lab_only server-side —
+// same chem/bio thresholds, so the definition is consistent everywhere the
+// app uses it): high chemical accessibility, low biosynthetic accessibility.
+export const LAB_ONLY_CHEM_MIN = 72 // chem score ≥ 72 ⟺ SAScore ≤ 4.5 (same conversion synth() uses)
+export const LAB_ONLY_BIO_MAX = 30
+
+export function isLabOnly(p: Point): boolean {
+  return p.chem >= LAB_ONLY_CHEM_MIN && p.bio <= LAB_ONLY_BIO_MAX
+}
+
+/** Best lab-only candidates: easiest to make first, then rarest in nature. */
+export function labOnlyCandidates(points: Point[], limit = 8): Point[] {
+  return points.filter(isLabOnly).sort((a, b) => (b.chem - a.chem) || (a.bio - b.bio)).slice(0, limit)
 }
 
 export const GROUP_COLORS: Record<string, string> = {

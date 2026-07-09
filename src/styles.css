@@ -417,6 +417,10 @@
   /* ===== persona bar in the inspector (v7) ===== */
   .persona-bar{position:sticky;top:0;z-index:6;background:var(--panel2);border-bottom:1px solid var(--line);
     padding:9px 12px;display:flex;flex-direction:column;gap:6px}
+  /* standalone: used outside the narrow inspector sidebar (e.g. Analytics) — no sticky panel chrome, chips don't stretch full-width */
+  .persona-bar.standalone{position:static;background:none;border:none;padding:0;z-index:auto}
+  .persona-bar.standalone .persona-chips{flex-wrap:wrap}
+  .persona-bar.standalone .pchip{flex:none;flex-direction:row;padding:6px 12px;gap:6px;font-size:12px}
   .persona-bar-label{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
   .persona-chips{display:flex;gap:5px}
   .pchip{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid var(--line);

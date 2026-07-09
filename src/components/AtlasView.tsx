@@ -1,16 +1,9 @@
 import { useState } from 'react'
-import { findClass, dMaxOf, type LipidClass, type Persona } from '../lib/lipids'
+import { findClass, dMaxOf, PERSONAS, type LipidClass, type Persona } from '../lib/lipids'
 import type { Cell, Pin } from '../App'
 import Rail from './Rail'
 import GapMap from './GapMap'
 import Inspector from './Inspector'
-
-const PERSONAS: { id: Persona; ic: string; short: string; label: string }[] = [
-  { id: 'analyst', ic: '◎', short: 'Analyst', label: 'Mass-spec analyst' },
-  { id: 'biophys', ic: '≋', short: 'Biophysics', label: 'Membrane biophysicist' },
-  { id: 'chem', ic: '⚗', short: 'Chemist', label: 'Synthetic chemist' },
-  { id: 'bioinfo', ic: '⌗', short: 'Bioinfo', label: 'Bioinformatician' },
-]
 
 interface Props {
   cls: LipidClass
