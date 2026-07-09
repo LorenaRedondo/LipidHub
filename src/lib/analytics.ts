@@ -105,8 +105,23 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 // ── Theoretically-motivated trend curves ────────────────────────────────────
 // A fitted line is only ever drawn for a pair with a real physical/established
 // basis — otherwise the scatter shows points + Pearson r and nothing else, so
-// we never imply a model that isn't there. Two curated relationships:
+// we never imply a model that isn't there. Two tiers, labelled distinctly in
+// the UI so we never overstate what a curve shows:
 //
+//  - 'validation': the property is real trained-model output (ccs, via
+//    predictions.json) — the curve tests whether it obeys a literature
+//    scaling law, which is a genuine check, not a tautology.
+//  - 'formula': the property is itself *computed* from the cited formula
+//    elsewhere in this app (thickness/tm/breakthrough all come from
+//    membraneBiophysics()/props(), not from measured or ML data) — the curve
+//    just makes that formula legible, it can't fail to fit.
+//
+// logP vs carbons was considered and rejected: cls.lpOff (the per-class
+// headgroup intercept) spans −6 to +14 against a slope of 0.52/carbon, so
+// pooling classes reproduces the exact multi-band artifact chain-count
+// normalization fixed for thickness — there's no single clean curve to draw.
+//
+// Curated relationships:
 //  - CCS vs mass: Mason–Schamp mobility scaling, CCS ∝ mass^0.635 — the same
 //    fixed exponent ml/features.py calibrates its baseline against (α is a
 //    literature constant, not fit per-plot; only the scale factor is fit here).
@@ -115,10 +130,21 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 //    linear once carbons are normalized per chain, which is why this pair
 //    uses `carbonsPerChain` rather than raw `carbons` (raw carbons conflates
 //    1-, 2-, 3- and 4-chain classes into separate parallel bands).
+//  - tm vs carbons: our tm formula (3.0·c − 55 − 25·d) has no per-class
+//    offset, so pooling classes is safe here — real Tm literature (Marsh's
+//    Handbook of Lipid Bilayers; Koynova & Caffrey 1998) shows chain length
+//    is roughly linear but a cis double bond causes a much sharper drop than
+//    our simple linear-in-d term captures.
+//  - breakthrough vs carbonsPerChain: our formula (0.32·nc − 2.0·dpc − 2.4)
+//    is chain-normalized like thickness, so no class-offset confound. Shape
+//    matches AFM nanoindentation literature on supported bilayers (e.g.
+//    Garcia-Manyes, Oncins & Sanz, Biophys J 2005).
+export type TrendBasis = 'validation' | 'formula'
 export interface Trend {
   x: FeatureKey // the curve's natural independent axis
   y: FeatureKey // the curve's natural dependent axis
   reason: string
+  basis: TrendBasis
   fit: (xs: number[], ys: number[]) => (x: number) => number
 }
 
@@ -144,8 +170,10 @@ function fitLinear(xs: number[], ys: number[]): (x: number) => number {
 }
 
 const TRENDS: Trend[] = [
-  { x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here)', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT) },
-  { x: 'carbonsPerChain', y: 'thickness', reason: "Tanford's rule: bilayer half-thickness ∝ chain length", fit: fitLinear },
+  { x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here)', basis: 'validation', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT) },
+  { x: 'carbonsPerChain', y: 'thickness', reason: "Tanford's rule: bilayer half-thickness ∝ chain length", basis: 'formula', fit: fitLinear },
+  { x: 'carbons', y: 'tm', reason: 'Chain-length/Tm scaling (Marsh; Koynova & Caffrey 1998) — our tm formula is linear-in-d, real double-bond depression is sharper', basis: 'formula', fit: fitLinear },
+  { x: 'carbonsPerChain', y: 'breakthrough', reason: 'AFM nanoindentation chain-length scaling (Garcia-Manyes, Oncins & Sanz 2005)', basis: 'formula', fit: fitLinear },
 ]
 
 /** A curve is only offered for the pair actually being plotted (either axis order). */
