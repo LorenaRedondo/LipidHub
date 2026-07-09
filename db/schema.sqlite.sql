@@ -1,4 +1,4 @@
--- ── LIPIDEX reconciled data model — SQLite dialect ─────────────────────────
+-- ── LIPIVERSE reconciled data model — SQLite dialect ────────────────────────
 -- Mirrors db/schema.sql (the Postgres/Supabase target). This is the dev/local
 -- store that backs the REST API + MCP server (server/db.ts); the browser
 -- bundle never touches it — it keeps computing client-side from src/lib.

@@ -15,7 +15,7 @@ export default function Header({ view, onView, compareCount }: { view: View; onV
   return (
     <header>
       <div className="brand">
-        <span className="logo">LIPID<b>EX</b></span>
+        <span className="logo">LIPI<b>VERSE</b></span>
         <span className="tag">A navigable atlas of the known &amp; predicted lipidome</span>
       </div>
       <nav aria-label="Main">

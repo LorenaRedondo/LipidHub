@@ -1,8 +1,8 @@
-# LIPIDEX — vision & scope
+# LIPIVERSE — vision & scope
 
 ## The one-liner
 
-**Every lipid gets a great, honest, linkable page — and LIPIDEX is the substrate the
+**Every lipid gets a great, honest, linkable page — and LIPIVERSE is the substrate the
 lipidome is queried through, by humans and by agents.**
 
 We don't out-curate LIPID MAPS (their data is CC BY — we build on it). We win on

@@ -36,7 +36,7 @@ async function fetchJson(url: string, timeoutMs = 15000): Promise<unknown | null
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (LIPIDEX research preview)' } })
+    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (LIPIVERSE research preview)' } })
     if (!res.ok) return null
     return await res.json()
   } catch {

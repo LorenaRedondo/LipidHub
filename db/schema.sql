@@ -1,4 +1,4 @@
--- ── LIPIDEX reconciled data model ─────────────────────────────────────────
+-- ── LIPIVERSE reconciled data model ───────────────────────────────────────
 -- Portable PostgreSQL DDL. Apply to Postgres (RDKit cartridge recommended for
 -- structure search) or Supabase. Provenance is a first-class citizen: every
 -- property value knows how it was produced, by which model version, with what

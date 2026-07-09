@@ -1,4 +1,4 @@
-// ── LIPIDEX REST API ───────────────────────────────────────────────────────
+// ── LIPIVERSE REST API ──────────────────────────────────────────────────────
 // Run: npm run api   (tsx server/api.ts).  Thin HTTP layer over src/lib/service.
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
@@ -20,7 +20,7 @@ const num = (v: string | undefined) => (v == null || v === '' ? undefined : Numb
 
 app.get('/', (c) =>
   c.json({
-    name: 'LIPIDEX API',
+    name: 'LIPIVERSE API',
     version: '0.1.0',
     note: 'Research preview. mass/formula/adducts are exact; CCS/RT/Tm/synthesizability are heuristic placeholders (issue #3).',
     endpoints: [
@@ -76,7 +76,7 @@ app.get('/search', (c) => {
   if (q.format === 'csv') {
     const head = 'id,shorthand,group,formula,exact_mass,ccs_pred,rt_pred,logp,origin,biosynthetic,sascore'
     const rows = res.results.map((r) => [r.id, r.shorthand, r.class.group, r.formula, r.exactMass, r.properties.ccs, r.properties.rt, r.properties.logP, r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore].join(','))
-    return c.body([head, ...rows].join('\n'), 200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lipidex-search.csv"' })
+    return c.body([head, ...rows].join('\n'), 200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lipiverse-search.csv"' })
   }
   return c.json(res)
 })
@@ -117,5 +117,5 @@ app.get('/predict/:id', (c) => {
 const port = Number(process.env.API_PORT) || 8787
 serve({ fetch: app.fetch, port }, (info) => {
   // eslint-disable-next-line no-console
-  console.log(`LIPIDEX API on http://localhost:${info.port}`)
+  console.log(`LIPIVERSE API on http://localhost:${info.port}`)
 })

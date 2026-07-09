@@ -119,7 +119,7 @@ export default function AnalyticsView() {
             <div className="an-ctrls">
               <label>X<select value={xKey} onChange={(e) => setXKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
               <label>Y<select value={yKey} onChange={(e) => setYKey(e.target.value as FeatureKey)}>{FEATURES.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}</select></label>
-              <button className="dl-link" onClick={() => downloadSVG(`lipidex-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
+              <button className="dl-link" onClick={() => downloadSVG(`lipiverse-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
             </div>
 
             <div className="rline">

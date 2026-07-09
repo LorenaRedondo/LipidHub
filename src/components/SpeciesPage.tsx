@@ -16,7 +16,7 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   useEffect(() => {
     if (!rec) return
     const prev = document.title
-    document.title = `${rec.shorthand} (${rec.formula}) · LIPIDEX`
+    document.title = `${rec.shorthand} (${rec.formula}) · LIPIVERSE`
     let meta = document.querySelector('meta[name="description"]')
     if (!meta) { meta = document.createElement('meta'); meta.setAttribute('name', 'description'); document.head.appendChild(meta) }
     meta.setAttribute('content', `${rec.shorthand} — ${rec.class.name}. Formula ${rec.formula}, exact mass ${rec.exactMass}. Predicted CCS, RT, logP; ${rec.origin === 'curated' ? 'curated in LIPID MAPS' : 'in-silico'}.`)
@@ -38,12 +38,12 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   const adductRows = Object.entries(rec.adducts)
 
   const downloadStructure = () => downloadSVG(`${rec!.id}.svg`, document.querySelector('.sp-struct .struct-canvas svg'))
-  const cite = `LIPIDEX. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}Retrieved from lipidex, ${location.origin}/#/species/${rec.id}`
+  const cite = `LIPIVERSE. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}Retrieved from lipiverse, ${location.origin}/#/species/${rec.id}`
 
   return (
     <div className="app">
       <div className="species-page">
-        <button className="crumb" onClick={onBack}>← LIPIDEX atlas</button>
+        <button className="crumb" onClick={onBack}>← LIPIVERSE atlas</button>
 
         <header className="sp-hero">
           <div className="sp-badges">

@@ -9,7 +9,7 @@ import { CLASSES, LMSD_CURATED, dMaxOf, findClass } from '../src/lib/lipids'
 import { buildRecord, type SpeciesRecord } from '../src/lib/service'
 import structuresData from '../src/data/lmsdStructures.json'
 
-const SITE = process.env.SITE_URL || 'https://lipidex.example'
+const SITE = process.env.SITE_URL || 'https://lipiverse.example'
 const OUT = 'dist/s'
 const structures = (structuresData as { structures: Record<string, { lmId: string; inchikey: string; smiles: string }> }).structures
 
@@ -18,7 +18,7 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 function page(rec: SpeciesRecord): string {
   const cls = findClass(rec.class.k)!
   const st = structures[rec.id]
-  const title = `${rec.shorthand} (${rec.formula}) — ${rec.class.name} | LIPIDEX`
+  const title = `${rec.shorthand} (${rec.formula}) — ${rec.class.name} | LIPIVERSE`
   const desc = `${rec.shorthand}: ${rec.class.name}. Formula ${rec.formula}, exact mass ${rec.exactMass} Da. Adduct [M+H]+ ${rec.adducts['[M+H]+']}. Predicted CCS ${rec.properties.ccs} Å². ${rec.origin === 'curated' ? `Curated in LIPID MAPS${st ? ` (${st.lmId})` : ''}.` : 'In-silico predicted.'} Occurs in ${rec.class.kingdoms.join(', ')}.`
   const canonical = `${SITE}/s/${rec.id}.html`
   const jsonld = {
@@ -26,7 +26,7 @@ function page(rec: SpeciesRecord): string {
     name: rec.shorthand, alternateName: rec.class.name,
     molecularFormula: rec.formula, molecularWeight: { '@type': 'QuantitativeValue', value: rec.exactMass, unitText: 'Da' },
     ...(st ? { identifier: [{ '@type': 'PropertyValue', propertyID: 'InChIKey', value: st.inchikey }, { '@type': 'PropertyValue', propertyID: 'LIPID MAPS', value: st.lmId }], smiles: st.smiles } : {}),
-    url: canonical, isPartOf: { '@type': 'Dataset', name: 'LIPIDEX' },
+    url: canonical, isPartOf: { '@type': 'Dataset', name: 'LIPIVERSE' },
   }
   const row = (k: string, v: string) => `<div class="k">${k}</div><div class="v">${esc(v)}</div>`
   return `<!doctype html>
@@ -35,7 +35,7 @@ function page(rec: SpeciesRecord): string {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${canonical}">
-<meta property="og:type" content="website"><meta property="og:title" content="${esc(rec.shorthand)} · LIPIDEX">
+<meta property="og:type" content="website"><meta property="og:title" content="${esc(rec.shorthand)} · LIPIVERSE">
 <meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${canonical}">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">${JSON.stringify(jsonld)}</script>
@@ -47,7 +47,7 @@ h1{font-family:ui-monospace,monospace;font-size:34px;margin:0 0 4px}.sub{color:#
 .k{color:#93a8b2}.v{font-family:ui-monospace,monospace;text-align:right}.note{color:#647883;font-size:12px}
 h2{font-size:14px;color:#647883;text-transform:uppercase;letter-spacing:.08em;margin:26px 0 10px}</style>
 </head><body><main>
-<p><a href="${SITE}/">← LIPIDEX</a></p>
+<p><a href="${SITE}/">← LIPIVERSE</a></p>
 <p><span class="badge ${rec.origin === 'curated' ? '' : 'gap'}">${rec.origin === 'curated' ? 'curated · LIPID MAPS' : 'predicted gap'}</span></p>
 <h1>${esc(rec.shorthand)}</h1>
 <div class="sub">${esc(rec.class.name)} · ${esc(rec.class.category)}</div>

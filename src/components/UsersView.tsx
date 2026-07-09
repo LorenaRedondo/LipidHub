@@ -48,7 +48,7 @@ export default function UsersView() {
         </div>
 
         <div className="marketnote">
-          <b>How LIPIDEX fits alongside the reference databases.</b> LIPIDEX builds on the resources
+          <b>How LIPIVERSE fits alongside the reference databases.</b> LIPIVERSE builds on the resources
           the field already relies on — LIPID MAPS, SwissLipids, Rhea, HMDB — rather than replacing
           them. It adds three things they don't put in one place: the <em>enumerated</em> space shown
           beside the <em>catalogued</em> one, so the gaps are visible; properties inferred for every
