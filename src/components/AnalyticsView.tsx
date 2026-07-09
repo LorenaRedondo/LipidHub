@@ -67,10 +67,10 @@ export default function AnalyticsView() {
         <h2 style={{ marginTop: 8 }}>Explore correlations</h2>
         <p className="lede">
           Every plausible species in the atlas as one point, with its computed properties.
-          The matrix shows Pearson r for every property pair — a correlation strength, not a
-          fitted model. The scatter lets you drill into any pair; a trend curve is only drawn
-          when the pair has an established physical basis (see caption), so we never imply a
-          relationship the data doesn't support.{' '}
+          The matrix is a birds-eye Pearson r overview across every property pair. The scatter
+          below shows the raw points for whichever pair you pick — a correlation number and
+          trend curve only appear when that specific pair has an established physical basis
+          (see caption); otherwise it's just the distribution, with nothing implied.{' '}
           <span style={{ color: 'var(--faint)' }}>
             ({data.length} species · {predictedCount} with real ML-predicted CCS/RT
             {pred ? ` (${pred.model_version})` : ''}, rest from the composition formula.)
@@ -122,11 +122,17 @@ export default function AnalyticsView() {
               <button className="dl-link" onClick={() => downloadSVG(`lipiverse-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
             </div>
 
-            <div className="rline">
-              r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
-              <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
-            </div>
-            {trend && <div className="an-sub" style={{ marginTop: -6, marginBottom: 8 }}>trend curve: {trend.reason}</div>}
+            {trend ? (
+              <>
+                <div className="rline">
+                  r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
+                  <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
+                </div>
+                <div className="an-sub" style={{ marginTop: -6, marginBottom: 8 }}>trend curve: {trend.reason}</div>
+              </>
+            ) : (
+              <div className="an-sub" style={{ marginBottom: 8 }}>no established physical relationship for this pair — showing the raw distribution only</div>
+            )}
 
             <div className="scatter-wrap">
               <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="property scatter plot">
