@@ -57,7 +57,7 @@ export default function AnalyticsView() {
   }, [trend, xKey, xs, ys, xmin, xmax, ymin, ymax])
 
   const corrColor = (v: number) =>
-    v >= 0 ? `rgba(240,169,75,${(0.12 + 0.88 * v).toFixed(3)})` : `rgba(78,203,198,${(0.12 + 0.88 * -v).toFixed(3)})`
+    v >= 0 ? `rgba(224,168,63,${(0.12 + 0.88 * v).toFixed(3)})` : `rgba(78,203,198,${(0.12 + 0.88 * -v).toFixed(3)})`
   const strength = Math.abs(r) > 0.8 ? 'strong' : Math.abs(r) > 0.5 ? 'moderate' : Math.abs(r) > 0.2 ? 'weak' : 'no'
 
   return (
@@ -110,7 +110,7 @@ export default function AnalyticsView() {
             <div className="corr-key">
               <span className="sw" style={{ background: 'rgba(78,203,198,.9)' }} /> −1
               <span className="sw" style={{ background: 'var(--raise)' }} /> 0
-              <span className="sw" style={{ background: 'rgba(240,169,75,.9)' }} /> +1
+              <span className="sw" style={{ background: 'rgba(224,168,63,.9)' }} /> +1
             </div>
           </div>
 
@@ -125,7 +125,7 @@ export default function AnalyticsView() {
             {trend ? (
               <>
                 <div className="rline">
-                  r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
+                  r = <b className="num" style={{ color: r >= 0 ? 'var(--gold)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
                   <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
                   <span className={'trend-basis ' + trend.basis}>
                     {trend.basis === 'validation' ? 'tested vs. real model output' : 'formula reference, not independent data'}

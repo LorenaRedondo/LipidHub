@@ -33,13 +33,13 @@ export default function Schematic({ cls, iso }: { cls: LipidClass; iso: [number,
       </text>
       {hasP && (
         <>
-          <circle cx={cx + 18} cy={cy} r={5.5} fill="var(--amber)" opacity={0.8} />
-          <text x={cx + 18} y={cy + 3} fill="#0b1418" fontSize={7} textAnchor="middle" fontWeight={700}>P</text>
+          <circle cx={cx + 18} cy={cy} r={5.5} fill="var(--cyan)" opacity={0.8} />
+          <text x={cx + 18} y={cy + 3} fill="var(--ground)" fontSize={7} textAnchor="middle" fontWeight={700}>P</text>
         </>
       )}
       {tails.map((t, i) => (
         <g key={i}>
-          <path d={t.path} fill="none" stroke="var(--amber)" strokeWidth={1.8} strokeLinejoin="round" opacity={t.opacity} />
+          <path d={t.path} fill="none" stroke="var(--cyan)" strokeWidth={1.8} strokeLinejoin="round" opacity={t.opacity} />
           <text x={startX + t.len + 6} y={t.y + 3} fill="var(--faint)" fontSize={9} fontFamily="var(--mono)">
             {t.cN}:{t.dN}
           </text>

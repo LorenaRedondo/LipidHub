@@ -10,6 +10,8 @@ import ReferencesView from './components/ReferencesView'
 import SearchView from './components/SearchView'
 import IdentifyView from './components/IdentifyView'
 import SpeciesPage from './components/SpeciesPage'
+import DataAccessView from './components/DataAccessView'
+import MethodsView from './components/MethodsView'
 
 export interface Cell { c: number; d: number }
 export interface Pin { clsK: string; c: number; d: number }
@@ -125,6 +127,8 @@ export default function App() {
       {view === 'refs' && <ReferencesView />}
       {view === 'pipe' && <PipelineView />}
       {view === 'users' && <UsersView />}
+      {view === 'access' && <DataAccessView />}
+      {view === 'methods' && <MethodsView />}
     </div>
   )
 }
