@@ -76,7 +76,7 @@ export default function GapMap({ cls, sel, onSelect }: Props) {
           <div className="ylabels">
             {rows.map((d) => <span key={d}>{d}</span>)}
           </div>
-          <div className="gridcore">
+          <div className="gridcore" style={{ ['--cols' as string]: cols.length } as React.CSSProperties}>
             <div className="grid" role="grid" aria-label={`${cls.name} composition map`} style={{ gridTemplateColumns: `repeat(${cols.length},1fr)` }}>
               {rows.map((d) =>
                 cols.map((c) => {
