@@ -22,8 +22,11 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
     setXKey(PERSONA_ANALYTICS[p].x)
     setYKey(PERSONA_ANALYTICS[p].y)
   }
-  const r = useMemo(() => correlate(data, xKey, yKey), [data, xKey, yKey])
   const trend = useMemo(() => trendFor(xKey, yKey), [xKey, yKey])
+  // r describes the same population the curve is fit against — if the curve excludes
+  // a shape/charge outlier group, the correlation number shouldn't silently include it
+  const rData = useMemo(() => (trend?.excludeFromFit ? data.filter((p) => !trend.excludeFromFit!(p)) : data), [data, trend])
+  const r = useMemo(() => correlate(rData, xKey, yKey), [rData, xKey, yKey])
   const isBioChemPair = (xKey === 'bio' && yKey === 'chem') || (xKey === 'chem' && yKey === 'bio')
   const showLabOnly = persona === 'chem' && isBioChemPair
   const candidates = useMemo(() => (showLabOnly ? labOnlyCandidates(data) : []), [showLabOnly, data])
@@ -50,11 +53,13 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
   const fmt = (v: number) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10)
 
   // trend curve, fit in the pair's *natural* orientation (trend.x/trend.y) then re-oriented
-  // onto whichever axis the user currently has it plotted on
+  // onto whichever axis the user currently has it plotted on. excludeFromFit points still
+  // render as scatter dots (via pts/xs/ys above) — they're just not used to fit the curve.
   const trendPath = useMemo(() => {
     if (!trend) return null
+    const fitPts = trend.excludeFromFit ? pts.filter((o) => !trend.excludeFromFit!(o.p)) : pts
     const swapped = trend.x !== xKey // xKey must be trend.y if not trend.x, since trendFor() matched
-    const fitXs = swapped ? ys : xs, fitYs = swapped ? xs : ys
+    const fitXs = fitPts.map((o) => (swapped ? o.y : o.x)), fitYs = fitPts.map((o) => (swapped ? o.x : o.y))
     if (fitXs.length < 3) return null
     const f = trend.fit(fitXs, fitYs)
     const lo = swapped ? ymin : xmin, hi = swapped ? ymax : xmax
@@ -67,7 +72,8 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
       path.push(`${i ? 'L' : 'M'} ${sx(px).toFixed(1)} ${sy(py).toFixed(1)}`)
     }
     return path.join(' ')
-  }, [trend, xKey, xs, ys, xmin, xmax, ymin, ymax])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trend, xKey, pts, xmin, xmax, ymin, ymax])
 
   // lab-only quadrant rect, in whichever axis orientation chem/bio currently sit
   const labOnlyRect = useMemo(() => {

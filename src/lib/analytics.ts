@@ -19,6 +19,7 @@ export interface Point {
   ccs: number
   rt: number
   predicted: boolean // true if ccs/rt came from the trained model, false if from the composition formula
+  chains: number // acyl-chain count — shape/charge regimes differ enough (e.g. 4-chain cardiolipin) to matter for some fits
   logp: number
   tm: number | null
   carbons: number
@@ -48,7 +49,7 @@ export function buildDataset(pred?: PredFile | null): Point[] {
         pts.push({
           id, clsK: cls.k, group: cls.group, c, d,
           mass: p.M, mz: p.M + PROTON,
-          ccs: ml?.ccs.v ?? p.ccs, rt: ml?.rt.v ?? p.rt, predicted: ml != null,
+          ccs: ml?.ccs.v ?? p.ccs, rt: ml?.rt.v ?? p.rt, predicted: ml != null, chains,
           logp: p.logp, tm: p.tm,
           carbons: c, carbonsPerChain: chains > 0 ? Math.round((c / chains) * 100) / 100 : null, dbonds: d,
           bio: sy.bio, chem: sy.chem,
@@ -125,6 +126,12 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 //  - CCS vs mass: Mason–Schamp mobility scaling, CCS ∝ mass^0.635 — the same
 //    fixed exponent ml/features.py calibrates its baseline against (α is a
 //    literature constant, not fit per-plot; only the scale factor is fit here).
+//    The fit excludes chains > 2 (in this atlas, that's cardiolipin alone):
+//    its 4-arm branched structure and doubly-anionic charge state put it in a
+//    genuinely different shape/charge regime, visibly breaking away from the
+//    single-chain scaling as a separate streak at high mass — confirmed by
+//    inspecting the actual outlier points, not assumed. Still plotted as
+//    data, just excluded from what the reference curve is fit against.
 //  - thickness vs carbonsPerChain: Tanford's hydrocarbon-chain-length rule
 //    (lc = 1.5 + 1.265·nc), which membraneBiophysics() already implements —
 //    linear once carbons are normalized per chain, which is why this pair
@@ -146,6 +153,7 @@ export interface Trend {
   reason: string
   basis: TrendBasis
   fit: (xs: number[], ys: number[]) => (x: number) => number
+  excludeFromFit?: (p: Point) => boolean // still plotted as data, just not used to fit the curve
 }
 
 const CCS_MASS_EXPONENT = 0.635 // matches ml/features.py — literature range ~0.6–0.7
@@ -170,7 +178,10 @@ function fitLinear(xs: number[], ys: number[]): (x: number) => number {
 }
 
 const TRENDS: Trend[] = [
-  { x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here)', basis: 'validation', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT) },
+  {
+    x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here) — fit excludes >2-chain species (e.g. cardiolipin), a different shape/charge regime',
+    basis: 'validation', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT), excludeFromFit: (p) => p.chains > 2,
+  },
   { x: 'carbonsPerChain', y: 'thickness', reason: "Tanford's rule: bilayer half-thickness ∝ chain length", basis: 'formula', fit: fitLinear },
   { x: 'carbons', y: 'tm', reason: 'Chain-length/Tm scaling (Marsh; Koynova & Caffrey 1998) — our tm formula is linear-in-d, real double-bond depression is sharper', basis: 'formula', fit: fitLinear },
   { x: 'carbonsPerChain', y: 'breakthrough', reason: 'AFM nanoindentation chain-length scaling (Garcia-Manyes, Oncins & Sanz 2005)', basis: 'formula', fit: fitLinear },
