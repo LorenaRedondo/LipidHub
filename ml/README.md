@@ -12,6 +12,7 @@ npm run export:dataset       # TS → ml/dataset.csv (enumerated species + compo
 python ml/data_prep.py       # raw real CCS data → ml/data/processed/real_lipid_ccs.csv (cleaned, QA'd)
 python ml/train.py           # tunes + trains CCS/RT models → src/data/predictions.json + models/metrics.json
 python ml/synth.py           # real SAScore (RDKit) → src/data/synth.json
+python ml/logp.py            # real logP (RDKit Crippen) → src/data/logp.json
 npm run db:build             # overlays everything, plus live UniProt/Rhea pathway verification, into db/lipidex.sqlite
 
 mlflow ui --backend-store-uri sqlite:///ml/mlflow.db   # compare every training run/trial
@@ -72,6 +73,12 @@ residual-plot artifacts:
 Computed directly from each species' SMILES — a real structural calculation
 (`method: 'calculated'`), not a trained-model guess.
 
+**6. `logp.py`** — real logP via RDKit's Crippen atom-contribution method
+(`rdkit.Chem.Crippen.MolLogP`), computed directly from each species' SMILES. Same
+`method: 'calculated'` treatment as SAScore; replaces the heuristic linear formula
+for the ~2,000 species with a valid SMILES (server/API/MCP only — see the frontend
+caveat in the table below).
+
 ## What's real vs. what's still a documented placeholder
 
 | Property | Status |
@@ -79,6 +86,7 @@ Computed directly from each species' SMILES — a real structural calculation
 | CCS | **Physics baseline fit to real measurements** + GBM residual correction, hyperparameter-tuned, **validated against a held-out real test set** (see `ml/models/metrics.json` → `ccs.real_holdout_test`). Still small-N (single digits of held-out points) — the coverage number on that split is noisy by nature of the sample size; report the point estimate (MAE/R²) as primary evidence, not the coverage. |
 | RT | Physics-*shaped* synthetic target only. Retention time is method/instrument-specific (unlike CCS, there's no single "true" RT — see [RepoRT](https://github.com/michaelwitting/RepoRT)/[PredRet](https://www.researchgate.net/publication/281108823_PredRet_Prediction_of_Retention_Time_by_Direct_Mapping_between_Multiple_Chromatographic_Systems)), and no bulk lipid RT dataset was obtainable in this environment. Swapping in a real, single-method RT library only touches `synthetic_targets()`'s RT half — everything downstream (Optuna search, MLflow tracking, conformal calibration, precompute) is already generic. |
 | SAScore (chemical synthesizability) | Real RDKit computation, not a placeholder. |
+| logP | Real RDKit (Crippen) computation for species with a valid SMILES (~2,000 of ~2,090 plausible species) — server/API/MCP only; the frontend SPA still computes its own heuristic client-side since it has no access to this offline pipeline's output beyond what's written into `db/lipidex.sqlite`. TPSA/other RDKit descriptors not yet computed. |
 | Biosynthetic score | Live UniProt/Rhea pathway verification (`src/lib/pathway.ts`), not this pipeline. |
 
 ## Comparing experiments

@@ -46,6 +46,12 @@ function synthNote(row: SpeciesRow): string {
   return `Biosynthetic from ${bio}; chemical (SAScore) from ${chem}. Retrosynthesis route generation not yet implemented (issue #4).`
 }
 
+function propsNote(byKey: Record<string, { model_version: string | null }>): string {
+  const ccs = byKey.ccs?.model_version === 'heuristic-v0' ? 'heuristic formula' : `real ML model (${byKey.ccs?.model_version}, see issue #33 for remaining scope)`
+  const logp = byKey.logp?.model_version?.startsWith('rdkit-') ? `RDKit Crippen (${byKey.logp?.model_version})` : 'heuristic formula'
+  return `CCS/RT from ${ccs}; logP from ${logp}; Tm is a heuristic placeholder (see issue #3). Mass/formula are exact.`
+}
+
 const propsForIdStmt = db.prepare(`SELECT key, value, model_version, ci_low, ci_high FROM property_best WHERE species_id = ?`)
 const pathwayForIdStmt = db.prepare(`SELECT enzyme_uniprot, rhea_rxn FROM pathway WHERE species_id = ?`)
 
@@ -83,9 +89,7 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
     },
     properties: {
       ccs: byKey.ccs?.value ?? 0, rt: byKey.rt?.value ?? 0, logP: byKey.logp?.value ?? 0, tm: byKey.tm?.value ?? null,
-      note: byKey.ccs?.model_version === 'heuristic-v0'
-        ? 'CCS/RT/Tm are heuristic placeholders (see issue #3); mass/formula are exact.'
-        : `CCS/RT from ${byKey.ccs?.model_version}; Tm/logP are heuristic placeholders (see issue #3); mass/formula are exact.`,
+      note: propsNote(byKey),
     },
     synthesizability: {
       biosynthetic: row.bio_score ?? 0, chemicalScore: row.chem_sascore != null ? chemScoreFromSa(row.chem_sascore) : 0, saScore: row.chem_sascore ?? 0,

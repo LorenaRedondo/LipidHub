@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-07-09T16:56:03.623Z",
+  "builtAt": "2026-07-10T17:59:24.294Z",
   "classes": 22,
   "species": {
     "total": 2581,
@@ -11,6 +11,7 @@
   "models": {
     "ccsRt": "gbm-v2-optuna-real-anchored",
     "chemSascore": "rdkit-2026.03.3-sascorer",
+    "logP": "rdkit-2026.03.3-crippen",
     "pathway": "uniprot-rhea-live-v1"
   }
 }

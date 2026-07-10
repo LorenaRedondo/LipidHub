@@ -3,8 +3,9 @@ import meta from '../data/meta.json'
 const REAL_VS_ILLUSTRATIVE: { component: string; current: string; target: string }[] = [
   { component: 'Formula & exact mass', current: 'computed exactly from backbone + acyl chains', target: 'same' },
   { component: 'Adduct m/z', current: 'computed exactly', target: 'same' },
-  { component: 'CCS / RT', current: `real ML model (${meta.models.ccsRt}), shown in the Inspector, Analytics, REST, and MCP; CCS validated against held-out real experimental data`, target: 'expand training data beyond the current anchor set' },
-  { component: 'logP / Tm', current: 'heuristic placeholders (composition-based formulas)', target: 'trained models' },
+  { component: 'CCS / RT', current: `real ML model (${meta.models.ccsRt}), shown in the Inspector, Analytics, REST, and MCP; CCS validated against held-out real experimental data`, target: 'per-adduct/per-method scope, evaluate a GNN, monotonicity constraint (see issue #33)' },
+  { component: 'logP', current: `real RDKit Crippen calculation (${meta.models.logP}) for species with a valid SMILES — server/API/MCP only, frontend Inspector still shows the heuristic-only formula`, target: 'real values in the frontend UI too; TPSA/other descriptors (see issue #3)' },
+  { component: 'Tm', current: 'heuristic placeholder (composition-based formula)', target: 'trained model or QSPR' },
   { component: 'Synthesizability', current: `chemical: real RDKit SAScore (${meta.models.chemSascore}); biosynthetic: live UniProt/Rhea verification × composition heuristic — both server/API/MCP only, frontend Inspector still shows the heuristic-only formula`, target: 'real scores in the frontend UI too; retrosynthesis route generation (see issue #52)' },
   { component: 'Origin & pathway graph', current: `real — enzymes discovered from UniProt's catalytic-activity annotations per Rhea reaction (${meta.models.pathway})`, target: 'per-species (not per-class) enzyme specificity' },
   { component: 'Known vs. gap status', current: `real — ingested from LMSD (${meta.lmsdRecordsScanned.toLocaleString()} structures scanned)`, target: 'full structures/InChIKeys for every curated species' },
@@ -38,6 +39,7 @@ export default function MethodsView() {
             <tr><th>LMSD structures scanned</th><td className="cur">{meta.lmsdRecordsScanned.toLocaleString()} (CC BY 4.0, lipidmaps.org)</td></tr>
             <tr><th>CCS / RT model</th><td className="cur">{meta.models.ccsRt}</td></tr>
             <tr><th>Chemical SAScore model</th><td className="cur">{meta.models.chemSascore}</td></tr>
+            <tr><th>logP model</th><td className="cur">{meta.models.logP}</td></tr>
             <tr><th>Pathway verification model</th><td className="cur">{meta.models.pathway}</td></tr>
           </tbody>
         </table>
