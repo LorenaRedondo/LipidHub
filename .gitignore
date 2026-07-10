@@ -9,6 +9,9 @@ dist/
 .idea/
 .vscode/
 
+# secrets (see .env.example)
+.env
+
 # Claude Code local
 .claude/settings.local.json
 

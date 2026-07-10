@@ -54,15 +54,29 @@ export default function DataAccessView() {
 
         <h3 className="refsub">MCP server (for agents)</h3>
         <p className="note" style={{ marginBottom: 10 }}>
-          Same records as the REST API, exposed as tools over stdio — built for Claude and
-          other MCP-compatible agents to query directly.
+          Same records as the REST API, exposed as tools — built for Claude and other
+          MCP-compatible agents to query directly. Two transports:
         </p>
+        <p className="note" style={{ marginBottom: 4 }}><b>stdio</b> — requires a local checkout of this repo:</p>
         <div className="plancode">
           npm run mcp{'\n'}
           claude mcp add lipiverse -- npm run mcp
         </div>
+        <p className="note" style={{ margin: '10px 0 4px' }}><b>hosted HTTP</b> — for anyone with an API key, no checkout needed:</p>
+        <div className="plancode">
+          MCP_API_KEYS=$(openssl rand -hex 32) npm run mcp:http{'\n'}
+          {'\n'}
+          <span className="cm"># or via Docker Compose (put MCP_API_KEYS in a .env file):</span>{'\n'}
+          docker compose up -d mcp
+        </div>
+        <p className="note" style={{ marginBottom: 6 }}>
+          Endpoint <code>POST /mcp</code>, requires <code>Authorization: Bearer &lt;key&gt;</code>,
+          rate limited to 60 requests/minute per key (429 + <code>Retry-After</code> past that).
+          Add it to Claude Code with an HTTP transport and a custom header —
+          run <code>claude mcp add --help</code> for the exact flags for your installed version.
+        </p>
         <p className="note" style={{ marginBottom: 20 }}>
-          Tools: {MCP_TOOLS.map((t, i) => <span key={t}><code>{t}</code>{i < MCP_TOOLS.length - 1 ? ', ' : ''}</span>)}
+          Tools (identical on both transports): {MCP_TOOLS.map((t, i) => <span key={t}><code>{t}</code>{i < MCP_TOOLS.length - 1 ? ', ' : ''}</span>)}
         </p>
 
         <h3 className="refsub">Claude Skill</h3>
