@@ -374,13 +374,28 @@
   .trend-basis.validation{color:var(--known);border-color:var(--known-dim);background:rgba(95,202,139,.08)}
   .trend-basis.formula{color:var(--faint);border-color:var(--line2);background:var(--raise)}
 
-  .scatter-wrap{border:1px solid var(--line);border-radius:9px;background:#0c1115;padding:6px}
+  .scatter-wrap{position:relative;border:1px solid var(--line);border-radius:9px;background:#0c1115;padding:6px}
   .scatter-wrap .ax{fill:var(--muted);font-family:var(--mono);font-size:9px}
   .scatter-wrap .axtitle{fill:var(--faint);font-family:var(--sans);font-size:10px;letter-spacing:.03em}
   circle:hover{stroke:var(--text);stroke-width:1}
 
+  .grp-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .grp-chip{display:flex;align-items:center;gap:5px;border:1px solid var(--line2);border-radius:20px;
+    padding:3px 10px;font-family:var(--sans);font-size:11px;color:var(--muted);background:var(--panel2);
+    cursor:pointer;transition:opacity .1s,border-color .1s}
+  .grp-chip:hover{border-color:var(--line2);color:var(--text)}
+  .grp-chip.off{opacity:.35;text-decoration:line-through}
+  .grp-chip.reset{text-decoration:none;opacity:1;color:var(--faint)}
+
+  .scatter-tooltip{position:fixed;z-index:50;pointer-events:none;background:var(--raise);
+    border:1px solid var(--line2);border-radius:8px;padding:8px 10px;font-family:var(--mono);
+    font-size:11px;color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:220px}
+  .scatter-tooltip .tt-name{font-family:var(--sans);font-weight:700;font-size:12px;margin-bottom:4px;color:var(--text)}
+  .scatter-tooltip .tt-row{display:flex;justify-content:space-between;gap:14px}
+  .scatter-tooltip .tt-row span:first-child{color:var(--faint)}
+  .scatter-tooltip .tt-hint{margin-top:5px;font-family:var(--sans);font-size:9.5px;color:var(--faint)}
+
   .an-legend{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px;font-size:11px;color:var(--muted)}
-  .lg{display:flex;align-items:center;gap:5px}
   .dot2{width:9px;height:9px;border-radius:50%;flex:none}
 
   @media (max-width:900px){ .an-grid{grid-template-columns:1fr} }
