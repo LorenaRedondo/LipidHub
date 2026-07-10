@@ -472,6 +472,28 @@
   .sp-actions .cta{padding:7px 12px;font-size:12px;text-decoration:none}
   @media (max-width:720px){ .sp-grid{grid-template-columns:1fr} .sp-title{font-size:30px} }
 
+  /* Print stylesheet, scoped to species pages only (issue #58) — light background, dark
+     text, hide interactive-only chrome. Reuses the same CSS custom properties every
+     component already reads, just with light-mode values, so nothing else needs to change. */
+  @media print {
+    .app:has(> .species-page) {
+      background:#fff; color:#111417;
+      --ground:#fff; --panel:#fff; --panel2:#f7f7f8; --raise:#eef0f2;
+      --line:#d5d9dd; --line2:#c2c7cc;
+      --text:#111417; --muted:#4a5560; --faint:#5f6b76;
+      --cyan:#0e7c77; --cyan-dim:#0a5f5c;
+      --gold:#8a5d10;
+      --known:#1f7a4d; --known-dim:#175c3a;
+      --gap:#8a5d10; --gap-dim:#6b4a0d;
+      --rare:#7a8290;
+      --alert:#a83a2a;
+    }
+    .crumb, .sp-actions { display:none }
+    .species-page{max-width:100%;padding:0}
+    .sp-card{break-inside:avoid}
+    a{color:inherit;text-decoration:underline}
+  }
+
   /* ===== identify workflow (v9) ===== */
   .idf-inputs{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px;
     padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
