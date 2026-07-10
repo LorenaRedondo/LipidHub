@@ -2,6 +2,7 @@ import { Fragment, useEffect } from 'react'
 import { findClass, isomer } from '../lib/lipids'
 import { getSpecies } from '../lib/service'
 import { useLmsdStructure } from '../lib/lmsdStructures'
+import { usePredictions, predictionFor } from '../lib/predictions'
 import { downloadJSON, downloadSVG } from '../lib/download'
 import Structure from './Structure'
 import PredictionCard from './PredictionCard'
@@ -12,6 +13,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   const rec = getSpecies(id)
   const cls = rec ? findClass(rec.class.k) : undefined
   const real = useLmsdStructure(id)
+  const predFile = usePredictions()
+  const pred = rec ? predictionFor(predFile, rec.id) : null
 
   useEffect(() => {
     if (!rec) return
@@ -38,7 +41,11 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   const adductRows = Object.entries(rec.adducts)
 
   const downloadStructure = () => downloadSVG(`${rec!.id}.svg`, document.querySelector('.sp-struct .struct-canvas svg'))
-  const cite = `LIPIVERSE. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}Retrieved from lipiverse, ${location.origin}/#/species/${rec.id}`
+  // Pin the model version (and the values it produced) into the citation text itself — the
+  // live page updates when the model is retrained, but a copied citation shouldn't silently
+  // drift with it (issue #57).
+  const predNote = pred && predFile ? `CCS ${pred.ccs.v} Å², RT ${pred.rt.v} min (model ${predFile.model_version}). ` : ''
+  const cite = `LIPIVERSE. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}${predNote}Retrieved from lipiverse, ${location.origin}/#/species/${rec.id}`
 
   return (
     <div className="app">
@@ -133,9 +140,13 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
 
         <ProvenanceLegend />
         <p className="note" style={{ marginTop: 10 }}>
-          Formula, exact mass, and adduct m/z are computed exactly. CCS, RT, T<sub>m</sub>, and
-          synthesizability are heuristic placeholders in this research preview (trained models: issue #3).
-          Curated status is ingested from LIPID MAPS (CC BY 4.0).
+          Formula, exact mass, and adduct m/z are computed exactly. The CCS/RT shown under
+          "Mass spectrometry" above are from a composition heuristic (issue #33 tracks
+          remaining gaps: single-adduct/single-method scope, no monotonicity constraint) —
+          where a real trained-model prediction exists for this species, it's shown separately
+          in "Predicted properties" with its model version and 90% uncertainty interval.
+          T<sub>m</sub> and synthesizability remain heuristic placeholders. Curated status is
+          ingested from LIPID MAPS (CC BY 4.0).
         </p>
       </div>
     </div>
