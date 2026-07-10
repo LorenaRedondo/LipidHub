@@ -9,6 +9,7 @@ import { useLmsdStructure } from '../lib/lmsdStructures'
 import { pathwayForClass, usePathwayGraph } from '../lib/pathwayGraph'
 import Structure from './Structure'
 import ConfBadge, { ProvenanceLegend } from './ConfBadge'
+import AfmForceCurve from './AfmForceCurve'
 
 function KV({ k, v, u, m }: { k: ReactNode; v: ReactNode; u?: string; m?: Method }) {
   return (
@@ -222,6 +223,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
         Nanomechanics (breakthrough force, K<sub>A</sub>) and phase behaviour are what AFM force
         spectroscopy measures directly — these are predictions awaiting that measured tier.
       </p>
+      <div style={{ marginTop: 12 }}><AfmForceCurve breakthroughNn={mem.breakthroughNn} /></div>
     </Section>
   ) : null
 
