@@ -434,29 +434,72 @@ export interface Membrane {
 /** Acyl-chain count for per-chain geometry (sphingoid base + N-acyl count as 2, else cls.n). */
 export function chainsOf(cls: LipidClass): number { return cls.kind === 'sphingo' ? 2 : cls.n }
 
-export function membraneBiophysics(cls: LipidClass, c: number, d: number): Membrane | null {
-  if (!MEMBRANE_CLASSES.has(cls.k)) return null // neutral storage lipids don't form membranes
+interface MembraneInputs { chains: number; nc: number; dpc: number; a0: number; v: number; lc: number; tm: number }
+
+function membraneInputs(cls: LipidClass, c: number, d: number): MembraneInputs {
   const chains = chainsOf(cls)
   const nc = c / chains // carbons per chain
   const dpc = d / chains // double bonds per chain
   const a0 = HEAD_AREA[cls.k] ?? 60
   const v = chains * (27.4 + 26.9 * nc) // hydrocarbon volume, Å³ (Tanford)
   const lc = 1.5 + 1.265 * nc // max chain length, Å (Tanford)
-  const packing = v / (a0 * lc) // shape / packing parameter P = v/(a0·lc)
+  const tm = 3.0 * c - 55 - 25 * d // same heuristic as props().tm
+  return { chains, nc, dpc, a0, v, lc, tm }
+}
+
+/** The real formulas, shared by single-species and mixture (ideal-mixing) callers alike. */
+function deriveMembrane(inp: MembraneInputs): Membrane {
+  const packing = inp.v / (inp.a0 * inp.lc) // shape / packing parameter P = v/(a0·lc)
   const curvature = packing < 0.55 ? 'micellar (positive curvature)'
     : packing <= 1.0 ? 'lamellar bilayer'
     : 'inverted hexagonal Hᴵᴵ (negative curvature)'
-  const thicknessNm = Math.round((2 * lc * 0.065 + 0.9 - 0.35 * dpc) * 100) / 100
-  const areaPerLipid = Math.round(a0 + 7 * dpc)
-  const tm = 3.0 * c - 55 - 25 * d // same heuristic as props().tm
-  const phase37 = tm > 37 ? 'gel (ordered)' : 'fluid (liquid-crystalline)'
-  const breakthroughNn = Math.round(Math.max(0.3, 0.32 * nc - 2.0 * dpc - 2.4) * 10) / 10
-  const compressibilityKa = Math.round(180 + 7 * nc - 45 * dpc)
+  const thicknessNm = Math.round((2 * inp.lc * 0.065 + 0.9 - 0.35 * inp.dpc) * 100) / 100
+  const areaPerLipid = Math.round(inp.a0 + 7 * inp.dpc)
+  const phase37 = inp.tm > 37 ? 'gel (ordered)' : 'fluid (liquid-crystalline)'
+  const breakthroughNn = Math.round(Math.max(0.3, 0.32 * inp.nc - 2.0 * inp.dpc - 2.4) * 10) / 10
+  const compressibilityKa = Math.round(180 + 7 * inp.nc - 45 * inp.dpc)
   return {
     bilayer: packing >= 0.55 && packing <= 1.05,
     thicknessNm, areaPerLipid, packing: Math.round(packing * 100) / 100,
     curvature, phase37, breakthroughNn, compressibilityKa,
   }
+}
+
+export function membraneBiophysics(cls: LipidClass, c: number, d: number): Membrane | null {
+  if (!MEMBRANE_CLASSES.has(cls.k)) return null // neutral storage lipids don't form membranes
+  return deriveMembrane(membraneInputs(cls, c, d))
+}
+
+export interface MixComponent { cls: LipidClass; c: number; d: number; molFraction: number }
+
+/**
+ * Ideal-mixing approximation: mole-fraction-weighted combination of each component's real
+ * physical inputs (specific volume/area additivity — a standard first-order ideal-mixing
+ * assumption), then the *same* real formulas above derive the emergent bilayer properties from
+ * the mixed inputs — not an average of each component's pre-computed output properties.
+ *
+ * No non-ideal interaction terms: real mixtures deviate from this for well-studied pairs (e.g.
+ * cholesterol's condensing effect, Lo/Ld phase separation) — this function doesn't model that,
+ * see issue #63. Callers must present this as an approximation, not a discovered result.
+ */
+export function mixMembraneBiophysics(components: MixComponent[]): Membrane | null {
+  const valid = components.filter((k) => MEMBRANE_CLASSES.has(k.cls.k) && k.molFraction > 0)
+  if (!valid.length) return null
+  const total = valid.reduce((s, k) => s + k.molFraction, 0)
+  if (total <= 0) return null
+  const mixed = valid.reduce((acc, k) => {
+    const x = k.molFraction / total
+    const inp = membraneInputs(k.cls, k.c, k.d)
+    acc.chains += x * inp.chains
+    acc.nc += x * inp.nc
+    acc.dpc += x * inp.dpc
+    acc.a0 += x * inp.a0
+    acc.v += x * inp.v
+    acc.lc += x * inp.lc
+    acc.tm += x * inp.tm
+    return acc
+  }, { chains: 0, nc: 0, dpc: 0, a0: 0, v: 0, lc: 0, tm: 0 })
+  return deriveMembrane(mixed)
 }
 
 // ── literature ───────────────────────────────────────────────────────────

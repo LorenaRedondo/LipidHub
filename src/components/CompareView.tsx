@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
-  FORMATE, NH4, PROTON, fam, findClass, formulaParts, headgroupCharge,
-  prefersAmmonium, props, status, synth, type LipidClass,
+  FORMATE, MEMBRANE_CLASSES, NH4, PROTON, fam, findClass, formulaParts, headgroupCharge,
+  mixMembraneBiophysics, prefersAmmonium, props, status, synth, type LipidClass,
 } from '../lib/lipids'
 import type { Pin } from '../App'
 import ConfBadge from './ConfBadge'
@@ -12,10 +12,23 @@ function formulaText(cls: LipidClass, c: number, d: number): string {
   return formulaParts(props(cls, c, d).f).map((p) => p.el + (p.n > 1 ? p.n : '')).join('')
 }
 
+const pinKey = (p: Pin) => `${p.clsK}-${p.c}-${p.d}`
+
 export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pin[]; onTogglePin: (p: Pin) => void; onGoAtlas: () => void }) {
+  const [mode, setMode] = useState<'table' | 'mixture'>('table')
   const cols: Resolved[] = pins
     .map((pin) => ({ pin, cls: findClass(pin.clsK) }))
     .filter((r): r is Resolved => !!r.cls)
+  const membraneCols = cols.filter((r) => MEMBRANE_CLASSES.has(r.cls.k))
+
+  const [fractions, setFractions] = useState<Record<string, number>>({})
+  const fractionFor = (r: Resolved) => fractions[pinKey(r.pin)] ?? 1 / Math.max(1, membraneCols.length)
+
+  const mixed = useMemo(() => {
+    if (membraneCols.length < 2) return null
+    return mixMembraneBiophysics(membraneCols.map((r) => ({ cls: r.cls, c: r.pin.c, d: r.pin.d, molFraction: fractionFor(r) })))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [membraneCols.map((r) => pinKey(r.pin)).join(','), fractions])
 
   if (!cols.length) {
     return (
@@ -54,42 +67,105 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
     { label: 'Status', get: (r) => status(r.cls, r.pin.c, r.pin.d) },
   ]
 
+  function setFraction(r: Resolved, pct: number) {
+    setFractions((prev) => ({ ...prev, [pinKey(r.pin)]: Math.max(0, Math.min(100, pct)) / 100 }))
+  }
+
   return (
     <section className="view on">
       <div className="doc wide">
         <span className="eyebrow">Compare · {cols.length}/4</span>
-        <h2 style={{ marginTop: 8 }}>Side-by-side</h2>
-        <p className="lede" style={{ marginBottom: 22 }}>
-          Property values are computed live from each species' composition. Anything marked
-          <span style={{ margin: '0 4px' }}><ConfBadge m="predicted" /></span> is a model estimate, not a measurement.
-        </p>
-
-        <div className="cmp-scroll">
-          <table className="cmp">
-            <thead>
-              <tr>
-                <th className="rowhead" />
-                {cols.map((r) => (
-                  <th key={r.cls.k + r.pin.c + r.pin.d}>
-                    <div className="cmp-species">{r.cls.k} {fam(r.pin.c, r.pin.d)}</div>
-                    <div className="cmp-name">{r.cls.name}</div>
-                    <button className="cmp-remove" onClick={() => onTogglePin(r.pin)} title="Remove from comparison">remove ✕</button>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.label}>
-                  <td className="rowhead">{row.label}</td>
-                  {cols.map((r) => (
-                    <td key={r.cls.k + r.pin.c + r.pin.d} className={row.mono ? 'num' : ''}>{row.get(r)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2 style={{ marginTop: 8 }}>{mode === 'table' ? 'Side-by-side' : 'As a mixture'}</h2>
+        <div className="seg" style={{ marginBottom: 16 }} role="group" aria-label="Compare mode">
+          <button aria-pressed={mode === 'table'} className={mode === 'table' ? 'on' : ''} onClick={() => setMode('table')}>side-by-side</button>
+          <button aria-pressed={mode === 'mixture'} className={mode === 'mixture' ? 'on' : ''} onClick={() => setMode('mixture')} disabled={membraneCols.length < 2} title={membraneCols.length < 2 ? 'Pin at least 2 membrane-forming species' : undefined}>as a mixture</button>
         </div>
+
+        {mode === 'table' ? (
+          <>
+            <p className="lede" style={{ marginBottom: 22 }}>
+              Property values are computed live from each species' composition. Anything marked
+              <span style={{ margin: '0 4px' }}><ConfBadge m="predicted" /></span> is a model estimate, not a measurement.
+            </p>
+
+            <div className="cmp-scroll">
+              <table className="cmp">
+                <thead>
+                  <tr>
+                    <th className="rowhead" />
+                    {cols.map((r) => (
+                      <th key={r.cls.k + r.pin.c + r.pin.d}>
+                        <div className="cmp-species">{r.cls.k} {fam(r.pin.c, r.pin.d)}</div>
+                        <div className="cmp-name">{r.cls.name}</div>
+                        <button className="cmp-remove" onClick={() => onTogglePin(r.pin)} title="Remove from comparison">remove ✕</button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.label}>
+                      <td className="rowhead">{row.label}</td>
+                      {cols.map((r) => (
+                        <td key={r.cls.k + r.pin.c + r.pin.d} className={row.mono ? 'num' : ''}>{row.get(r)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="lede" style={{ marginBottom: 22 }}>
+              Set mole fractions for each membrane-forming pinned species — the emergent bilayer
+              properties below are computed by blending each species' real physical inputs
+              (specific-volume/area additivity, a standard first-order <b>ideal-mixing</b>{' '}
+              approximation), then deriving thickness/curvature/nanomechanics from the blend with
+              the same formulas used for a single species. This is <b>not</b> a phase-separation
+              model — real mixtures of e.g. cholesterol + saturated lipids deviate from ideal
+              mixing significantly (tracked separately, issue #63).
+              {cols.length !== membraneCols.length && (
+                <span style={{ display: 'block', marginTop: 6, color: 'var(--faint)' }}>
+                  {cols.length - membraneCols.length} pinned species don't form membranes and are excluded from the blend.
+                </span>
+              )}
+            </p>
+
+            <div className="mix-inputs" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {membraneCols.map((r) => (
+                <div key={pinKey(r.pin)} className="rline" style={{ marginBottom: 0, justifyContent: 'space-between' }}>
+                  <span><b className="num">{r.cls.k} {fam(r.pin.c, r.pin.d)}</b> <span className="an-sub">{r.cls.name}</span></span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="number" min={0} max={100} step={1}
+                      value={Math.round(fractionFor(r) * 100)}
+                      onChange={(e) => setFraction(r, Number(e.target.value))}
+                      className="one" style={{ width: 60 }}
+                    />
+                    <span className="an-sub">mol %</span>
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            {mixed && (
+              <div className="sp-grid" style={{ maxWidth: 480 }}>
+                <div className="sp-card">
+                  <h3>Emergent bilayer <span className="pred-model">ideal-mixing approx.</span></h3>
+                  <div className="kv">
+                    <div className="k">Phase at 37 °C</div><div className="v">{mixed.phase37}</div>
+                    <div className="k">Packing / curvature</div><div className="v">{mixed.packing} · {mixed.curvature}</div>
+                    <div className="k">Bilayer thickness</div><div className="v">{mixed.thicknessNm} <span className="u">nm</span></div>
+                    <div className="k">Area / lipid</div><div className="v">{mixed.areaPerLipid} <span className="u">Å²</span></div>
+                    <div className="k">Breakthrough force</div><div className="v">{mixed.breakthroughNn} <span className="u">nN</span></div>
+                    <div className="k">Compressibility Kᴀ</div><div className="v">{mixed.compressibilityKa} <span className="u">mN/m</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
         <button className="cta ghost" onClick={onGoAtlas} style={{ marginTop: 22 }}>← Back to the Atlas</button>
       </div>
     </section>
