@@ -3,8 +3,10 @@ import {
   FORMATE, MEMBRANE_CLASSES, NH4, PROTON, fam, findClass, formulaParts, headgroupCharge,
   mixMembraneBiophysics, prefersAmmonium, props, status, synth, type LipidClass,
 } from '../lib/lipids'
+import { matchPhaseDiagram } from '../lib/phaseDiagram'
 import type { Pin } from '../App'
 import ConfBadge from './ConfBadge'
+import PhaseDiagramCard from './PhaseDiagramCard'
 
 interface Resolved { pin: Pin; cls: LipidClass }
 
@@ -29,6 +31,27 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
     return mixMembraneBiophysics(membraneCols.map((r) => ({ cls: r.cls, c: r.pin.c, d: r.pin.d, molFraction: fractionFor(r) })))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membraneCols.map((r) => pinKey(r.pin)).join(','), fractions])
+
+  const diagram = useMemo(
+    () => matchPhaseDiagram(cols.map((r) => ({ clsK: r.cls.k, c: r.pin.c, d: r.pin.d }))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cols.map((r) => pinKey(r.pin)).join(',')],
+  )
+  const [phasePct, setPhasePct] = useState<Record<string, number>>({})
+  const phaseFractionFor = (r: Resolved) => phasePct[pinKey(r.pin)] ?? 1 / 3
+  function setPhaseFraction(r: Resolved, pct: number) {
+    setPhasePct((prev) => ({ ...prev, [pinKey(r.pin)]: Math.max(0, Math.min(100, pct)) / 100 }))
+  }
+  const phaseInputs = useMemo(() => {
+    if (!diagram) return null
+    const find = (key: string) => cols.find((r) => `${r.cls.k}-${r.pin.c}-${r.pin.d}` === key)
+    const lowR = find(diagram.system.lowMelt), hiR = find(diagram.system.highMelt), cholR = find(diagram.system.sterol)
+    if (!lowR || !hiR || !cholR) return null
+    const total = phaseFractionFor(lowR) + phaseFractionFor(hiR) + phaseFractionFor(cholR)
+    const pLow = phaseFractionFor(lowR) / total, pHi = phaseFractionFor(hiR) / total, pChol = phaseFractionFor(cholR) / total
+    return { lowR, hiR, cholR, x: pHi / (pHi + pLow || 1), y: pChol }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagram, phasePct])
 
   if (!cols.length) {
     return (
@@ -164,6 +187,40 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
                 </div>
               </div>
             )}
+
+            {diagram && phaseInputs ? (
+              <div style={{ marginTop: 20, maxWidth: 480 }}>
+                <p className="lede" style={{ marginBottom: 14 }}>
+                  This exact pin combination (DOPC + DPPC + cholesterol) has a real, published ternary
+                  phase diagram — set mole fractions below to classify liquid-disordered (Lα) /
+                  liquid-ordered (Lo) coexistence instead of the ideal-mixing approximation above.
+                </p>
+                <div className="mix-inputs" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                  {[phaseInputs.lowR, phaseInputs.hiR, phaseInputs.cholR].map((r) => (
+                    <div key={pinKey(r.pin)} className="rline" style={{ marginBottom: 0, justifyContent: 'space-between' }}>
+                      <span><b className="num">{r.cls.k} {fam(r.pin.c, r.pin.d)}</b> <span className="an-sub">{r.cls.name}</span></span>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="number" min={0} max={100} step={1}
+                          value={Math.round(phaseFractionFor(r) * 100)}
+                          onChange={(e) => setPhaseFraction(r, Number(e.target.value))}
+                          className="one" style={{ width: 60 }}
+                        />
+                        <span className="an-sub">mol %</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <div className="sp-grid" style={{ maxWidth: 480 }}>
+                  <PhaseDiagramCard diagram={diagram} x={phaseInputs.x} y={phaseInputs.y} />
+                </div>
+              </div>
+            ) : cols.length === 3 ? (
+              <p className="note" style={{ marginTop: 16, maxWidth: 480 }}>
+                No published phase diagram is digitized for this combination yet — real Lo/Ld domain
+                data currently only covers DOPC (PC 36:2) + DPPC (PC 32:0) + cholesterol. See issue #63.
+              </p>
+            ) : null}
           </>
         )}
         <button className="cta ghost" onClick={onGoAtlas} style={{ marginTop: 22 }}>← Back to the Atlas</button>

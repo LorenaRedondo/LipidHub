@@ -28,3 +28,16 @@ License, Version 2.0. Source: https://github.com/PNNL-Comp-Mass-Spec/Metabolomic
 Used as real, drift-tube-measured collision cross section data to calibrate and
 validate the CCS property model (ml/data_prep.py, ml/train.py) — not modified beyond
 filtering/reshaping into ml/data/processed/real_lipid_ccs.csv.
+
+The file src/data/phaseDiagrams/dopcDppcChol.json contains tie-line coordinates for the
+DOPC/DPPC/cholesterol ternary phase diagram, hand-transcribed from Table A.1 of:
+  Marsh D. Cholesterol-induced fluid membrane domains: A compendium of lipid-raft
+  ternary phase diagrams. Biochim Biophys Acta 1788 (2009) 2114-2123.
+  doi:10.1016/j.bbamem.2009.08.004
+which itself re-tabulates data originally measured by:
+  Veatch SL, Gawrisch K, Keller SL. Closed-loop miscibility gap and quantitative
+  tie-lines in ternary membrane mixtures. Biophys J 90 (2006) 4428-4436.
+Unlike the LMSD (CC BY 4.0) and PNNL (Apache 2.0) sources above, these two papers
+are standard-copyright journal articles, not openly licensed for redistribution.
+Only the numerical tie-line coordinates (facts, not the papers' text or figures) are
+reproduced here, transcribed by hand for use in src/lib/phaseDiagram.ts.
