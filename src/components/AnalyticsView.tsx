@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import { PERSONAS, type Persona } from '../lib/lipids'
+import { fam, findClass, PERSONAS, type Persona } from '../lib/lipids'
 import {
   FEATURES, FEATURE_MAP, GROUP_COLORS, LAB_ONLY_BIO_MAX, LAB_ONLY_CHEM_MIN, PERSONA_ANALYTICS,
-  buildDataset, correlate, isLabOnly, labOnlyCandidates, trendFor, type FeatureKey,
+  buildDataset, correlate, isLabOnly, labOnlyCandidates, trendFor, type FeatureKey, type Point,
 } from '../lib/analytics'
 import { usePredictions } from '../lib/predictions'
 import { downloadSVG } from '../lib/download'
@@ -23,14 +23,31 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
     setYKey(PERSONA_ANALYTICS[p].y)
   }
   const trend = useMemo(() => trendFor(xKey, yKey), [xKey, yKey])
+
+  // which lipid groups are toggled off via the filter chips — hides them from the scatter,
+  // the fit curve, and the correlation number below it (but not the overview matrix above)
+  const [hiddenGroups, setHiddenGroups] = useState<Set<string>>(new Set())
+  const toggleGroup = (g: string) => setHiddenGroups((prev) => {
+    const next = new Set(prev)
+    next.has(g) ? next.delete(g) : next.add(g)
+    return next
+  })
+  const visibleData = useMemo(() => data.filter((p) => !hiddenGroups.has(p.group)), [data, hiddenGroups])
+
   // r describes the same population the curve is fit against — if the curve excludes
   // a shape/charge outlier group, the correlation number shouldn't silently include it
-  const rData = useMemo(() => (trend?.excludeFromFit ? data.filter((p) => !trend.excludeFromFit!(p)) : data), [data, trend])
+  const rData = useMemo(
+    () => (trend?.excludeFromFit ? visibleData.filter((p) => !trend.excludeFromFit!(p)) : visibleData),
+    [visibleData, trend],
+  )
   const r = useMemo(() => correlate(rData, xKey, yKey), [rData, xKey, yKey])
   const isBioChemPair = (xKey === 'bio' && yKey === 'chem') || (xKey === 'chem' && yKey === 'bio')
   const showLabOnly = persona === 'chem' && isBioChemPair
-  const candidates = useMemo(() => (showLabOnly ? labOnlyCandidates(data) : []), [showLabOnly, data])
+  const candidates = useMemo(() => (showLabOnly ? labOnlyCandidates(visibleData) : []), [showLabOnly, visibleData])
   const predictedCount = useMemo(() => data.filter((p) => p.predicted).length, [data])
+
+  // hovered/clicked scatter point — custom tooltip + click-to-open in the Atlas
+  const [hover, setHover] = useState<{ p: Point; clientX: number; clientY: number } | null>(null)
 
   // correlation matrix (complete-case per pair)
   const matrix = useMemo(
@@ -41,7 +58,7 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
   // ── scatter geometry ────────────────────────────────────────────────
   const W = 600, H = 400, M = { l: 62, r: 16, t: 14, b: 46 }
   const fx = FEATURE_MAP[xKey], fy = FEATURE_MAP[yKey]
-  const pts = data
+  const pts = visibleData
     .map((p, i) => ({ p, i, x: fx.get(p), y: fy.get(p) }))
     .filter((o): o is { p: typeof o.p; i: number; x: number; y: number } => o.x != null && o.y != null)
   const xs = pts.map((o) => o.x), ys = pts.map((o) => o.y)
@@ -211,7 +228,24 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
               </div>
             )}
 
-            <div className="scatter-wrap">
+            <div className="grp-filter" role="group" aria-label="Filter lipid classes shown">
+              {Object.entries(GROUP_COLORS).map(([g, c]) => (
+                <button
+                  key={g}
+                  className={'grp-chip' + (hiddenGroups.has(g) ? ' off' : '')}
+                  aria-pressed={!hiddenGroups.has(g)}
+                  onClick={() => toggleGroup(g)}
+                  title={hiddenGroups.has(g) ? `Show ${g}` : `Hide ${g}`}
+                >
+                  <span className="dot2" style={{ background: c }} />{g}
+                </button>
+              ))}
+              {hiddenGroups.size > 0 && (
+                <button className="grp-chip reset" onClick={() => setHiddenGroups(new Set())}>reset</button>
+              )}
+            </div>
+
+            <div className="scatter-wrap" onMouseLeave={() => setHover(null)}>
               <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="property scatter plot">
                 {/* grid + ticks */}
                 {ticks(ymin, ymax).map((t, i) => (
@@ -233,11 +267,17 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
                   const fill = showLabOnly && isLabOnly(o.p) ? 'var(--cyan)'
                     : colorScale && colorVal != null ? colorScale.color(colorVal)
                     : GROUP_COLORS[o.p.group]
+                  const isHovered = hover?.p.id === o.p.id
                   return (
                     <circle
-                      key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={showLabOnly && isLabOnly(o.p) ? 3.4 : 2.7}
+                      key={o.p.id} cx={sx(o.x)} cy={sy(o.y)}
+                      r={isHovered ? (showLabOnly && isLabOnly(o.p) ? 5 : 4) : showLabOnly && isLabOnly(o.p) ? 3.4 : 2.7}
                       fill={fill}
                       fillOpacity={showLabOnly ? (isLabOnly(o.p) ? 0.95 : 0.35) : 0.72}
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={(e) => setHover({ p: o.p, clientX: e.clientX, clientY: e.clientY })}
+                      onMouseMove={(e) => setHover({ p: o.p, clientX: e.clientX, clientY: e.clientY })}
+                      onClick={() => onOpen(o.p.clsK, o.p.c, o.p.d)}
                     >
                       <title>{`${o.p.clsK} ${o.p.c}:${o.p.d} · ${fx.short} ${fmt(o.x)} · ${fy.short} ${fmt(o.y)}${colorScale && colorVal != null ? ` · ${trend!.colorBy!.label} ${fmt(colorVal)}` : ''}`}</title>
                     </circle>
@@ -247,6 +287,15 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
                 <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" className="axtitle">{fx.label}</text>
                 <text transform={`translate(14 ${(M.t + H - M.b) / 2}) rotate(-90)`} textAnchor="middle" className="axtitle">{fy.label}</text>
               </svg>
+              {hover && (
+                <div className="scatter-tooltip" style={{ left: hover.clientX + 14, top: hover.clientY + 14 }}>
+                  <div className="tt-name">{hover.p.clsK} {fam(hover.p.c, hover.p.d)} <span className="an-sub">{findClass(hover.p.clsK)?.name}</span></div>
+                  <div className="tt-row"><span>{fx.short}</span><span className="num">{fmt(fx.get(hover.p) ?? NaN)}</span></div>
+                  <div className="tt-row"><span>{fy.short}</span><span className="num">{fmt(fy.get(hover.p) ?? NaN)}</span></div>
+                  <div className="tt-row"><span>Group</span><span>{hover.p.group}</span></div>
+                  <div className="tt-hint">click to open in Atlas →</div>
+                </div>
+              )}
             </div>
 
             {showLabOnly ? (
@@ -267,11 +316,7 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
                 <span style={{ width: 120, height: 10, borderRadius: 5, background: `linear-gradient(90deg, ${colorScale.color(colorScale.lo)}, ${colorScale.color(colorScale.hi)})` }} />
                 <span className="num">{fmt(colorScale.hi)}</span>
               </div>
-            ) : (
-              <div className="an-legend">
-                {Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)}
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
