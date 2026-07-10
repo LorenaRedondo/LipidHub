@@ -52,6 +52,27 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
   const ticks = (min: number, max: number) => Array.from({ length: 5 }, (_, i) => min + ((max - min) * i) / 4)
   const fmt = (v: number) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10)
 
+  // when the active trend colors by a continuous value (unsaturation), compute a
+  // cyan→coral scale over that value's range among the currently-plotted points
+  const colorScale = useMemo(() => {
+    if (!trend?.colorBy) return null
+    const key = trend.colorBy.key
+    const vals = pts.map((o) => FEATURE_MAP[key].get(o.p)).filter((v): v is number => v != null)
+    if (!vals.length) return null
+    const lo = Math.min(...vals), hi = Math.max(...vals)
+    const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t)
+    const cyanRgb = [78, 203, 198], coralRgb = [227, 112, 95]
+    return {
+      lo, hi, key,
+      color: (v: number) => {
+        const t = hi > lo ? (v - lo) / (hi - lo) : 0
+        const [r, g, b] = cyanRgb.map((c0, i) => lerp(c0, coralRgb[i], t))
+        return `rgb(${r},${g},${b})`
+      },
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trend, pts])
+
   // trend curve, fit in the pair's *natural* orientation (trend.x/trend.y) then re-oriented
   // onto whichever axis the user currently has it plotted on. excludeFromFit points still
   // render as scatter dots (via pts/xs/ys above) — they're just not used to fit the curve.
@@ -207,15 +228,21 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
                 {labOnlyRect && (
                   <rect x={labOnlyRect.x} y={labOnlyRect.y} width={labOnlyRect.w} height={labOnlyRect.h} fill="var(--cyan)" fillOpacity={0.07} stroke="var(--cyan-dim)" strokeDasharray="3 3" />
                 )}
-                {pts.map((o) => (
-                  <circle
-                    key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={showLabOnly && isLabOnly(o.p) ? 3.4 : 2.7}
-                    fill={showLabOnly && isLabOnly(o.p) ? 'var(--cyan)' : GROUP_COLORS[o.p.group]}
-                    fillOpacity={showLabOnly ? (isLabOnly(o.p) ? 0.95 : 0.35) : 0.72}
-                  >
-                    <title>{`${o.p.clsK} ${o.p.c}:${o.p.d} · ${fx.short} ${fmt(o.x)} · ${fy.short} ${fmt(o.y)}`}</title>
-                  </circle>
-                ))}
+                {pts.map((o) => {
+                  const colorVal = colorScale ? FEATURE_MAP[colorScale.key].get(o.p) : null
+                  const fill = showLabOnly && isLabOnly(o.p) ? 'var(--cyan)'
+                    : colorScale && colorVal != null ? colorScale.color(colorVal)
+                    : GROUP_COLORS[o.p.group]
+                  return (
+                    <circle
+                      key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={showLabOnly && isLabOnly(o.p) ? 3.4 : 2.7}
+                      fill={fill}
+                      fillOpacity={showLabOnly ? (isLabOnly(o.p) ? 0.95 : 0.35) : 0.72}
+                    >
+                      <title>{`${o.p.clsK} ${o.p.c}:${o.p.d} · ${fx.short} ${fmt(o.x)} · ${fy.short} ${fmt(o.y)}${colorScale && colorVal != null ? ` · ${trend!.colorBy!.label} ${fmt(colorVal)}` : ''}`}</title>
+                    </circle>
+                  )
+                })}
                 {trendPath && <path d={trendPath} fill="none" stroke="var(--text)" strokeWidth={1.6} strokeDasharray="4 3" opacity={0.85} />}
                 <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle" className="axtitle">{fx.label}</text>
                 <text transform={`translate(14 ${(M.t + H - M.b) / 2}) rotate(-90)`} textAnchor="middle" className="axtitle">{fy.label}</text>
@@ -233,6 +260,13 @@ export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
                   ))}
                 </div>
               )
+            ) : colorScale ? (
+              <div className="an-legend" style={{ alignItems: 'center' }}>
+                <span className="an-sub">{trend!.colorBy!.label}</span>
+                <span className="num">{fmt(colorScale.lo)}</span>
+                <span style={{ width: 120, height: 10, borderRadius: 5, background: `linear-gradient(90deg, ${colorScale.color(colorScale.lo)}, ${colorScale.color(colorScale.hi)})` }} />
+                <span className="num">{fmt(colorScale.hi)}</span>
+              </div>
             ) : (
               <div className="an-legend">
                 {Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)}

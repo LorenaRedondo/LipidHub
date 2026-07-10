@@ -25,6 +25,7 @@ export interface Point {
   carbons: number
   carbonsPerChain: number | null // acyl-chain length normalized by chain count — the physically comparable unit across classes
   dbonds: number
+  dbondsPerChain: number | null
   bio: number
   chem: number
   thickness: number | null
@@ -52,6 +53,7 @@ export function buildDataset(pred?: PredFile | null): Point[] {
           ccs: ml?.ccs.v ?? p.ccs, rt: ml?.rt.v ?? p.rt, predicted: ml != null, chains,
           logp: p.logp, tm: p.tm,
           carbons: c, carbonsPerChain: chains > 0 ? Math.round((c / chains) * 100) / 100 : null, dbonds: d,
+          dbondsPerChain: chains > 0 ? Math.round((d / chains) * 100) / 100 : null,
           bio: sy.bio, chem: sy.chem,
           thickness: mem?.thicknessNm ?? null, breakthrough: mem?.breakthroughNn ?? null, packing: mem?.packing ?? null,
         })
@@ -61,7 +63,7 @@ export function buildDataset(pred?: PredFile | null): Point[] {
   return pts
 }
 
-export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'carbonsPerChain' | 'dbonds' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
+export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'carbonsPerChain' | 'dbonds' | 'dbondsPerChain' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
 export interface Feature { key: FeatureKey; label: string; short: string; get: (p: Point) => number | null }
 
 export const FEATURES: Feature[] = [
@@ -74,6 +76,7 @@ export const FEATURES: Feature[] = [
   { key: 'carbons', label: 'Acyl carbons (total)', short: 'C', get: (p) => p.carbons },
   { key: 'carbonsPerChain', label: 'Carbons per chain', short: 'C/chain', get: (p) => p.carbonsPerChain },
   { key: 'dbonds', label: 'Double bonds', short: 'DB', get: (p) => p.dbonds },
+  { key: 'dbondsPerChain', label: 'Double bonds per chain', short: 'DB/chain', get: (p) => p.dbondsPerChain },
   { key: 'bio', label: 'Biosynthetic score', short: 'bio', get: (p) => p.bio },
   { key: 'chem', label: 'Chemical synth.', short: 'chem', get: (p) => p.chem },
   { key: 'thickness', label: 'Bilayer thickness (nm)', short: 'thick', get: (p) => p.thickness },
@@ -122,29 +125,39 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 // pooling classes reproduces the exact multi-band artifact chain-count
 // normalization fixed for thickness — there's no single clean curve to draw.
 //
+// thickness/tm/breakthrough are each a function of TWO composition variables
+// (chain length AND unsaturation), not one — membraneBiophysics()'s real
+// formulas are `1.095 + 0.16445·nc − 0.35·dpc`, `3·c − 55 − 25·d`, and
+// `max(0.3, 0.32·nc − 2.0·dpc − 2.4)` respectively. Least-squares-fitting a
+// single line against chain length alone (as an earlier version of this file
+// did) silently averages over the unsaturation axis, understating the real
+// r and hiding a second, comparably-sized effect as unexplained scatter —
+// confirmed on the breakthrough-force plot, where a naive 1D fit gave r=0.34
+// despite the data visibly banding by double-bond count. Since we know these
+// formulas exactly (they're our own code, not something to discover by
+// regression), each curve now plots the *known* d=0 (fully saturated) slice
+// directly, and points are colored by unsaturation (`colorBy`) so the second
+// dimension is visible instead of read as noise.
+//
 // Curated relationships:
 //  - CCS vs mass: Mason–Schamp mobility scaling, CCS ∝ mass^0.635 — the same
 //    fixed exponent ml/features.py calibrates its baseline against (α is a
 //    literature constant, not fit per-plot; only the scale factor is fit here).
-//    The fit excludes chains > 2 (in this atlas, that's cardiolipin alone):
-//    its 4-arm branched structure and doubly-anionic charge state put it in a
-//    genuinely different shape/charge regime, visibly breaking away from the
-//    single-chain scaling as a separate streak at high mass — confirmed by
+//    This one *is* a real least-squares fit against real ML-predicted data
+//    (not our own known formula), so a single reference line matches how
+//    CCS-vs-mass is conventionally used in ion-mobility-MS as a quick
+//    in-family sanity check — real unsaturation/headgroup effects are
+//    expected to show up as (smaller) residual scatter around it, same as
+//    in the literature. The fit excludes chains > 2 (in this atlas, that's
+//    cardiolipin alone): its 4-arm branched structure and doubly-anionic
+//    charge state put it in a genuinely different shape/charge regime,
+//    visibly breaking away as a separate streak at high mass — confirmed by
 //    inspecting the actual outlier points, not assumed. Still plotted as
 //    data, just excluded from what the reference curve is fit against.
-//  - thickness vs carbonsPerChain: Tanford's hydrocarbon-chain-length rule
-//    (lc = 1.5 + 1.265·nc), which membraneBiophysics() already implements —
-//    linear once carbons are normalized per chain, which is why this pair
-//    uses `carbonsPerChain` rather than raw `carbons` (raw carbons conflates
-//    1-, 2-, 3- and 4-chain classes into separate parallel bands).
-//  - tm vs carbons: our tm formula (3.0·c − 55 − 25·d) has no per-class
-//    offset, so pooling classes is safe here — real Tm literature (Marsh's
-//    Handbook of Lipid Bilayers; Koynova & Caffrey 1998) shows chain length
-//    is roughly linear but a cis double bond causes a much sharper drop than
-//    our simple linear-in-d term captures.
-//  - breakthrough vs carbonsPerChain: our formula (0.32·nc − 2.0·dpc − 2.4)
-//    is chain-normalized like thickness, so no class-offset confound. Shape
-//    matches AFM nanoindentation literature on supported bilayers (e.g.
+//  - thickness vs carbonsPerChain: Tanford's hydrocarbon-chain-length rule.
+//  - tm vs carbons: Marsh's Handbook of Lipid Bilayers; Koynova & Caffrey
+//    1998 — chain length is roughly linear, double bonds shift it down.
+//  - breakthrough vs carbonsPerChain: AFM nanoindentation literature (e.g.
 //    Garcia-Manyes, Oncins & Sanz, Biophys J 2005).
 export type TrendBasis = 'validation' | 'formula'
 export interface Trend {
@@ -154,6 +167,7 @@ export interface Trend {
   basis: TrendBasis
   fit: (xs: number[], ys: number[]) => (x: number) => number
   excludeFromFit?: (p: Point) => boolean // still plotted as data, just not used to fit the curve
+  colorBy?: { key: FeatureKey; label: string } // color scatter by this continuous value instead of by group
 }
 
 const CCS_MASS_EXPONENT = 0.635 // matches ml/features.py — literature range ~0.6–0.7
@@ -166,25 +180,29 @@ function fitPowerFixedExponent(xs: number[], ys: number[], alpha: number): (x: n
   return (x) => scale * Math.pow(x, alpha)
 }
 
-function fitLinear(xs: number[], ys: number[]): (x: number) => number {
-  const n = xs.length
-  let mx = 0, my = 0
-  for (let i = 0; i < n; i++) { mx += xs[i]; my += ys[i] }
-  mx /= n; my /= n
-  let num = 0, den = 0
-  for (let i = 0; i < n; i++) { const dx = xs[i] - mx; num += dx * (ys[i] - my); den += dx * dx }
-  const slope = den ? num / den : 0, intercept = my - slope * mx
-  return (x) => slope * x + intercept
-}
+/** Ignores the passed-in data — returns a known closed-form line, not a re-fit of our own formula. */
+const knownFormula = (f: (x: number) => number) => (_xs: number[], _ys: number[]) => f
 
 const TRENDS: Trend[] = [
   {
     x: 'mass', y: 'ccs', reason: 'Mason–Schamp: CCS ∝ mass^0.635 (fixed exponent, scale fit here) — fit excludes >2-chain species (e.g. cardiolipin), a different shape/charge regime',
     basis: 'validation', fit: (xs, ys) => fitPowerFixedExponent(xs, ys, CCS_MASS_EXPONENT), excludeFromFit: (p) => p.chains > 2,
   },
-  { x: 'carbonsPerChain', y: 'thickness', reason: "Tanford's rule: bilayer half-thickness ∝ chain length", basis: 'formula', fit: fitLinear },
-  { x: 'carbons', y: 'tm', reason: 'Chain-length/Tm scaling (Marsh; Koynova & Caffrey 1998) — our tm formula is linear-in-d, real double-bond depression is sharper', basis: 'formula', fit: fitLinear },
-  { x: 'carbonsPerChain', y: 'breakthrough', reason: 'AFM nanoindentation chain-length scaling (Garcia-Manyes, Oncins & Sanz 2005)', basis: 'formula', fit: fitLinear },
+  {
+    x: 'carbonsPerChain', y: 'thickness', basis: 'formula', colorBy: { key: 'dbondsPerChain', label: 'double bonds/chain' },
+    reason: "Tanford's rule at 0 double bonds/chain — each unit of unsaturation shifts this down ~0.35 nm (color axis); shown as the known formula, not re-fit",
+    fit: knownFormula((nc) => 1.095 + 0.16445 * nc),
+  },
+  {
+    x: 'carbons', y: 'tm', basis: 'formula', colorBy: { key: 'dbonds', label: 'double bonds' },
+    reason: 'Chain-length/Tm scaling (Marsh; Koynova & Caffrey 1998) at 0 double bonds — each double bond shifts this down 25°C (color axis); shown as the known formula, not re-fit',
+    fit: knownFormula((c) => 3 * c - 55),
+  },
+  {
+    x: 'carbonsPerChain', y: 'breakthrough', basis: 'formula', colorBy: { key: 'dbondsPerChain', label: 'double bonds/chain' },
+    reason: 'AFM nanoindentation chain-length scaling (Garcia-Manyes, Oncins & Sanz 2005) at 0 double bonds/chain — each unit of unsaturation shifts this down 2.0 nN (color axis); shown as the known formula, not re-fit',
+    fit: knownFormula((nc) => Math.max(0.3, 0.32 * nc - 2.4)),
+  },
 ]
 
 /** A curve is only offered for the pair actually being plotted (either axis order). */
