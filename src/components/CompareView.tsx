@@ -7,6 +7,7 @@ import { matchPhaseDiagram } from '../lib/phaseDiagram'
 import type { Pin } from '../App'
 import ConfBadge from './ConfBadge'
 import PhaseDiagramCard from './PhaseDiagramCard'
+import PhaseTransitionCard from './PhaseTransitionCard'
 
 interface Resolved { pin: Pin; cls: LipidClass }
 
@@ -180,7 +181,7 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
             </div>
 
             {mixed && (
-              <div className="sp-grid" style={{ maxWidth: 480 }}>
+              <div className="sp-grid" style={{ maxWidth: 820 }}>
                 <div className="sp-card">
                   <h3>Emergent bilayer <span className="pred-model">ideal-mixing approx.</span></h3>
                   <div className="kv">
@@ -192,6 +193,7 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
                     <div className="k">Compressibility Kᴀ</div><div className="v">{mixed.compressibilityKa} <span className="u">mN/m</span></div>
                   </div>
                 </div>
+                <PhaseTransitionCard tmC={mixed.tmC} />
               </div>
             )}
 

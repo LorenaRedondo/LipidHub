@@ -427,6 +427,7 @@ export interface Membrane {
   packing: number
   curvature: string
   phase37: string
+  tmC: number
   breakthroughNn: number
   compressibilityKa: number
 }
@@ -456,12 +457,13 @@ function deriveMembrane(inp: MembraneInputs): Membrane {
   const thicknessNm = Math.round((2 * inp.lc * 0.065 + 0.9 - 0.35 * inp.dpc) * 100) / 100
   const areaPerLipid = Math.round(inp.a0 + 7 * inp.dpc)
   const phase37 = inp.tm > 37 ? 'gel (ordered)' : 'fluid (liquid-crystalline)'
+  const tmC = Math.round(inp.tm * 10) / 10
   const breakthroughNn = Math.round(Math.max(0.3, 0.32 * inp.nc - 2.0 * inp.dpc - 2.4) * 10) / 10
   const compressibilityKa = Math.round(180 + 7 * inp.nc - 45 * inp.dpc)
   return {
     bilayer: packing >= 0.55 && packing <= 1.05,
     thicknessNm, areaPerLipid, packing: Math.round(packing * 100) / 100,
-    curvature, phase37, breakthroughNn, compressibilityKa,
+    curvature, phase37, tmC, breakthroughNn, compressibilityKa,
   }
 }
 
