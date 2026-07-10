@@ -16,6 +16,7 @@ import { verifyEnzyme, verifyPathway } from '../src/lib/pathway'
 import predData from '../src/data/predictions.json'
 import structuresData from '../src/data/lmsdStructures.json'
 import synthData from '../src/data/synth.json'
+import logpData from '../src/data/logp.json'
 import lmsdCuratedData from '../src/data/lmsdCurated.json'
 
 const PRED = predData as unknown as {
@@ -25,6 +26,7 @@ const PRED = predData as unknown as {
 }
 const STRUCTURES = (structuresData as unknown as { structures: Record<string, { lmId: string; inchikey: string; smiles: string }> }).structures
 const SYNTH = synthData as unknown as { model_version: string; method: string; scores: Record<string, number> }
+const LOGP = logpData as unknown as { model_version: string; method: string; values: Record<string, number> }
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DB_PATH = path.join(HERE, '../db/lipidex.sqlite')
@@ -142,6 +144,23 @@ const overlaySa = db.transaction(() => {
 })
 overlaySa()
 
+// ── overlay: real logP (RDKit Crippen) replaces the heuristic — property_best already
+// prefers 'calculated' over 'predicted', so this just adds a second, better row per
+// species rather than deleting the heuristic one (#3) ──
+const insertLogp = db.prepare(
+  `INSERT INTO property (species_id, key, value, unit, method, model_version, ci_low, ci_high)
+   VALUES (@species_id, 'logp', @value, NULL, 'calculated', @model_version, NULL, NULL)`,
+)
+let logpOverlaid = 0
+const overlayLogp = db.transaction(() => {
+  for (const [id, value] of Object.entries(LOGP.values)) {
+    if (!speciesExists.get(id)) continue
+    insertLogp.run({ species_id: id, value, model_version: LOGP.model_version })
+    logpOverlaid++
+  }
+})
+overlayLogp()
+
 // ── overlay: live UniProt/Rhea pathway verification scales bio_score (#4) and
 // populates the `pathway` table + src/data/pathwayGraph.json with the real,
 // discovered enzyme/reaction graph (#5) — not the hand-picked cls.enz/rhea.
@@ -212,6 +231,7 @@ fs.writeFileSync(
     models: {
       ccsRt: PRED.model_version,
       chemSascore: SYNTH.model_version,
+      logP: LOGP.model_version,
       pathway: live ? PATHWAY_GRAPH_MODEL_VERSION : 'heuristic-v0 (pathway verification skipped — offline build)',
     },
   }, null, 2),
@@ -222,6 +242,7 @@ console.log(`  classes:              ${CLASSES.length}`)
 console.log(`  species:              ${speciesCount}  (curated ${curatedCount} / gap ${gapCount} / rare ${rareCount})`)
 console.log(`  ML predictions:       ${predictionsOverlaid} species (ccs+rt replaced; model ${PRED.model_version})`)
 console.log(`  SAScore (RDKit):      ${saOverlaid} species (chem_sascore replaced; model ${SYNTH.model_version})`)
+console.log(`  logP (RDKit Crippen): ${logpOverlaid} species (real logp added; model ${LOGP.model_version})`)
 console.log(`  Pathway verification: ${live ? `${classesVerified}/${CLASSES.length} classes verified (bio_score scaled)` : 'skipped (offline)'}`)
 console.log(`  Pathway graph (#5):   ${live ? `${pathwayRows} pathway rows, ${Object.values(pathwayGraph).reduce((n, c) => n + c.enzymes.length, 0)} distinct enzyme links across ${classesVerified} classes` : 'skipped (offline)'}`)
 console.log(`  LMSD structures:      ${structuresOverlaid} species (smiles/inchikey/lm_id + xref)`)
