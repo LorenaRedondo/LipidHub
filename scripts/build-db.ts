@@ -16,6 +16,7 @@ import { verifyEnzyme, verifyPathway } from '../src/lib/pathway'
 import predData from '../src/data/predictions.json'
 import structuresData from '../src/data/lmsdStructures.json'
 import synthData from '../src/data/synth.json'
+import lmsdCuratedData from '../src/data/lmsdCurated.json'
 
 const PRED = predData as unknown as {
   model_version: string
@@ -197,6 +198,24 @@ if (live) {
 }
 
 db.close()
+
+// ── build manifest: real, current facts for the in-app Methods page and the
+// header status line — generated here so neither can drift out of sync with
+// what this build actually produced.
+fs.writeFileSync(
+  path.join(HERE, '../src/data/meta.json'),
+  JSON.stringify({
+    builtAt: new Date().toISOString(),
+    classes: CLASSES.length,
+    species: { total: speciesCount, curated: curatedCount, gap: gapCount, rare: rareCount },
+    lmsdRecordsScanned: (lmsdCuratedData as { recordsScanned: number }).recordsScanned,
+    models: {
+      ccsRt: PRED.model_version,
+      chemSascore: SYNTH.model_version,
+      pathway: live ? PATHWAY_GRAPH_MODEL_VERSION : 'heuristic-v0 (pathway verification skipped — offline build)',
+    },
+  }, null, 2),
+)
 
 console.log(`Built ${DB_PATH}`)
 console.log(`  classes:              ${CLASSES.length}`)

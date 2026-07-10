@@ -41,12 +41,12 @@ export default function PredictionCard({ cls, c, d }: { cls: LipidClass; c: numb
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="predicted CCS vs chain length" style={{ marginTop: 6 }}>
         <polygon points={band} fill="var(--cyan)" fillOpacity={0.14} />
         <path d={line} fill="none" stroke="var(--cyan)" strokeWidth={1.6} />
-        <circle cx={sx(c)} cy={sy(pred.ccs.v)} r={4} fill="var(--amber)" stroke="#0b1418" strokeWidth={1.2} />
+        <circle cx={sx(c)} cy={sy(pred.ccs.v)} r={4} fill="var(--gold)" stroke="var(--ground)" strokeWidth={1.2} />
         {[ymin, (ymin + ymax) / 2, ymax].map((t, i) => (
           <text key={i} x={M.l - 6} y={sy(t) + 3} textAnchor="end" fill="var(--faint)" fontSize={9} fontFamily="var(--mono)">{Math.round(t)}</text>
         ))}
-        <text x={sx(c)} y={sy(pred.ccs.v) - 8} textAnchor="middle" fill="var(--amber)" fontSize={9} fontFamily="var(--mono)">{cls.k} {c}:{d}</text>
-        <text x={(M.l + W - M.r) / 2} y={H - 4} textAnchor="middle" fill="var(--faint)" fontSize={9} fontFamily="var(--mono)">carbons →  ·  CCS Å² (90% band)</text>
+        <text x={sx(c)} y={sy(pred.ccs.v) - 8} textAnchor="middle" fill="var(--gold)" fontSize={9} fontFamily="var(--mono)">{cls.k} {c}:{d}</text>
+        <text x={(M.l + W - M.r) / 2} y={H - 4} textAnchor="middle" fill="var(--faint)" fontSize={9} fontFamily="var(--sans)">carbons →  ·  CCS Å² (90% band)</text>
       </svg>
     </div>
   )

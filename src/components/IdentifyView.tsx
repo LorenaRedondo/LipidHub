@@ -45,7 +45,7 @@ export default function IdentifyView({ onOpen }: Props) {
         <h2 style={{ marginTop: 8 }}>What lipid is this feature?</h2>
         <p className="lede">
           Enter an observed m/z from a run — add CCS and RT to disambiguate. You get ranked
-          candidates with a confidence score, <b>including species no spectral library has</b>
+          candidates with a confidence score, <b>including species no spectral library has</b>{' '}
           because the atlas predicted them.{' '}
           <span style={{ color: 'var(--faint)' }}>Mass is exact; CCS/RT are predicted (issue #3).</span>
         </p>

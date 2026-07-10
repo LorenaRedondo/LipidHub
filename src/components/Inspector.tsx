@@ -158,7 +158,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
       </div>
       <div className="synth-row">
         <div className="top"><span>Chemical (100−SAScore)</span><b>{sy.chem}/100 · SA {sy.sa}</b></div>
-        <div className="bar"><i style={{ width: `${sy.chem}%`, background: 'var(--amber)' }} /></div>
+        <div className="bar"><i style={{ width: `${sy.chem}%`, background: 'var(--gold)' }} /></div>
       </div>
       <p className="verdict">
         {bioVerdict}<br />

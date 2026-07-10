@@ -22,7 +22,7 @@ npm run api        # http://localhost:8787  (API_PORT to override)
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /classes` | the 20 classes with taxonomy |
+| `GET /classes` | all 22 classes with taxonomy |
 | `GET /species/:id` | one species, e.g. `/species/PC-34-1` |
 | `GET /search?…` | faceted search (see params below) |
 | `GET /identify?mz=760.585&ppm=10&adduct=[M+H]+` | candidate species for an m/z |

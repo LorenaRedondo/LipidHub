@@ -1,20 +1,33 @@
-interface Stage { step: string; title: string; items: string[]; why: string }
+interface Item { text: string; planned?: boolean }
+interface Stage { step: string; title: string; items: Item[]; why: string }
 
 const STAGES: Stage[] = [
   { step: '01 · INGEST', title: 'Reference sources',
-    items: ['LIPID MAPS LMSD — ~48k curated', 'LMISSD + COMP_DB — 1.1M in-silico', 'SwissLipids — enzyme/pathway', 'Rhea · UniProt — reactions', 'HMDB · ChEBI — context & ontology'],
+    items: [{ text: 'LIPID MAPS LMSD — ~48k curated' }, { text: 'LMISSD + COMP_DB — 1.1M in-silico' }, { text: 'SwissLipids — enzyme/pathway' }, { text: 'Rhea · UniProt — reactions' }, { text: 'HMDB · ChEBI — context & ontology' }],
     why: 'All open, all with bulk + API access.' },
   { step: '02 · RECONCILE', title: 'Normalize & dedup',
-    items: ['Canonical LIPID MAPS shorthand', 'InChIKey / SMILES identity', 'Cross-reference IDs across DBs', 'RDKit structure standardization'],
+    items: [{ text: 'Canonical LIPID MAPS shorthand' }, { text: 'InChIKey / SMILES identity' }, { text: 'Cross-reference IDs across DBs' }, { text: 'RDKit structure standardization' }],
     why: 'One species = one node, many sources.' },
   { step: '03 · ENUMERATE', title: 'Define the space',
-    items: ['headgroup × acyl-chain generator', 'chemically-sane bounds & rules', 'diff vs. curated → the gaps'],
+    items: [{ text: 'headgroup × acyl-chain generator' }, { text: 'chemically-sane bounds & rules' }, { text: 'diff vs. curated → the gaps' }],
     why: 'This is what makes the "periodic table" complete.' },
   { step: '04 · INFER', title: 'Property engine',
-    items: ['RDKit — formula, mass, logP, TPSA', 'ML — CCS, RT, in-silico MS/MS', 'heuristics — Tm, packing', 'synthesizability — bio + chemical'],
+    items: [
+      { text: 'formula, mass, adducts — exact, from composition' },
+      { text: 'CCS, RT — real ML (GBM + Optuna, real-anchored)' },
+      { text: 'logP, Tm, MS/MS fragments — heuristic formulas' },
+      { text: 'synthesizability — real RDKit SAScore + live UniProt/Rhea' },
+    ],
     why: 'Every gap gets predicted, testable properties.' },
   { step: '05 · SERVE', title: 'Access layer',
-    items: ['Postgres + RDKit cartridge', 'graph store for pathways', 'REST · SPARQL · bulk export', 'the Atlas UI (this)'],
+    items: [
+      { text: 'REST API' },
+      { text: 'MCP server + Claude Skill' },
+      { text: 'the Atlas UI (this)' },
+      { text: 'Postgres + RDKit cartridge', planned: true },
+      { text: 'graph store for pathways', planned: true },
+      { text: 'SPARQL + bulk export (#7)', planned: true },
+    ],
     why: 'Researchers meet it as UI, API, or download.' },
 ]
 
@@ -54,7 +67,9 @@ export default function PipelineView() {
           Nothing here needs to be invented from scratch — the reference data exists and ships with
           open licences and APIs. The work is <b>reconciliation, enumeration, and inference</b>, plus
           the two layers nobody has built: systematic synthesizability, and the gap map. Everything
-          flows left to right; every value carries its provenance.
+          flows left to right; every value carries its provenance. Items marked{' '}
+          <span className="status-pill planned">planned</span> aren't built yet — see the{' '}
+          <b>Methods</b> page (Resources menu, above) for the full real-vs-target breakdown.
         </p>
 
         <div className="pipe">
@@ -62,7 +77,11 @@ export default function PipelineView() {
             <div className="pcard" key={s.step}>
               <span className="step">{s.step}</span>
               <h3>{s.title}</h3>
-              <ul>{s.items.map((it) => <li key={it}>{it}</li>)}</ul>
+              <ul>{s.items.map((it) => (
+                <li key={it.text} className={it.planned ? 'planned' : undefined}>
+                  {it.text}{it.planned && <span className="status-pill planned" style={{ marginLeft: 6 }}>planned</span>}
+                </li>
+              ))}</ul>
               <span className="why">{s.why}</span>
             </div>
           ))}
@@ -70,7 +89,7 @@ export default function PipelineView() {
         <div className="pipe-arrows"><span>→</span><span>→</span><span>→</span><span>→</span><span /></div>
 
         <div className="schema">
-          <div className="bar-t"><span style={{ color: 'var(--amber)' }}>◧</span> core schema — provenance is a first-class citizen</div>
+          <div className="bar-t"><span style={{ color: 'var(--cyan)' }}>◧</span> core schema — provenance is a first-class citizen</div>
           <pre dangerouslySetInnerHTML={{ __html: SCHEMA_HTML }} />
         </div>
 
@@ -80,8 +99,9 @@ export default function PipelineView() {
             <p>
               No lipid DB systematically answers "can I make this?". We split it: a <b>biosynthetic
               score</b> (live-verified enzyme + reaction match against UniProt/Rhea) and a{' '}
-              <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis pass, e.g. AiZynthFinder,
-              is not yet implemented). That single distinction —
+              <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis route-generation pass
+              was validated but found chemically unreliable for lipid chemistry — see issue #52).
+              That single distinction —
               nature-accessible vs. lab-accessible vs. neither — is defensible and, as far as the
               reference DBs go, unoccupied.
             </p>

@@ -1,19 +1,35 @@
 import { useMemo, useState } from 'react'
+import { PERSONAS, type Persona } from '../lib/lipids'
 import {
-  FEATURES, FEATURE_MAP, GROUP_COLORS,
-  buildDataset, correlate, trendFor, type FeatureKey,
+  FEATURES, FEATURE_MAP, GROUP_COLORS, LAB_ONLY_BIO_MAX, LAB_ONLY_CHEM_MIN, PERSONA_ANALYTICS,
+  buildDataset, correlate, isLabOnly, labOnlyCandidates, trendFor, type FeatureKey,
 } from '../lib/analytics'
 import { usePredictions } from '../lib/predictions'
 import { downloadSVG } from '../lib/download'
 
-export default function AnalyticsView() {
+interface Props { persona: Persona; onPersona: (p: Persona) => void; onOpen: (clsK: string, c: number, d: number) => void }
+
+export default function AnalyticsView({ persona, onPersona, onOpen }: Props) {
   const pred = usePredictions()
   const data = useMemo(() => buildDataset(pred), [pred])
-  const [xKey, setXKey] = useState<FeatureKey>('carbons')
-  const [yKey, setYKey] = useState<FeatureKey>('logp')
+  const [xKey, setXKey] = useState<FeatureKey>(PERSONA_ANALYTICS[persona].x)
+  const [yKey, setYKey] = useState<FeatureKey>(PERSONA_ANALYTICS[persona].y)
 
-  const r = useMemo(() => correlate(data, xKey, yKey), [data, xKey, yKey])
+  // clicking a persona resets the pair to that persona's default lens; the
+  // pickers below stay fully manual after that, this is just a starting point
+  function selectPersona(p: Persona) {
+    onPersona(p)
+    setXKey(PERSONA_ANALYTICS[p].x)
+    setYKey(PERSONA_ANALYTICS[p].y)
+  }
   const trend = useMemo(() => trendFor(xKey, yKey), [xKey, yKey])
+  // r describes the same population the curve is fit against — if the curve excludes
+  // a shape/charge outlier group, the correlation number shouldn't silently include it
+  const rData = useMemo(() => (trend?.excludeFromFit ? data.filter((p) => !trend.excludeFromFit!(p)) : data), [data, trend])
+  const r = useMemo(() => correlate(rData, xKey, yKey), [rData, xKey, yKey])
+  const isBioChemPair = (xKey === 'bio' && yKey === 'chem') || (xKey === 'chem' && yKey === 'bio')
+  const showLabOnly = persona === 'chem' && isBioChemPair
+  const candidates = useMemo(() => (showLabOnly ? labOnlyCandidates(data) : []), [showLabOnly, data])
   const predictedCount = useMemo(() => data.filter((p) => p.predicted).length, [data])
 
   // correlation matrix (complete-case per pair)
@@ -37,11 +53,13 @@ export default function AnalyticsView() {
   const fmt = (v: number) => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10)
 
   // trend curve, fit in the pair's *natural* orientation (trend.x/trend.y) then re-oriented
-  // onto whichever axis the user currently has it plotted on
+  // onto whichever axis the user currently has it plotted on. excludeFromFit points still
+  // render as scatter dots (via pts/xs/ys above) — they're just not used to fit the curve.
   const trendPath = useMemo(() => {
     if (!trend) return null
+    const fitPts = trend.excludeFromFit ? pts.filter((o) => !trend.excludeFromFit!(o.p)) : pts
     const swapped = trend.x !== xKey // xKey must be trend.y if not trend.x, since trendFor() matched
-    const fitXs = swapped ? ys : xs, fitYs = swapped ? xs : ys
+    const fitXs = fitPts.map((o) => (swapped ? o.y : o.x)), fitYs = fitPts.map((o) => (swapped ? o.x : o.y))
     if (fitXs.length < 3) return null
     const f = trend.fit(fitXs, fitYs)
     const lo = swapped ? ymin : xmin, hi = swapped ? ymax : xmax
@@ -54,28 +72,60 @@ export default function AnalyticsView() {
       path.push(`${i ? 'L' : 'M'} ${sx(px).toFixed(1)} ${sy(py).toFixed(1)}`)
     }
     return path.join(' ')
-  }, [trend, xKey, xs, ys, xmin, xmax, ymin, ymax])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trend, xKey, pts, xmin, xmax, ymin, ymax])
+
+  // lab-only quadrant rect, in whichever axis orientation chem/bio currently sit
+  const labOnlyRect = useMemo(() => {
+    if (!showLabOnly) return null
+    const chemOnX = xKey === 'chem'
+    const chemMin = Math.max(LAB_ONLY_CHEM_MIN, chemOnX ? xmin : ymin)
+    const bioMax = Math.min(LAB_ONLY_BIO_MAX, chemOnX ? ymax : xmax)
+    if (chemMin > (chemOnX ? xmax : ymax) || bioMax < (chemOnX ? ymin : xmin)) return null
+    const left = chemOnX ? sx(chemMin) : sx(xmin)
+    const right = chemOnX ? sx(xmax) : sx(bioMax)
+    const top = chemOnX ? sy(ymax) : sy(chemMin)
+    const bottom = chemOnX ? sy(bioMax) : sy(ymin)
+    return { x: Math.min(left, right), y: Math.min(top, bottom), w: Math.abs(right - left), h: Math.abs(bottom - top) }
+  }, [showLabOnly, xKey, xs, ys, xmin, xmax, ymin, ymax])
 
   const corrColor = (v: number) =>
-    v >= 0 ? `rgba(240,169,75,${(0.12 + 0.88 * v).toFixed(3)})` : `rgba(78,203,198,${(0.12 + 0.88 * -v).toFixed(3)})`
+    v >= 0 ? `rgba(224,168,63,${(0.12 + 0.88 * v).toFixed(3)})` : `rgba(78,203,198,${(0.12 + 0.88 * -v).toFixed(3)})`
   const strength = Math.abs(r) > 0.8 ? 'strong' : Math.abs(r) > 0.5 ? 'moderate' : Math.abs(r) > 0.2 ? 'weak' : 'no'
 
   return (
     <section className="view on">
       <div className="doc wide">
         <span className="eyebrow">Analytics</span>
-        <h2 style={{ marginTop: 8 }}>Explore correlations</h2>
+        <h2 style={{ marginTop: 8 }}>Explore property relationships</h2>
         <p className="lede">
-          Every plausible species in the atlas as one point, with its computed properties.
-          The matrix is a birds-eye Pearson r overview across every property pair. The scatter
-          below shows the raw points for whichever pair you pick — a correlation number and
-          trend curve only appear when that specific pair has an established physical basis
-          (see caption); otherwise it's just the distribution, with nothing implied.{' '}
+          Every plausible species in the atlas as one point. What's worth looking at here depends
+          on what you're trying to do — pick a view below for a relevant starting pair, or set
+          any two properties yourself.{' '}
           <span style={{ color: 'var(--faint)' }}>
             ({data.length} species · {predictedCount} with real ML-predicted CCS/RT
             {pred ? ` (${pred.model_version})` : ''}, rest from the composition formula.)
           </span>
         </p>
+
+        <div className="persona-bar standalone" style={{ marginBottom: 20 }}>
+          <span className="persona-bar-label">View as</span>
+          <div className="persona-chips" role="group" aria-label="Analyze as">
+            {PERSONAS.map((p) => (
+              <button
+                key={p.id}
+                aria-pressed={p.id === persona}
+                className={'pchip' + (p.id === persona ? ' on' : '')}
+                onClick={() => selectPersona(p.id)}
+                title={p.label}
+              >
+                <span className="ic" aria-hidden="true">{p.ic}</span>
+                <span>{p.short}</span>
+              </button>
+            ))}
+          </div>
+          <p className="note" style={{ marginTop: 8, marginBottom: 0 }}>{PERSONA_ANALYTICS[persona].framing}</p>
+        </div>
 
         <div className="an-grid">
           {/* correlation matrix */}
@@ -110,7 +160,7 @@ export default function AnalyticsView() {
             <div className="corr-key">
               <span className="sw" style={{ background: 'rgba(78,203,198,.9)' }} /> −1
               <span className="sw" style={{ background: 'var(--raise)' }} /> 0
-              <span className="sw" style={{ background: 'rgba(240,169,75,.9)' }} /> +1
+              <span className="sw" style={{ background: 'rgba(224,168,63,.9)' }} /> +1
             </div>
           </div>
 
@@ -122,10 +172,10 @@ export default function AnalyticsView() {
               <button className="dl-link" onClick={() => downloadSVG(`lipiverse-${xKey}-vs-${yKey}.svg`, document.querySelector('.scatter-wrap svg'))}>SVG ↓</button>
             </div>
 
-            {trend ? (
+            {trend && (
               <>
                 <div className="rline">
-                  r = <b className="num" style={{ color: r >= 0 ? 'var(--amber)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
+                  r = <b className="num" style={{ color: r >= 0 ? 'var(--gold)' : 'var(--cyan)' }}>{r.toFixed(2)}</b>
                   <span className="an-sub">{strength} {r >= 0 ? 'positive' : 'negative'} correlation</span>
                   <span className={'trend-basis ' + trend.basis}>
                     {trend.basis === 'validation' ? 'tested vs. real model output' : 'formula reference, not independent data'}
@@ -133,8 +183,11 @@ export default function AnalyticsView() {
                 </div>
                 <div className="an-sub" style={{ marginTop: -6, marginBottom: 8 }}>trend curve: {trend.reason}</div>
               </>
-            ) : (
-              <div className="an-sub" style={{ marginBottom: 8 }}>no established physical relationship for this pair — showing the raw distribution only</div>
+            )}
+            {showLabOnly && (
+              <div className="an-sub" style={{ marginBottom: 8 }}>
+                shaded region: chem ≥ {LAB_ONLY_CHEM_MIN}, bio ≤ {LAB_ONLY_BIO_MAX} (same definition as <code>/lab-only</code>) — {candidates.length} candidates below
+              </div>
             )}
 
             <div className="scatter-wrap">
@@ -151,8 +204,15 @@ export default function AnalyticsView() {
                     <text x={sx(t)} y={H - M.b + 16} textAnchor="middle" className="ax">{fmt(t)}</text>
                   </g>
                 ))}
+                {labOnlyRect && (
+                  <rect x={labOnlyRect.x} y={labOnlyRect.y} width={labOnlyRect.w} height={labOnlyRect.h} fill="var(--cyan)" fillOpacity={0.07} stroke="var(--cyan-dim)" strokeDasharray="3 3" />
+                )}
                 {pts.map((o) => (
-                  <circle key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={2.7} fill={GROUP_COLORS[o.p.group]} fillOpacity={0.72}>
+                  <circle
+                    key={o.p.id} cx={sx(o.x)} cy={sy(o.y)} r={showLabOnly && isLabOnly(o.p) ? 3.4 : 2.7}
+                    fill={showLabOnly && isLabOnly(o.p) ? 'var(--cyan)' : GROUP_COLORS[o.p.group]}
+                    fillOpacity={showLabOnly ? (isLabOnly(o.p) ? 0.95 : 0.35) : 0.72}
+                  >
                     <title>{`${o.p.clsK} ${o.p.c}:${o.p.d} · ${fx.short} ${fmt(o.x)} · ${fy.short} ${fmt(o.y)}`}</title>
                   </circle>
                 ))}
@@ -162,9 +222,22 @@ export default function AnalyticsView() {
               </svg>
             </div>
 
-            <div className="an-legend">
-              {Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)}
-            </div>
+            {showLabOnly ? (
+              candidates.length > 0 && (
+                <div className="an-legend" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6, marginTop: 12 }}>
+                  {candidates.map((c) => (
+                    <div key={c.id} className="rline" style={{ marginBottom: 0, justifyContent: 'space-between' }}>
+                      <span><b className="num">{c.clsK} {c.c}:{c.d}</b> <span className="an-sub">chem {c.chem} · bio {c.bio}</span></span>
+                      <button className="openbtn" onClick={() => onOpen(c.clsK, c.c, c.d)}>open →</button>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="an-legend">
+                {Object.entries(GROUP_COLORS).map(([g, c]) => <span key={g} className="lg"><span className="dot2" style={{ background: c }} />{g}</span>)}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -10,6 +10,8 @@ import ReferencesView from './components/ReferencesView'
 import SearchView from './components/SearchView'
 import IdentifyView from './components/IdentifyView'
 import SpeciesPage from './components/SpeciesPage'
+import DataAccessView from './components/DataAccessView'
+import MethodsView from './components/MethodsView'
 
 export interface Cell { c: number; d: number }
 export interface Pin { clsK: string; c: number; d: number }
@@ -121,10 +123,12 @@ export default function App() {
       {view === 'search' && <SearchView onOpen={openInAtlas} pins={pins} onTogglePin={togglePin} />}
       {view === 'identify' && <IdentifyView onOpen={openInAtlas} />}
       {view === 'compare' && <CompareView pins={pins} onTogglePin={togglePin} onGoAtlas={() => setView('atlas')} />}
-      {view === 'analytics' && <AnalyticsView />}
+      {view === 'analytics' && <AnalyticsView persona={persona} onPersona={setPersona} onOpen={openInAtlas} />}
       {view === 'refs' && <ReferencesView />}
       {view === 'pipe' && <PipelineView />}
       {view === 'users' && <UsersView />}
+      {view === 'access' && <DataAccessView />}
+      {view === 'methods' && <MethodsView />}
     </div>
   )
 }

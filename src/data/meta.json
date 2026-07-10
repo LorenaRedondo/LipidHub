@@ -1,0 +1,16 @@
+{
+  "builtAt": "2026-07-09T16:56:03.623Z",
+  "classes": 22,
+  "species": {
+    "total": 2581,
+    "curated": 1395,
+    "gap": 695,
+    "rare": 491
+  },
+  "lmsdRecordsScanned": 50516,
+  "models": {
+    "ccsRt": "gbm-v2-optuna-real-anchored",
+    "chemSascore": "rdkit-2026.03.3-sascorer",
+    "pathway": "uniprot-rhea-live-v1"
+  }
+}

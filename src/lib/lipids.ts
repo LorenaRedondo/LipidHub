@@ -19,6 +19,14 @@ export type Formula = Record<Elem, number>
 export type Kind = 'glycero' | 'sphingo' | 'sterolester' | 'glyco' | 'fattyacyl' | 'sterol'
 export type SubHead = 'SM' | 'Hex' | 'MGDG' | 'DGDG' | 'SQDG'
 export type Persona = 'analyst' | 'biophys' | 'chem' | 'bioinfo'
+
+/** Shared across the Atlas inspector and Analytics — one "who am I" identity, several views. */
+export const PERSONAS: { id: Persona; ic: string; short: string; label: string }[] = [
+  { id: 'analyst', ic: '◎', short: 'Analyst', label: 'Mass-spec analyst' },
+  { id: 'biophys', ic: '≋', short: 'Biophysics', label: 'Membrane biophysicist' },
+  { id: 'chem', ic: '⚗', short: 'Chemist', label: 'Synthetic chemist' },
+  { id: 'bioinfo', ic: '⌗', short: 'Bioinfo', label: 'Bioinformatician' },
+]
 export type Status = 'known' | 'gap' | 'rare'
 export type Method = 'measured' | 'calculated' | 'predicted'
 export type Kingdom = 'Animals' | 'Plants' | 'Algae' | 'Fungi' | 'Bacteria' | 'Archaea'
