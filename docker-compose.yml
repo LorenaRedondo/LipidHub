@@ -16,3 +16,15 @@ services:
     ports:
       - "5174:80"
     restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      target: api
+    command: ["npx", "tsx", "mcp/httpServer.ts"]
+    ports:
+      - "8788:8788"
+    environment:
+      MCP_HTTP_PORT: "8788"
+      MCP_API_KEYS: ${MCP_API_KEYS}
+    restart: unless-stopped
