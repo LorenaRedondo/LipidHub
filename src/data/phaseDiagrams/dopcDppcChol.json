@@ -1,0 +1,30 @@
+{
+  "system": { "lowMelt": "PC-36-2", "highMelt": "PC-32-0", "sterol": "ST-27-1" },
+  "xLabel": "DPPC / (DPPC+DOPC)",
+  "yLabel": "cholesterol mole fraction",
+  "tempRangeC": [10, 25],
+  "citation": "Marsh D. Cholesterol-induced fluid membrane domains: A compendium of lipid-raft ternary phase diagrams. Biochim Biophys Acta 1788 (2009) 2114-2123, Table A.1.",
+  "originalSource": "Veatch SL, Gawrisch K, Keller SL. Closed-loop miscibility gap and quantitative tie-lines in ternary membrane mixtures. Biophys J 90 (2006) 4428-4436.",
+  "note": "Table A.1 lists a two-phase tie-line region with tie-lines at each nominal temperature sampling different overall compositions, not one tie-line per temperature. Two additional T=10C rows in the source table (Lo endpoint y around 0.2, far below the y~0.54 cluster of the other T=10 rows) were not transcribed here: they don't fit the monotonic-boundary assumption this module's classifyPhase() relies on, and the source paper's own discussion (Section 5) flags this low-cholesterol edge of the diagram as unsettled. Treat this dataset as the well-behaved core of Table A.1, not the full table.",
+  "tieLines": [
+    { "tempC": 10, "xLa": 0.18, "yLa": 0.23, "xLo": 0.66, "yLo": 0.54 },
+    { "tempC": 10, "xLa": 0.16, "yLa": 0.25, "xLo": 0.65, "yLo": 0.54 },
+    { "tempC": 10, "xLa": 0.19, "yLa": 0.16, "xLo": 0.83, "yLo": 0.54 },
+    { "tempC": 12.5, "xLa": 0.17, "yLa": 0.23, "xLo": 0.61, "yLo": 0.50 },
+    { "tempC": 12.5, "xLa": 0.17, "yLa": 0.15, "xLo": 0.68, "yLo": 0.54 },
+    { "tempC": 12.5, "xLa": 0.19, "yLa": 0.09, "xLo": 0.91, "yLo": 0.47 },
+    { "tempC": 15, "xLa": 0.19, "yLa": 0.25, "xLo": 0.65, "yLo": 0.52 },
+    { "tempC": 15, "xLa": 0.19, "yLa": 0.15, "xLo": 0.72, "yLo": 0.58 },
+    { "tempC": 15, "xLa": 0.22, "yLa": 0.14, "xLo": 0.72, "yLo": 0.47 },
+    { "tempC": 15, "xLa": 0.25, "yLa": 0.09, "xLo": 0.83, "yLo": 0.46 },
+    { "tempC": 17.5, "xLa": 0.26, "yLa": 0.18, "xLo": 0.80, "yLo": 0.43 },
+    { "tempC": 17.5, "xLa": 0.31, "yLa": 0.09, "xLo": 0.80, "yLo": 0.35 },
+    { "tempC": 20, "xLa": 0.28, "yLa": 0.23, "xLo": 0.69, "yLo": 0.42 },
+    { "tempC": 20, "xLa": 0.27, "yLa": 0.22, "xLo": 0.71, "yLo": 0.47 },
+    { "tempC": 20, "xLa": 0.28, "yLa": 0.14, "xLo": 0.82, "yLo": 0.41 },
+    { "tempC": 22.5, "xLa": 0.30, "yLa": 0.19, "xLo": 0.76, "yLo": 0.35 },
+    { "tempC": 22.5, "xLa": 0.31, "yLa": 0.11, "xLo": 0.80, "yLo": 0.41 },
+    { "tempC": 25, "xLa": 0.33, "yLa": 0.12, "xLo": 0.79, "yLo": 0.44 },
+    { "tempC": 25, "xLa": 0.37, "yLa": 0.10, "xLo": 0.78, "yLo": 0.35 }
+  ]
+}
