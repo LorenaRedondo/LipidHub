@@ -99,10 +99,17 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
       <div className="doc wide">
         <span className="eyebrow">Compare · {cols.length}/4</span>
         <h2 style={{ marginTop: 8 }}>{mode === 'table' ? 'Side-by-side' : 'As a mixture'}</h2>
-        <div className="seg" style={{ marginBottom: 16 }} role="group" aria-label="Compare mode">
+        <div className="seg" style={{ marginBottom: membraneCols.length < 2 ? 6 : 16 }} role="group" aria-label="Compare mode">
           <button aria-pressed={mode === 'table'} className={mode === 'table' ? 'on' : ''} onClick={() => setMode('table')}>side-by-side</button>
           <button aria-pressed={mode === 'mixture'} className={mode === 'mixture' ? 'on' : ''} onClick={() => setMode('mixture')} disabled={membraneCols.length < 2} title={membraneCols.length < 2 ? 'Pin at least 2 membrane-forming species' : undefined}>as a mixture</button>
         </div>
+        {membraneCols.length < 2 && (
+          <p className="note" style={{ marginBottom: 16 }}>
+            "as a mixture" needs at least 2 pinned species that form bilayers (glycerophospholipids,
+            glycolipids, sphingolipids, or cardiolipin) — {cols.length ? `you have ${membraneCols.length} of ${cols.length} pinned that qualify` : 'nothing pinned yet'}.
+            Fatty acyls, sterols, and storage lipids (TG/DG/CE) aren't modeled as bilayer components here.
+          </p>
+        )}
 
         {mode === 'table' ? (
           <>
