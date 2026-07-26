@@ -17,14 +17,16 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 
 - `list_lipid_classes` — the 20 classes with their group, LIPID MAPS category, and kingdoms.
 - `get_lipid({ id })` — one species by id/shorthand (`PC-34-1` or `"PC 34:1"`): formula, exact
-  mass, adduct m/z, CCS/RT/logP/Tm, synthesizability, taxonomy, SMILES, literature link.
+  mass, adduct m/z, CCS/RT (trained model), logP (RDKit), synthesizability, taxonomy, SMILES,
+  literature link. Any property with no reliable value is `null` ("not available"); `tm` is
+  always `null`. `properties.provenance` names each value's source.
 - `search_lipids({ q?, classK?, group?, kingdom?, massMin?, massMax?, origin?, minBiosynthetic?, maxSaScore?, pageSize? })`
   — faceted search; returns a total and a page of records.
 - `identify_by_mz({ mz, ppm?, adduct? })` — candidate species for an observed m/z (default 10 ppm, `[M+H]+`).
 - `compare_lipids({ ids: [...] })` — several species side by side.
 - `find_gaps({ classK?, limit? })` — in-silico-only species (not curated) — the atlas "gaps".
 - `predict_properties({ id })` — ML-predicted CCS/RT with a 90% calibrated uncertainty interval
-  and model version, where a trained model is available (falls back to the heuristic otherwise).
+  and model version, where a trained model covers the species (otherwise "not available").
 - `check_lmsd({ id })` — verify a species against the **LIPID MAPS Structure Database** (the
   authoritative reference): returns `inLMSD`, real LM IDs, and the official classification.
 - `check_pathway({ classK })` — live-verify a class's declared enzymes (UniProt) and reaction
@@ -35,10 +37,11 @@ enumerated lipid species with computed properties, biological taxonomy, and stru
 
 ## How to use it
 
-**Always trust exact values, flag predicted ones.** Formula, exact mass, and adduct m/z are
-computed exactly. `properties.note` and `synthesizability.note` say exactly how each value
-was produced (trained ML model vs. heuristic placeholder, live-verified pathway vs. heuristic)
-— read and pass on that caveat rather than presenting anything as measured. Prefer
+**Always trust exact values, flag predicted ones, and never invent missing ones.** Formula,
+exact mass, and adduct m/z are computed exactly. `properties.provenance`/`note` and
+`synthesizability.note` say how each value was produced (trained ML model, RDKit, live-verified
+pathway) — read and pass on that caveat rather than presenting anything as measured. A `null`
+property means "not available" — report it as such, don't estimate it. Prefer
 `predict_properties` over the CCS/RT in `get_lipid`/`search_lipids` when a real model version
 is available; both surface the same value, but `predict_properties` is explicit about it.
 
@@ -78,6 +81,6 @@ synthesizability filters to shortlist novel-but-plausible targets.
 
 - Don't invent species ids — validate via `get_lipid`; ids are `CLASS-carbons-doublebonds`.
 - Don't state a double-bond position or sn-position as known — sum composition doesn't fix them.
-- Don't treat predicted CCS/RT/Tm as ground truth.
+- Don't treat predicted CCS/RT as ground truth, and don't report a `null` property as a number.
 - Don't claim a retrosynthesis route exists — route generation isn't implemented yet (`synth
   .route_json` is always null).

@@ -7,14 +7,14 @@ const PERSONAS: Persona[] = [
     task: 'An untargeted run throws an unknown feature at m/z 760.58, RT 11.3, CCS 301. Is it real, and what is it?',
     gives: <>Search by <b>mass or CCS window</b>, land on candidate cells, compare <b>predicted vs. their measured</b> RT/CCS/MS-MS to confirm or reject an ID — including for species not in any spectral library because the atlas predicted them.</> },
   { ic: '≋', name: 'Membrane biophysicist', role: 'research · project-driven',
-    task: 'Design a model membrane with a target phase-transition temperature and curvature.',
-    gives: <>Read predicted <b>membrane nanomechanics</b> — phase, curvature, bilayer thickness, area/lipid, and AFM-measurable <b>breakthrough force &amp; K<sub>A</sub></b> — alongside T<sub>m</sub> and logP; see how one more double bond softens the membrane. The gradient across the grid <em>is</em> the structure–property relationship.</> },
-  { ic: '⚗', name: 'Synthetic chemist / biotech', role: 'discovery · high-value',
-    task: "Find a novel lipid nanoparticle component that's chemically makeable but not naturally abundant.",
-    gives: <>Query the space directly: <b>high chemical-synthesizability, low biosynthetic score</b> — i.e. the white space of "lab-only" lipids — with a starting retrosynthetic route and the properties to prioritize candidates.</> },
+    task: 'Compare how acyl-chain length and unsaturation change bilayer packing and geometry.',
+    gives: <>Read <b>membrane geometry</b> from the Tanford/Israelachvili model — packing parameter, preferred curvature, bilayer thickness and area/lipid — alongside RDKit logP; see how one more double bond changes the packing across the grid. Phase state and nanomechanics are shown as "not available" until a measured tier exists.</> },
+  { ic: '⚗', name: 'Synthetic chemist / biotech', role: 'discovery',
+    task: "Find a lipid that's chemically makeable but not naturally abundant.",
+    gives: <>Query the space directly: <b>high chemical-synthesizability (RDKit SAScore), low biosynthetic score</b> — i.e. the "lab-only" quadrant — with the properties to prioritise candidates. Retrosynthesis route generation is not yet implemented (issue #4).</> },
   { ic: '⌗', name: 'Bioinformatician / data scientist', role: 'integrator · programmatic',
-    task: 'Annotate a 10,000-feature dataset and join lipids to enzymes for a network model.',
-    gives: <>Hit the <b>REST/SPARQL API or bulk export</b>; every species carries stable cross-refs (LMSD, SwissLipids, HMDB) and a provenance-tagged property table that's safe to build pipelines on.</> },
+    task: 'Annotate features and join lipids to enzymes for a network model.',
+    gives: <>Hit the <b>REST API or MCP tools</b>; every species carries a provenance-tagged property table (measured / calculated / predicted) that's safe to build pipelines on, plus LMSD cross-refs where curated. Bulk export and SPARQL are planned (issue #7), not built yet.</> },
   { ic: '⚕', name: 'Pharma / clinical researcher', role: 'translational',
     task: 'A lipid biomarker moves in disease — what makes it, and is it druggable?',
     gives: <>Trace a species to its <b>biosynthetic enzymes and pathway</b>, see structurally-neighbouring species that co-vary, and assess whether the pathway is a tractable target.</> },
@@ -28,10 +28,10 @@ export default function UsersView() {
     <section className="view on">
       <div className="doc">
         <span className="eyebrow">Who it's for</span>
-        <h2 style={{ marginTop: 8 }}>Five audiences, one atlas, five different front doors</h2>
+        <h2 style={{ marginTop: 8 }}>One data model, several different jobs</h2>
         <p className="lede">
-          The same data model serves very different jobs. The UI adapts what it surfaces — the
-          "View as…" presets in the Atlas reorder the inspector so each user sees their numbers first.
+          The same data model serves different jobs. The "View as…" presets in the Atlas reorder the
+          inspector so each user sees the fields most relevant to them first.
         </p>
 
         <div className="pgrid">
@@ -49,7 +49,7 @@ export default function UsersView() {
 
         <div className="marketnote">
           <b>How LIPIVERSE fits alongside the reference databases.</b> LIPIVERSE builds on the resources
-          the field already relies on — LIPID MAPS, SwissLipids, Rhea, HMDB — rather than replacing
+          the field already relies on — LIPID MAPS, Rhea, UniProt, HMDB — rather than replacing
           them. It adds three things they don't put in one place: the <em>enumerated</em> space shown
           beside the <em>catalogued</em> one, so the gaps are visible; properties inferred for every
           species from its composition; and an explicit label on every value — measured, calculated,

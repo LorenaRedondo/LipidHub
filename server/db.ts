@@ -47,9 +47,11 @@ function synthNote(row: SpeciesRow): string {
 }
 
 function propsNote(byKey: Record<string, { model_version: string | null }>): string {
-  const ccs = byKey.ccs?.model_version === 'heuristic-v0' ? 'heuristic formula' : `real ML model (${byKey.ccs?.model_version}, see issue #33 for remaining scope)`
-  const logp = byKey.logp?.model_version?.startsWith('rdkit-') ? `RDKit Crippen (${byKey.logp?.model_version})` : 'heuristic formula'
-  return `CCS/RT from ${ccs}; logP from ${logp}; Tm is a heuristic placeholder (see issue #3). Mass/formula are exact.`
+  const parts = ['Mass, formula and adduct m/z are exact.']
+  parts.push(byKey.ccs ? `CCS and RT from a trained ML model (${byKey.ccs.model_version}).` : 'CCS and RT not available for this species.')
+  parts.push(byKey.logp?.model_version?.startsWith('rdkit-') ? `logP from RDKit Crippen (${byKey.logp.model_version}).` : 'logP not available for this species.')
+  parts.push('Tm has no reliable per-species source and is not reported.')
+  return parts.join(' ')
 }
 
 const propsForIdStmt = db.prepare(`SELECT key, value, model_version, ci_low, ci_high FROM property_best WHERE species_id = ?`)
@@ -88,11 +90,25 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
       [ammon ? '[M+NH4]+' : '[M+HCOO]-']: round4(ammon ? M + NH4 : M + FORMATE),
     },
     properties: {
-      ccs: byKey.ccs?.value ?? 0, rt: byKey.rt?.value ?? 0, logP: byKey.logp?.value ?? 0, tm: byKey.tm?.value ?? null,
+      ccs: byKey.ccs?.value ?? null,
+      rt: byKey.rt?.value ?? null,
+      logP: byKey.logp?.value ?? null,
+      tm: null,
+      ccsInterval: byKey.ccs && byKey.ccs.ci_low != null && byKey.ccs.ci_high != null ? [byKey.ccs.ci_low, byKey.ccs.ci_high] : null,
+      rtInterval: byKey.rt && byKey.rt.ci_low != null && byKey.rt.ci_high != null ? [byKey.rt.ci_low, byKey.rt.ci_high] : null,
+      provenance: {
+        ccs: byKey.ccs ? `trained ML model ${byKey.ccs.model_version} · predicted, 90% CI` : null,
+        rt: byKey.rt ? `trained ML model ${byKey.rt.model_version} · predicted, 90% CI` : null,
+        logP: byKey.logp?.model_version?.startsWith('rdkit-') ? `RDKit Crippen ${byKey.logp.model_version} · calculated` : null,
+        tm: null,
+      },
       note: propsNote(byKey),
     },
     synthesizability: {
-      biosynthetic: row.bio_score ?? 0, chemicalScore: row.chem_sascore != null ? chemScoreFromSa(row.chem_sascore) : 0, saScore: row.chem_sascore ?? 0,
+      biosynthetic: row.bio_score ?? 0,
+      chemicalScore: row.chem_sascore != null ? chemScoreFromSa(row.chem_sascore) : 0,
+      saScore: row.chem_sascore ?? 0,
+      saSource: row.chem_model_version && row.chem_model_version !== 'heuristic-v0' ? `RDKit SAScore ${row.chem_model_version} · calculated` : 'composition estimate (no RDKit SAScore for this species)',
       note: synthNote(row),
     },
     membrane: membraneBiophysics(cls, c, d),

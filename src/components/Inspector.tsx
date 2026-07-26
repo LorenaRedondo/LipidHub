@@ -4,13 +4,12 @@ import {
   isomer, membraneBiophysics, pmcSearchUrl, prefersAmmonium, props, status, synth,
   type LipidClass, type Method, type Persona,
 } from '../lib/lipids'
+import { ccsRtFor, logpFor, saScoreFor, chemScoreFromSa, SOURCE } from '../lib/realProps'
 import { MAX_PINS, type Cell, type Pin } from '../App'
 import { useLmsdStructure } from '../lib/lmsdStructures'
 import { pathwayForClass, usePathwayGraph } from '../lib/pathwayGraph'
 import Structure from './Structure'
 import ConfBadge, { ProvenanceLegend } from './ConfBadge'
-import AfmForceCurve from './AfmForceCurve'
-import PhaseTransitionCard from './PhaseTransitionCard'
 
 function KV({ k, v, u, m }: { k: ReactNode; v: ReactNode; u?: string; m?: Method }) {
   return (
@@ -54,9 +53,13 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
     return <div className="insp-empty">Select a cell in the map<br />to inspect a species →</div>
   }
   const { c, d } = sel
+  const id = `${cls.k}-${c}-${d}`
   const p = props(cls, c, d)
   const sy = synth(cls, c, d)
   const st = status(cls, c, d)
+  const pr = ccsRtFor(id)          // real trained-model CCS/RT, or null
+  const lp = logpFor(id)           // real RDKit Crippen logP, or null
+  const sa = saScoreFor(id)        // real RDKit SAScore, or null
   const iso = isomer(cls, c, d)
   const ammon = prefersAmmonium(cls)
   const isPinned = pins.some((x) => x.clsK === cls.k && x.c === c && x.d === d)
@@ -74,7 +77,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
       : `in-silico  LEX:${cls.k}-${c}-${d} · not in LMSD`
 
   const secMS = (
-    <Section title="Mass spec — identification" tag="predicted from formula" focus={persona === 'analyst'}>
+    <Section title="Mass spec — identification" tag="exact m/z · trained-model CCS/RT" focus={persona === 'analyst'}>
       <div className="kv">
         <KV k="Exact mass (neutral)" v={p.M.toFixed(4)} u="Da" m="calculated" />
         <KV k="[M+H]⁺" v={(p.M + PROTON).toFixed(4)} u="m/z" m="calculated" />
@@ -84,9 +87,18 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
           v={(ammon ? p.M + NH4 : p.M + FORMATE).toFixed(4)}
           u="m/z" m="calculated"
         />
-        <KV k={`CCS ${cls.pref}`} v={p.ccs} u="Å²" m="predicted" />
-        <KV k="RT (RP-C18, 20 min)" v={p.rt} u="min" m="predicted" />
+        {pr
+          ? <KV k={`CCS ${cls.pref}`} v={<>{pr.ccs.v} <span className="ci">[{pr.ccs.lo}–{pr.ccs.hi}]</span></>} u="Å²" m="predicted" />
+          : <KV k={`CCS ${cls.pref}`} v="not available" />}
+        {pr
+          ? <KV k="RT (RP-C18, 20 min)" v={<>{pr.rt.v} <span className="ci">[{pr.rt.lo}–{pr.rt.hi}]</span></>} u="min" m="predicted" />
+          : <KV k="RT (RP-C18, 20 min)" v="not available" />}
       </div>
+      <p className="note" style={{ marginTop: 8 }}>
+        {pr
+          ? <>CCS &amp; RT source: {SOURCE.ccsRt}.</>
+          : <>No trained-model CCS/RT for this species — shown as <b>not available</b> rather than a heuristic guess.</>}
+      </p>
     </Section>
   )
 
@@ -129,26 +141,32 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
   )
 
   const secBio = (
-    <Section title="Membrane / physical" tag="heuristic + RDKit" focus={persona === 'biophys'}>
+    <Section title="Physical properties" tag="RDKit + exact" focus={persona === 'biophys'}>
       <div className="kv">
-        {p.tm != null
-          ? <KV k={<>Transition T<sub>m</sub></>} v={p.tm} u="°C" m="predicted" />
-          : <KV k={<>Transition T<sub>m</sub></>} v="n/a — neutral lipid" m="calculated" />}
-        <KV k="logP" v={p.logp} m="calculated" />
+        {lp != null
+          ? <KV k="logP" v={lp} m="calculated" />
+          : <KV k="logP" v="not available" />}
+        <KV k={<>Transition T<sub>m</sub></>} v="not available" />
         <KV k="Carbons / DB" v={`C${c} · ${d} =`} m="calculated" />
         <KV k="Headgroup" v={headgroupCharge(cls)} m="measured" />
       </div>
+      <p className="note" style={{ marginTop: 8 }}>
+        {lp != null && <>logP source: {SOURCE.logP}. </>}
+        T<sub>m</sub> has no reliable per-species source (measured or trained) and is not reported.
+      </p>
     </Section>
   )
 
+  const saVal = sa ?? sy.sa            // prefer real RDKit SAScore; heuristic only as a labelled estimate
+  const chemVal = sa != null ? chemScoreFromSa(sa) : sy.chem
   const bioVerdict = sy.bio > 60
     ? <><span className="ok">✔ biosynthesized</span> — pathway present</>
     : sy.bio > 25
       ? <><span className="mid">~ minor / conditional</span> — enzyme exists, species uncommon</>
       : <><span className="no">✘ not known in nature</span> — no reported pathway</>
-  const chemVerdict = sy.sa < 4
+  const chemVerdict = saVal < 4
     ? <span className="ok">✔ readily synthesizable</span>
-    : sy.sa < 6
+    : saVal < 6
       ? <span className="mid">~ multi-step</span>
       : <span className="no">✘ demanding</span>
 
@@ -159,12 +177,16 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
         <div className="bar"><i style={{ width: `${sy.bio}%`, background: 'var(--known)' }} /></div>
       </div>
       <div className="synth-row">
-        <div className="top"><span>Chemical (100−SAScore)</span><b>{sy.chem}/100 · SA {sy.sa}</b></div>
-        <div className="bar"><i style={{ width: `${sy.chem}%`, background: 'var(--gold)' }} /></div>
+        <div className="top"><span>Chemical (100−SAScore)</span><b>{chemVal}/100 · SA {saVal}</b></div>
+        <div className="bar"><i style={{ width: `${chemVal}%`, background: 'var(--gold)' }} /></div>
       </div>
       <p className="verdict">
         {bioVerdict}<br />
-        {chemVerdict} — SAScore {sy.sa}. Retrosynthesis route generation not yet implemented (issue #4).
+        {chemVerdict} — SAScore {saVal}. Retrosynthesis route generation not yet implemented (issue #4).
+      </p>
+      <p className="note" style={{ marginTop: 8 }}>
+        Chemical: {sa != null ? SOURCE.saScore : 'composition estimate (no RDKit SAScore for this species)'}.
+        Biosynthetic accessibility is a composition-based estimate (live-verified against UniProt/Rhea server-side).
       </p>
     </Section>
   )
@@ -211,23 +233,18 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
 
   const mem = membraneBiophysics(cls, c, d)
   const secMembrane = mem ? (
-    <Section title="Membrane biophysics" tag="predicted · AFM-measurable" focus={persona === 'biophys'}>
+    <Section title="Membrane geometry" tag="Tanford/Israelachvili model" focus={persona === 'biophys'}>
       <div className="kv">
-        <KV k="Phase at 37 °C" v={mem.phase37} m="predicted" />
-        <KV k="Packing / curvature" v={`${mem.packing} · ${mem.curvature}`} m="predicted" />
-        <KV k="Bilayer thickness" v={mem.thicknessNm} u="nm" m="predicted" />
-        <KV k="Area / lipid" v={mem.areaPerLipid} u="Å²" m="predicted" />
-        <KV k="Breakthrough force" v={mem.breakthroughNn} u="nN" m="predicted" />
-        <KV k="Compressibility Kᴀ" v={mem.compressibilityKa} u="mN/m" m="predicted" />
+        <KV k="Packing / curvature" v={`${mem.packing} · ${mem.curvature}`} m="calculated" />
+        <KV k="Bilayer thickness" v={mem.thicknessNm} u="nm" m="calculated" />
+        <KV k="Area / lipid" v={mem.areaPerLipid} u="Å²" m="calculated" />
       </div>
       <p className="note" style={{ marginTop: 8 }}>
-        Nanomechanics (breakthrough force, K<sub>A</sub>) and phase behaviour are what AFM force
-        spectroscopy measures directly — these are predictions awaiting that measured tier.
+        Source: the Israelachvili packing parameter P = v/(a₀·l_c) with Tanford hydrocarbon
+        volume/length and literature per-class headgroup areas — a geometric model estimate.
+        Phase state, T<sub>m</sub>, AFM breakthrough force and the compressibility modulus had no
+        validated per-species source and are shown as <b>not available</b> until a measured tier exists.
       </p>
-      <div className="sp-grid" style={{ marginTop: 12 }}>
-        <AfmForceCurve breakthroughNn={mem.breakthroughNn} />
-        <PhaseTransitionCard tmC={mem.tmC} />
-      </div>
     </Section>
   ) : null
 
@@ -269,7 +286,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
 
   const tips: Record<Persona, string> = {
     analyst: "Match your feature's m/z + CCS + RT against these predictions to confirm an ID even with no library spectrum.",
-    biophys: 'Membrane biophysics is up top: phase, curvature, thickness, and AFM nanomechanics (breakthrough force, Kᴀ). Walk cells to see how a double bond softens the membrane.',
+    biophys: 'Membrane geometry is up top: packing parameter, preferred curvature, bilayer thickness and area per lipid, from the Tanford/Israelachvili model. Walk cells to see how a double bond changes the packing.',
     chem: "Look for high chemical + low biosynthetic score — lab-accessible lipids nature doesn't make.",
     bioinfo: 'Every field here is one API call away; origin flag tells you measured vs. predicted before you trust it.',
   }

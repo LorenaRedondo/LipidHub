@@ -3,11 +3,11 @@ import {
   FORMATE, MEMBRANE_CLASSES, NH4, PROTON, fam, findClass, formulaParts, headgroupCharge,
   mixMembraneBiophysics, prefersAmmonium, props, status, synth, type LipidClass,
 } from '../lib/lipids'
+import { ccsRtFor, logpFor, saScoreFor } from '../lib/realProps'
 import { matchPhaseDiagram } from '../lib/phaseDiagram'
 import type { Pin } from '../App'
 import ConfBadge from './ConfBadge'
 import PhaseDiagramCard from './PhaseDiagramCard'
-import PhaseTransitionCard from './PhaseTransitionCard'
 
 interface Resolved { pin: Pin; cls: LipidClass }
 
@@ -81,13 +81,12 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
     { label: '[M+H]⁺', get: (r) => (props(r.cls, r.pin.c, r.pin.d).M + PROTON).toFixed(4), mono: true },
     { label: '[M−H]⁻', get: (r) => (props(r.cls, r.pin.c, r.pin.d).M - PROTON).toFixed(4), mono: true },
     { label: prefersAmmoniumLabel, get: (r) => { const M = props(r.cls, r.pin.c, r.pin.d).M; return (prefersAmmonium(r.cls) ? M + NH4 : M + FORMATE).toFixed(4) }, mono: true },
-    { label: 'CCS (Å²) · pred', get: (r) => props(r.cls, r.pin.c, r.pin.d).ccs, mono: true },
-    { label: 'RT (min) · pred', get: (r) => props(r.cls, r.pin.c, r.pin.d).rt, mono: true },
-    { label: 'logP · calc', get: (r) => props(r.cls, r.pin.c, r.pin.d).logp, mono: true },
-    { label: 'Tm (°C) · pred', get: (r) => { const t = props(r.cls, r.pin.c, r.pin.d).tm; return t == null ? 'n/a' : t }, mono: true },
+    { label: 'CCS (Å²) · pred', get: (r) => { const pr = ccsRtFor(pinKey(r.pin)); return pr ? pr.ccs.v : 'not available' }, mono: true },
+    { label: 'RT (min) · pred', get: (r) => { const pr = ccsRtFor(pinKey(r.pin)); return pr ? pr.rt.v : 'not available' }, mono: true },
+    { label: 'logP · calc', get: (r) => { const v = logpFor(pinKey(r.pin)); return v == null ? 'not available' : v }, mono: true },
     { label: 'Headgroup', get: (r) => headgroupCharge(r.cls) },
-    { label: 'Biosynthetic', get: (r) => `${synth(r.cls, r.pin.c, r.pin.d).bio}/100`, mono: true },
-    { label: 'Chemical (SAScore)', get: (r) => `${synth(r.cls, r.pin.c, r.pin.d).sa}`, mono: true },
+    { label: 'Biosynthetic (est.)', get: (r) => `${synth(r.cls, r.pin.c, r.pin.d).bio}/100`, mono: true },
+    { label: 'Chemical (SAScore)', get: (r) => { const v = saScoreFor(pinKey(r.pin)); return v == null ? `${synth(r.cls, r.pin.c, r.pin.d).sa} (est.)` : v }, mono: true },
     { label: 'Status', get: (r) => status(r.cls, r.pin.c, r.pin.d) },
   ]
 
@@ -152,8 +151,8 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
               Set mole fractions for each membrane-forming pinned species — the emergent bilayer
               properties below are computed by blending each species' real physical inputs
               (specific-volume/area additivity, a standard first-order <b>ideal-mixing</b>{' '}
-              approximation), then deriving thickness/curvature/nanomechanics from the blend with
-              the same formulas used for a single species. This is <b>not</b> a phase-separation
+              approximation), then deriving thickness/curvature from the blend with
+              the same Tanford geometry used for a single species. This is <b>not</b> a phase-separation
               model — real mixtures of e.g. cholesterol + saturated lipids deviate from ideal
               mixing significantly (tracked separately, issue #63).
               {cols.length !== membraneCols.length && (
@@ -183,17 +182,17 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
             {mixed && (
               <div className="sp-grid" style={{ maxWidth: 820 }}>
                 <div className="sp-card">
-                  <h3>Emergent bilayer <span className="pred-model">ideal-mixing approx.</span></h3>
+                  <h3>Emergent bilayer geometry <span className="pred-model">ideal-mixing approx.</span></h3>
                   <div className="kv">
-                    <div className="k">Phase at 37 °C</div><div className="v">{mixed.phase37}</div>
                     <div className="k">Packing / curvature</div><div className="v">{mixed.packing} · {mixed.curvature}</div>
                     <div className="k">Bilayer thickness</div><div className="v">{mixed.thicknessNm} <span className="u">nm</span></div>
                     <div className="k">Area / lipid</div><div className="v">{mixed.areaPerLipid} <span className="u">Å²</span></div>
-                    <div className="k">Breakthrough force</div><div className="v">{mixed.breakthroughNn} <span className="u">nN</span></div>
-                    <div className="k">Compressibility Kᴀ</div><div className="v">{mixed.compressibilityKa} <span className="u">mN/m</span></div>
                   </div>
+                  <p className="note" style={{ marginTop: 8 }}>
+                    Tanford/Israelachvili geometry only. Phase state, T<sub>m</sub> and AFM nanomechanics
+                    have no validated source and are not reported.
+                  </p>
                 </div>
-                <PhaseTransitionCard tmC={mixed.tmC} />
               </div>
             )}
 

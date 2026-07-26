@@ -1,6 +1,6 @@
 # Roadmap
 
-Phased plan from prototype to a defensible product. Each item below maps to a GitHub issue.
+Phased plan of work. Each item below maps to a GitHub issue.
 
 ## Phase 1 — make the data real
 - **#1 Ingest LIPID MAPS LMSD** and mark real curated species (replace the rule-based

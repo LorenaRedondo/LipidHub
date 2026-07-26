@@ -43,8 +43,8 @@ export default function SearchView({ onOpen, pins, onTogglePin }: Props) {
   function exportCsv() {
     const all = search({ ...JSON.parse(filterKey), page: 1, pageSize: 5000 }).results
     downloadCSV('lipiverse-search.csv',
-      ['id', 'shorthand', 'group', 'category', 'formula', 'exact_mass', 'ccs_pred', 'rt_pred', 'logp', 'tm', 'origin', 'biosynthetic', 'sascore', 'kingdoms'],
-      all.map((r) => [r.id, r.shorthand, r.class.group, r.class.category, r.formula, r.exactMass, r.properties.ccs, r.properties.rt, r.properties.logP, r.properties.tm ?? '', r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore, r.class.kingdoms.join('|')]))
+      ['id', 'shorthand', 'group', 'category', 'formula', 'exact_mass', 'ccs_pred', 'rt_pred', 'logp', 'origin', 'biosynthetic', 'sascore', 'kingdoms'],
+      all.map((r) => [r.id, r.shorthand, r.class.group, r.class.category, r.formula, r.exactMass, r.properties.ccs ?? '', r.properties.rt ?? '', r.properties.logP ?? '', r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore, r.class.kingdoms.join('|')]))
   }
 
   function reset() {
@@ -140,8 +140,8 @@ export default function SearchView({ onOpen, pins, onTogglePin }: Props) {
                     <td style={{ color: 'var(--muted)', fontSize: 12 }}>{r.class.group}</td>
                     <td className="num">{r.formula}</td>
                     <td className="num">{r.exactMass.toFixed(4)}</td>
-                    <td className="num">{r.properties.ccs}</td>
-                    <td className="num">{r.properties.logP}</td>
+                    <td className="num">{r.properties.ccs ?? 'n/a'}</td>
+                    <td className="num">{r.properties.logP ?? 'n/a'}</td>
                     <td>
                       <span className={'badge ' + (r.origin === 'curated' ? 'known' : 'gap')} style={{ fontSize: 9 }}>
                         {r.origin === 'curated' ? 'curated' : 'gap'}

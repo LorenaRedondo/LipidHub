@@ -7,15 +7,22 @@ interface Props { onOpen: (clsK: string, c: number, d: number) => void }
 const ADDUCTS = ['[M+H]+', '[M-H]-', '[M+NH4]+', '[M+HCOO]-']
 const numOr = (s: string): number | undefined => (s.trim() === '' ? undefined : Number(s))
 
-/** Rank candidates by combined evidence: mass (required) + optional CCS + RT. */
-function score(errPpm: number, tol: number, predCcs: number, obsCcs: number | undefined, predRt: number, obsRt: number | undefined) {
+/**
+ * Rank candidates by combined evidence: mass (required) + optional CCS + RT.
+ * A CCS/RT term only contributes when BOTH the user supplied an observed value
+ * AND the candidate has a real trained-model prediction (predCcs/predRt non-null);
+ * otherwise there is nothing reliable to compare against, so it is skipped.
+ */
+function score(errPpm: number, tol: number, predCcs: number | null, obsCcs: number | undefined, predRt: number | null, obsRt: number | undefined) {
   const mass = Math.max(0, 1 - Math.abs(errPpm) / tol)
+  const ccsUsable = obsCcs != null && predCcs != null
+  const rtUsable = obsRt != null && predRt != null
   let ccs = 1, rt = 1, used = 1
-  if (obsCcs != null) { ccs = Math.max(0, 1 - Math.abs(predCcs - obsCcs) / (0.05 * predCcs)); used++ } // 5% window
-  if (obsRt != null) { rt = Math.max(0, 1 - Math.abs(predRt - obsRt) / 2); used++ } // ±2 min window
+  if (ccsUsable) { ccs = Math.max(0, 1 - Math.abs(predCcs - obsCcs) / (0.05 * predCcs)); used++ } // 5% window
+  if (rtUsable) { rt = Math.max(0, 1 - Math.abs(predRt - obsRt) / 2); used++ } // ±2 min window
   // weighted: mass counts double (it's the hard constraint)
-  const conf = (2 * mass + (obsCcs != null ? ccs : 0) + (obsRt != null ? rt : 0)) / (2 + (obsCcs != null ? 1 : 0) + (obsRt != null ? 1 : 0))
-  return { conf: Math.round(conf * 100), ccsMatch: obsCcs != null ? ccs : null, rtMatch: obsRt != null ? rt : null, evidence: used }
+  const conf = (2 * mass + (ccsUsable ? ccs : 0) + (rtUsable ? rt : 0)) / (2 + (ccsUsable ? 1 : 0) + (rtUsable ? 1 : 0))
+  return { conf: Math.round(conf * 100), ccsMatch: ccsUsable ? ccs : null, rtMatch: rtUsable ? rt : null, evidence: used }
 }
 
 export default function IdentifyView({ onOpen }: Props) {
@@ -76,7 +83,7 @@ export default function IdentifyView({ onOpen }: Props) {
           {results.length > 0 && (
             <button className="dl-link" onClick={() => downloadCSV('lipiverse-identify.csv',
               ['shorthand', 'formula', 'adduct', 'adduct_mz', 'error_ppm', 'ccs_pred', 'rt_pred', 'origin', 'confidence'],
-              results.map(({ cand, s }) => [cand.record.shorthand, cand.record.formula, cand.adduct, cand.adductMz.toFixed(4), cand.errorPpm.toFixed(2), cand.record.properties.ccs, cand.record.properties.rt, cand.record.origin, s.conf]))}>download CSV ↓</button>
+              results.map(({ cand, s }) => [cand.record.shorthand, cand.record.formula, cand.adduct, cand.adductMz.toFixed(4), cand.errorPpm.toFixed(2), cand.record.properties.ccs ?? '', cand.record.properties.rt ?? '', cand.record.origin, s.conf]))}>download CSV ↓</button>
           )}
         </div>
 
@@ -98,8 +105,8 @@ export default function IdentifyView({ onOpen }: Props) {
                     <td className="num">{r.formula}</td>
                     <td className="num">{cand.adductMz.toFixed(4)}</td>
                     <td className="num" style={{ color: Math.abs(cand.errorPpm) < 3 ? 'var(--known)' : 'var(--muted)' }}>{cand.errorPpm.toFixed(2)}</td>
-                    <td className="num">{r.properties.ccs}{s.ccsMatch != null && <span className="u"> {s.ccsMatch > 0.6 ? '✓' : '✗'}</span>}</td>
-                    <td className="num">{r.properties.rt}{s.rtMatch != null && <span className="u"> {s.rtMatch > 0.6 ? '✓' : '✗'}</span>}</td>
+                    <td className="num">{r.properties.ccs ?? 'n/a'}{s.ccsMatch != null && <span className="u"> {s.ccsMatch > 0.6 ? '✓' : '✗'}</span>}</td>
+                    <td className="num">{r.properties.rt ?? 'n/a'}{s.rtMatch != null && <span className="u"> {s.rtMatch > 0.6 ? '✓' : '✗'}</span>}</td>
                     <td><span className={'badge ' + (r.origin === 'curated' ? 'known' : 'gap')} style={{ fontSize: 9 }}>{r.origin === 'curated' ? 'curated' : 'gap'}</span></td>
                     <td className="num">
                       <div className="conf-cell">

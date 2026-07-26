@@ -3,7 +3,7 @@ interface Stage { step: string; title: string; items: Item[]; why: string }
 
 const STAGES: Stage[] = [
   { step: '01 · INGEST', title: 'Reference sources',
-    items: [{ text: 'LIPID MAPS LMSD — ~48k curated' }, { text: 'LMISSD + COMP_DB — 1.1M in-silico' }, { text: 'SwissLipids — enzyme/pathway' }, { text: 'Rhea · UniProt — reactions' }, { text: 'HMDB · ChEBI — context & ontology' }],
+    items: [{ text: 'LIPID MAPS LMSD — ~48k curated' }, { text: 'LMISSD + COMP_DB — 1.1M in-silico' }, { text: 'Rhea · UniProt — enzymes & reactions' }, { text: 'HMDB · ChEBI — context & ontology' }],
     why: 'All open, all with bulk + API access.' },
   { step: '02 · RECONCILE', title: 'Normalize & dedup',
     items: [{ text: 'Canonical LIPID MAPS shorthand' }, { text: 'InChIKey / SMILES identity' }, { text: 'Cross-reference IDs across DBs' }, { text: 'RDKit structure standardization' }],
@@ -15,10 +15,11 @@ const STAGES: Stage[] = [
     items: [
       { text: 'formula, mass, adducts — exact, from composition' },
       { text: 'CCS, RT — real ML (GBM + Optuna, real-anchored)' },
-      { text: 'logP, Tm, MS/MS fragments — heuristic formulas' },
+      { text: 'logP — RDKit Crippen; MS/MS fragments — from composition' },
       { text: 'synthesizability — real RDKit SAScore + live UniProt/Rhea' },
+      { text: 'Tm — not reported (no reliable source)' },
     ],
-    why: 'Every gap gets predicted, testable properties.' },
+    why: 'Every value is either exact, trained, or "not available".' },
   { step: '05 · SERVE', title: 'Access layer',
     items: [
       { text: 'REST API' },
@@ -55,7 +56,7 @@ const SCHEMA_HTML = `<span class="cm">-- one row per canonical species; identity
 
 <span class="kw">TABLE</span> pathway  (species_id, enzyme_uniprot, rhea_rxn, direction);
 <span class="kw">TABLE</span> synth    (species_id, bio_score, chem_sascore, route_json);
-<span class="kw">TABLE</span> xref     (species_id, db, accession);   <span class="cm">-- LMSD, SwissLipids, HMDB…</span>`
+<span class="kw">TABLE</span> xref     (species_id, db, accession);   <span class="cm">-- LMSD, HMDB…</span>`
 
 export default function PipelineView() {
   return (
@@ -64,10 +65,10 @@ export default function PipelineView() {
         <span className="eyebrow">Data architecture</span>
         <h2 style={{ marginTop: 8 }}>From five fragmented sources to one queryable atlas</h2>
         <p className="lede">
-          Nothing here needs to be invented from scratch — the reference data exists and ships with
-          open licences and APIs. The work is <b>reconciliation, enumeration, and inference</b>, plus
-          the two layers nobody has built: systematic synthesizability, and the gap map. Everything
-          flows left to right; every value carries its provenance. Items marked{' '}
+          The reference data exists and ships with open licences and APIs. The work here is
+          <b> reconciliation, enumeration, and inference</b>, plus two layers the reference DBs don't
+          put in one place: a synthesizability view and the gap map. Everything flows left to right;
+          every value carries its provenance. Items marked{' '}
           <span className="status-pill planned">planned</span> aren't built yet — see the{' '}
           <b>Methods</b> page (Resources menu, above) for the full real-vs-target breakdown.
         </p>
@@ -95,15 +96,14 @@ export default function PipelineView() {
 
         <div className="callouts">
           <div className="callout">
-            <h3><span className="chip">novel</span> Synthesizability as a real column</h3>
+            <h3><span className="chip">layer</span> Synthesizability as a column</h3>
             <p>
-              No lipid DB systematically answers "can I make this?". We split it: a <b>biosynthetic
-              score</b> (live-verified enzyme + reaction match against UniProt/Rhea) and a{' '}
-              <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis route-generation pass
-              was validated but found chemically unreliable for lipid chemistry — see issue #52).
-              That single distinction —
-              nature-accessible vs. lab-accessible vs. neither — is defensible and, as far as the
-              reference DBs go, unoccupied.
+              The reference DBs don't put a "can I make this?" answer in one place. This splits it: a{' '}
+              <b>biosynthetic score</b> (live-verified enzyme + reaction match against UniProt/Rhea)
+              and a <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis route-generation
+              pass was validated but found chemically unreliable for lipid chemistry — see issue #52).
+              The distinction — nature-accessible vs. lab-accessible vs. neither — is what the
+              "lab-only" quadrant surfaces.
             </p>
           </div>
           <div className="callout">

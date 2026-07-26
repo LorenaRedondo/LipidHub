@@ -8,7 +8,7 @@ import Structure from './Structure'
 import PredictionCard from './PredictionCard'
 import ConfBadge, { ProvenanceLegend } from './ConfBadge'
 
-/** A canonical, shareable, indexable page for one species — the growth engine. */
+/** A canonical, shareable, indexable page for one species. */
 export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => void }) {
   const rec = getSpecies(id)
   const cls = rec ? findClass(rec.class.k) : undefined
@@ -75,8 +75,8 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
             <div className="kv">
               <div className="k">Exact mass</div><div className="v">{rec.exactMass} <span className="u">Da</span></div>
               {adductRows.map(([a, m]) => (<Fragment key={a}><div className="k">{a}</div><div className="v">{m} <span className="u">m/z</span></div></Fragment>))}
-              <div className="k">CCS <ConfBadge m="predicted" /></div><div className="v">{rec.properties.ccs} <span className="u">Å²</span></div>
-              <div className="k">RT (RP-C18) <ConfBadge m="predicted" /></div><div className="v">{rec.properties.rt} <span className="u">min</span></div>
+              <div className="k">CCS {rec.properties.ccs != null && <ConfBadge m="predicted" />}</div><div className="v">{rec.properties.ccs != null ? <>{rec.properties.ccs} <span className="u">Å²</span></> : 'not available'}</div>
+              <div className="k">RT (RP-C18) {rec.properties.rt != null && <ConfBadge m="predicted" />}</div><div className="v">{rec.properties.rt != null ? <>{rec.properties.rt} <span className="u">min</span></> : 'not available'}</div>
               <div className="k">Diagnostic fragment</div><div className="v" style={{ fontSize: 12 }}>{rec.msmsHeadgroup.label}</div>
             </div>
           </div>
@@ -86,26 +86,27 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
           <div className="sp-card">
             <h3>Physical &amp; synthesizability</h3>
             <div className="kv">
-              <div className="k">logP <ConfBadge m="calculated" /></div><div className="v">{rec.properties.logP}</div>
-              <div className="k">T<sub>m</sub> {rec.properties.tm != null && <ConfBadge m="predicted" />}</div><div className="v">{rec.properties.tm ?? 'n/a'} {rec.properties.tm != null && <span className="u">°C</span>}</div>
+              <div className="k">logP {rec.properties.logP != null && <ConfBadge m="calculated" />}</div><div className="v">{rec.properties.logP != null ? rec.properties.logP : 'not available'}</div>
+              <div className="k">T<sub>m</sub></div><div className="v">not available</div>
               <div className="k">Headgroup</div><div className="v">{rec.headgroupCharge}</div>
-              <div className="k">Biosynthetic</div><div className="v">{rec.synthesizability.biosynthetic}<span className="u">/100</span></div>
+              <div className="k">Biosynthetic (est.)</div><div className="v">{rec.synthesizability.biosynthetic}<span className="u">/100</span></div>
               <div className="k">Chemical (SAScore)</div><div className="v">{rec.synthesizability.saScore}</div>
             </div>
           </div>
 
           {rec.membrane && (
             <div className="sp-card">
-              <h3>Membrane biophysics <span className="pred-model">AFM-measurable</span></h3>
+              <h3>Membrane geometry <span className="pred-model">Tanford/Israelachvili</span></h3>
               <div className="kv">
-                <div className="k">Phase at 37 °C</div><div className="v" style={{ fontSize: 12 }}>{rec.membrane.phase37}</div>
                 <div className="k">Curvature</div><div className="v" style={{ fontSize: 12 }}>{rec.membrane.curvature}</div>
                 <div className="k">Packing param.</div><div className="v">{rec.membrane.packing}</div>
                 <div className="k">Bilayer thickness</div><div className="v">{rec.membrane.thicknessNm} <span className="u">nm</span></div>
                 <div className="k">Area / lipid</div><div className="v">{rec.membrane.areaPerLipid} <span className="u">Å²</span></div>
-                <div className="k">Breakthrough force</div><div className="v">{rec.membrane.breakthroughNn} <span className="u">nN</span></div>
-                <div className="k">Compressibility K<sub>A</sub></div><div className="v">{rec.membrane.compressibilityKa} <span className="u">mN/m</span></div>
               </div>
+              <p className="note" style={{ marginTop: 8 }}>
+                Geometric model estimate (packing parameter with Tanford volume/length). Phase, T<sub>m</sub>
+                and AFM nanomechanics have no validated source and are not reported.
+              </p>
             </div>
           )}
 
@@ -140,13 +141,11 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
 
         <ProvenanceLegend />
         <p className="note" style={{ marginTop: 10 }}>
-          Formula, exact mass, and adduct m/z are computed exactly. The CCS/RT shown under
-          "Mass spectrometry" above are from a composition heuristic (issue #33 tracks
-          remaining gaps: single-adduct/single-method scope, no monotonicity constraint) —
-          where a real trained-model prediction exists for this species, it's shown separately
-          in "Predicted properties" with its model version and 90% uncertainty interval.
-          T<sub>m</sub> and synthesizability remain heuristic placeholders. Curated status is
-          ingested from LIPID MAPS (CC BY 4.0).
+          Formula, exact mass, and adduct m/z are computed exactly. CCS and RT come from a trained
+          model (with a 90% uncertainty interval, also shown under "Predicted properties") and logP
+          from an RDKit Crippen calculation — each shown only where a real value exists for this
+          species, otherwise <b>not available</b>. T<sub>m</sub> has no reliable per-species source
+          and is not reported. Curated status is ingested from LIPID MAPS (CC BY 4.0).
         </p>
       </div>
     </div>

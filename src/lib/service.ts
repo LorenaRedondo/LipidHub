@@ -7,6 +7,7 @@ import {
   membraneBiophysics, pmcSearchUrl, prefersAmmonium, props, status, synth,
   type Group, type Kingdom, type LipidClass, type Membrane,
 } from './lipids'
+import { ccsRtFor, logpFor, saScoreFor, chemScoreFromSa, SOURCE } from './realProps'
 import { toSmiles } from './smiles'
 
 export interface SpeciesRecord {
@@ -17,8 +18,19 @@ export interface SpeciesRecord {
   formula: string
   exactMass: number
   adducts: Record<string, number>
-  properties: { ccs: number; rt: number; logP: number; tm: number | null; note: string }
-  synthesizability: { biosynthetic: number; chemicalScore: number; saScore: number; note?: string }
+  properties: {
+    // Reliable-or-null: a number here is always backed by a real source (see
+    // `provenance`); null means "not available", never a heuristic placeholder.
+    ccs: number | null
+    rt: number | null
+    logP: number | null
+    tm: number | null
+    ccsInterval: [number, number] | null
+    rtInterval: [number, number] | null
+    provenance: { ccs: string | null; rt: string | null; logP: string | null; tm: string | null }
+    note: string
+  }
+  synthesizability: { biosynthetic: number; chemicalScore: number; saScore: number; saSource: string; note?: string }
   membrane: Membrane | null
   headgroupCharge: string
   origin: 'curated' | 'in_silico'
@@ -49,8 +61,12 @@ export function buildRecord(cls: LipidClass, c: number, d: number): SpeciesRecor
   const sy = synth(cls, c, d)
   const st = status(cls, c, d)
   const ammon = prefersAmmonium(cls)
+  const id = `${cls.k}-${c}-${d}`
+  const pr = ccsRtFor(id)
+  const lp = logpFor(id)
+  const sa = saScoreFor(id)
   return {
-    id: `${cls.k}-${c}-${d}`,
+    id,
     shorthand: `${cls.k} ${c}:${d}`,
     class: { k: cls.k, name: cls.name, group: cls.group, category: cls.category, kingdoms: cls.kingdoms, occurrence: cls.occurrence },
     composition: { carbons: c, doubleBonds: d },
@@ -61,8 +77,27 @@ export function buildRecord(cls: LipidClass, c: number, d: number): SpeciesRecor
       '[M-H]-': round4(p.M - PROTON),
       [ammon ? '[M+NH4]+' : '[M+HCOO]-']: round4(ammon ? p.M + NH4 : p.M + FORMATE),
     },
-    properties: { ccs: p.ccs, rt: p.rt, logP: p.logp, tm: p.tm, note: 'CCS/RT/Tm are heuristic placeholders (see issue #3); mass/formula are exact.' },
-    synthesizability: { biosynthetic: sy.bio, chemicalScore: sy.chem, saScore: sy.sa },
+    properties: {
+      ccs: pr?.ccs.v ?? null,
+      rt: pr?.rt.v ?? null,
+      logP: lp,
+      tm: null,
+      ccsInterval: pr ? [pr.ccs.lo, pr.ccs.hi] : null,
+      rtInterval: pr ? [pr.rt.lo, pr.rt.hi] : null,
+      provenance: {
+        ccs: pr ? SOURCE.ccsRt : null,
+        rt: pr ? SOURCE.ccsRt : null,
+        logP: lp != null ? SOURCE.logP : null,
+        tm: null,
+      },
+      note: 'Mass, formula and adduct m/z are exact. CCS and RT are trained-model predictions (with 90% intervals) and logP is an RDKit Crippen calculation, each reported only where a real value exists — otherwise "not available". Tm has no reliable per-species source and is not reported.',
+    },
+    synthesizability: {
+      biosynthetic: sy.bio,
+      chemicalScore: sa != null ? chemScoreFromSa(sa) : sy.chem,
+      saScore: sa ?? sy.sa,
+      saSource: sa != null ? SOURCE.saScore : 'composition estimate (no RDKit SAScore for this species)',
+    },
     membrane: membraneBiophysics(cls, c, d),
     headgroupCharge: headgroupCharge(cls),
     origin: st === 'known' ? 'curated' : 'in_silico',

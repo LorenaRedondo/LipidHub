@@ -37,17 +37,20 @@ flows left to right; every stored value knows how it was produced.
 | Property | Method | Provenance tag |
 |---|---|---|
 | formula, exact mass, adduct m/z | exact calculation from composition | `calculated` |
-| logP, TPSA, descriptors | RDKit | `calculated` |
-| **CCS** | ML (DeepCCS / AllCCS-style, per adduct) | `predicted` + model version |
-| **RT** | ML per chromatography method | `predicted` |
+| logP | RDKit Crippen | `calculated` (only where a valid SMILES exists) |
+| **CCS** | trained GBM model, per adduct | `predicted` + model version + 90% interval |
+| **RT** | trained GBM model | `predicted` + model version + 90% interval |
 | **MS/MS** | in-silico fragmentation | `predicted` |
-| **Tm**, packing | biophysical heuristics / QSPR | `predicted` |
-| **synthesizability** | see below | mixed — real where verified/computed, else `predicted` |
+| membrane geometry (packing, curvature, thickness, area) | Tanford/Israelachvili model | `calculated` (geometric model estimate) |
+| **synthesizability** | see below | mixed — real where computed/verified |
+| **Tm** | — | **not reported** (no reliable measured or trained source) |
 
-Where a measured value exists (from LMSD, spectral libraries, literature), it is stored
-as `measured` and always wins the display over a prediction.
+Reliability rule: a property is reported only when it is exact, a trained-model prediction,
+or an RDKit calculation — each carrying its source. Anything else is **not available** rather
+than a heuristic placeholder. Where a measured value exists (from LMSD, spectral libraries,
+literature) it is stored as `measured` and always wins the display over a prediction.
 
-### Synthesizability (the novel column)
+### Synthesizability
 
 Split deliberately into two independent scores, each with its own provenance
 (`synth.bio_method`/`bio_model_version`, `synth.chem_method`/`chem_model_version` —
@@ -71,9 +74,12 @@ The valuable quadrant is **high chemical, low biosynthetic** — lab-accessible 
 nature doesn't make (e.g. novel LNP components); surfaced via `GET /lab-only` and the
 `find_lab_only` MCP tool.
 
-The synthesizability *scores* land server-side only (REST + MCP + the SQLite store) —
-the frontend's Atlas/Compare/Analytics views still call the client-side heuristic
-`synth()` directly. The *pathway graph* (below) is the exception: it's precomputed at
+The real RDKit SAScore, trained CCS/RT and RDKit logP are committed as JSON artifacts
+(`src/data/synth.json`, `predictions.json`, `logp.json`) and surfaced through
+`src/lib/realProps.ts`, so the frontend Inspector/Compare/Analytics/Search show the same
+real values as the REST API and MCP — reporting "not available" where a species is outside
+model/RDKit coverage. The biosynthetic score remains a composition estimate (live-verified
+against UniProt/Rhea server-side). The *pathway graph* (below) is likewise precomputed at
 build time into a committed JSON artifact, so the Inspector shows it too.
 
 ### Origin & pathway graph (#5)

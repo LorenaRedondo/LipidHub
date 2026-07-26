@@ -1,8 +1,10 @@
 // ── LIPIVERSE data model ───────────────────────────────────────────────────
-// Pure, framework-free chemistry + property inference + biological taxonomy.
-// Formulas/masses are computed exactly from composition; CCS/RT/logP/Tm/
-// synthesizability are clearly-labelled heuristic model outputs pending the
-// real pipelines (see docs/architecture.md and GitHub issues #3, #4).
+// Pure, framework-free chemistry + biological taxonomy. Formulas/masses are
+// computed exactly from composition. Reliable property values (trained CCS/RT,
+// RDKit logP/SAScore) live in src/lib/realProps.ts and are reported only where
+// a real value exists — see docs/architecture.md. Membrane geometry here is the
+// Tanford/Israelachvili model estimate; the biosynthetic score is a composition
+// estimate (live-verified against UniProt/Rhea server-side).
 
 import curatedData from '../data/lmsdCurated.json'
 
@@ -312,18 +314,15 @@ export function status(cls: LipidClass, c: number, d: number): Status {
   return 'rare'
 }
 
-export interface Props { f: Formula; M: number; ccs: number; rt: number; logp: number; tm: number | null }
+// props() returns only what is computed exactly from composition: the molecular
+// formula and neutral monoisotopic mass (and, via adducts elsewhere, m/z). CCS,
+// RT, logP and Tm are NOT produced here — a real value comes from the trained
+// model / RDKit overlays (src/lib/realProps.ts) or it is "not available"; we do
+// not emit a heuristic placeholder dressed up as a property.
+export interface Props { f: Formula; M: number }
 export function props(cls: LipidClass, c: number, d: number): Props {
   const f = fmtObj(cls, c, d)
-  const M = mass(f)
-  return {
-    f,
-    M,
-    ccs: Math.round((105 + 0.262 * M - 1.4 * d) * 10) / 10,
-    rt: Math.max(0.4, Math.round((2.0 + 0.3 * c - 0.9 * d) * 10) / 10),
-    logp: Math.round((0.52 * c - 0.6 * d - cls.lpOff) * 10) / 10,
-    tm: cls.hasTm ? Math.round(3.0 * c - 55 - 25 * d) : null,
-  }
+  return { f, M: mass(f) }
 }
 
 export interface Synth { bio: number; sa: number; chem: number }
@@ -406,11 +405,19 @@ export function prefersAmmonium(cls: LipidClass): boolean {
   return cls.n === 3 || ['DG', 'CE', 'MGDG', 'DGDG'].includes(cls.k)
 }
 
-// ── membrane biophysics & nanomechanics ────────────────────────────────────
-// First-class bilayer properties: structure (thickness, area/lipid), packing &
-// curvature phase, phase state, and AFM-style nanomechanics (breakthrough force,
-// area-compressibility modulus). Computed from composition — heuristic placeholders
-// (method: predicted); the measured tier comes from AFM force spectroscopy.
+// ── membrane geometry (Tanford / Israelachvili composition model) ───────────
+// Bilayer geometry derived from a named, citable physical model: Tanford's
+// hydrocarbon volume and maximum chain length, literature per-class headgroup
+// areas, and the Israelachvili packing parameter P = v/(a0·lc) that sets the
+// preferred curvature. These are model estimates (labelled as such), not
+// measured or trained values — but they follow directly from an established
+// formula, so we report them with that source.
+//
+// Note: Tm, phase state, AFM breakthrough force and the area-compressibility
+// modulus used to live here as composition heuristics with hand-tuned
+// coefficients and no validated per-species model. They are not reliable
+// numbers, so they are no longer reported — "not available" is the honest
+// answer until a measured/trained source exists.
 
 /** Effective headgroup cross-sectional area (Å²) per class. */
 const HEAD_AREA: Record<string, number> = {
@@ -426,16 +433,12 @@ export interface Membrane {
   areaPerLipid: number
   packing: number
   curvature: string
-  phase37: string
-  tmC: number
-  breakthroughNn: number
-  compressibilityKa: number
 }
 
 /** Acyl-chain count for per-chain geometry (sphingoid base + N-acyl count as 2, else cls.n). */
 export function chainsOf(cls: LipidClass): number { return cls.kind === 'sphingo' ? 2 : cls.n }
 
-interface MembraneInputs { chains: number; nc: number; dpc: number; a0: number; v: number; lc: number; tm: number }
+interface MembraneInputs { chains: number; nc: number; dpc: number; a0: number; v: number; lc: number }
 
 function membraneInputs(cls: LipidClass, c: number, d: number): MembraneInputs {
   const chains = chainsOf(cls)
@@ -444,11 +447,10 @@ function membraneInputs(cls: LipidClass, c: number, d: number): MembraneInputs {
   const a0 = HEAD_AREA[cls.k] ?? 60
   const v = chains * (27.4 + 26.9 * nc) // hydrocarbon volume, Å³ (Tanford)
   const lc = 1.5 + 1.265 * nc // max chain length, Å (Tanford)
-  const tm = 3.0 * c - 55 - 25 * d // same heuristic as props().tm
-  return { chains, nc, dpc, a0, v, lc, tm }
+  return { chains, nc, dpc, a0, v, lc }
 }
 
-/** The real formulas, shared by single-species and mixture (ideal-mixing) callers alike. */
+/** Tanford/Israelachvili geometry, shared by single-species and mixture (ideal-mixing) callers alike. */
 function deriveMembrane(inp: MembraneInputs): Membrane {
   const packing = inp.v / (inp.a0 * inp.lc) // shape / packing parameter P = v/(a0·lc)
   const curvature = packing < 0.55 ? 'micellar (positive curvature)'
@@ -456,14 +458,10 @@ function deriveMembrane(inp: MembraneInputs): Membrane {
     : 'inverted hexagonal Hᴵᴵ (negative curvature)'
   const thicknessNm = Math.round((2 * inp.lc * 0.065 + 0.9 - 0.35 * inp.dpc) * 100) / 100
   const areaPerLipid = Math.round(inp.a0 + 7 * inp.dpc)
-  const phase37 = inp.tm > 37 ? 'gel (ordered)' : 'fluid (liquid-crystalline)'
-  const tmC = Math.round(inp.tm * 10) / 10
-  const breakthroughNn = Math.round(Math.max(0.3, 0.32 * inp.nc - 2.0 * inp.dpc - 2.4) * 10) / 10
-  const compressibilityKa = Math.round(180 + 7 * inp.nc - 45 * inp.dpc)
   return {
     bilayer: packing >= 0.55 && packing <= 1.05,
     thicknessNm, areaPerLipid, packing: Math.round(packing * 100) / 100,
-    curvature, phase37, tmC, breakthroughNn, compressibilityKa,
+    curvature,
   }
 }
 
@@ -498,9 +496,8 @@ export function mixMembraneBiophysics(components: MixComponent[]): Membrane | nu
     acc.a0 += x * inp.a0
     acc.v += x * inp.v
     acc.lc += x * inp.lc
-    acc.tm += x * inp.tm
     return acc
-  }, { chains: 0, nc: 0, dpc: 0, a0: 0, v: 0, lc: 0, tm: 0 })
+  }, { chains: 0, nc: 0, dpc: 0, a0: 0, v: 0, lc: 0 })
   return deriveMembrane(mixed)
 }
 

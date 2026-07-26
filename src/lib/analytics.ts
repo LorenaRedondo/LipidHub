@@ -1,11 +1,12 @@
 // ── Analytics: property correlations ───────────────────────────────────────
-// Builds a dataset of plausible species with their computed properties (using
-// the real trained-model CCS/RT predictions where available — same numbers the
-// per-species Inspector shows — falling back to the composition formula only
-// for species outside the model's coverage) and offers Pearson correlation.
+// Builds a dataset of plausible species with their reliable properties only:
+// exact mass/mz, real trained-model CCS/RT (predictions.json), real RDKit logP
+// (logp.json), and Tanford membrane geometry. Values with no real source are
+// null (not plotted / not correlated) rather than a heuristic placeholder.
 // All framework-free and pure.
 
 import { CLASSES, chainsOf, dMaxOf, PROTON, membraneBiophysics, props, status, synth, type Group, type Persona } from './lipids'
+import { logpFor } from './realProps'
 import type { PredFile } from './predictions'
 
 export interface Point {
@@ -16,12 +17,11 @@ export interface Point {
   d: number
   mass: number
   mz: number
-  ccs: number
-  rt: number
-  predicted: boolean // true if ccs/rt came from the trained model, false if from the composition formula
+  ccs: number | null // trained model only; null where the species is outside model coverage
+  rt: number | null
+  predicted: boolean // true if this species has real trained-model CCS/RT
   chains: number // acyl-chain count — shape/charge regimes differ enough (e.g. 4-chain cardiolipin) to matter for some fits
-  logp: number
-  tm: number | null
+  logp: number | null // RDKit Crippen only; null where not computed
   carbons: number
   carbonsPerChain: number | null // acyl-chain length normalized by chain count — the physically comparable unit across classes
   dbonds: number
@@ -29,7 +29,6 @@ export interface Point {
   bio: number
   chem: number
   thickness: number | null
-  breakthrough: number | null
   packing: number | null
 }
 
@@ -50,12 +49,12 @@ export function buildDataset(pred?: PredFile | null): Point[] {
         pts.push({
           id, clsK: cls.k, group: cls.group, c, d,
           mass: p.M, mz: p.M + PROTON,
-          ccs: ml?.ccs.v ?? p.ccs, rt: ml?.rt.v ?? p.rt, predicted: ml != null, chains,
-          logp: p.logp, tm: p.tm,
+          ccs: ml?.ccs.v ?? null, rt: ml?.rt.v ?? null, predicted: ml != null, chains,
+          logp: logpFor(id),
           carbons: c, carbonsPerChain: chains > 0 ? Math.round((c / chains) * 100) / 100 : null, dbonds: d,
           dbondsPerChain: chains > 0 ? Math.round((d / chains) * 100) / 100 : null,
           bio: sy.bio, chem: sy.chem,
-          thickness: mem?.thicknessNm ?? null, breakthrough: mem?.breakthroughNn ?? null, packing: mem?.packing ?? null,
+          thickness: mem?.thicknessNm ?? null, packing: mem?.packing ?? null,
         })
       }
     }
@@ -63,7 +62,7 @@ export function buildDataset(pred?: PredFile | null): Point[] {
   return pts
 }
 
-export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'tm' | 'carbons' | 'carbonsPerChain' | 'dbonds' | 'dbondsPerChain' | 'bio' | 'chem' | 'thickness' | 'breakthrough' | 'packing'
+export type FeatureKey = 'mass' | 'mz' | 'ccs' | 'rt' | 'logp' | 'carbons' | 'carbonsPerChain' | 'dbonds' | 'dbondsPerChain' | 'bio' | 'chem' | 'thickness' | 'packing'
 export interface Feature { key: FeatureKey; label: string; short: string; get: (p: Point) => number | null }
 
 export const FEATURES: Feature[] = [
@@ -72,7 +71,6 @@ export const FEATURES: Feature[] = [
   { key: 'ccs', label: 'CCS (Å²)', short: 'CCS', get: (p) => p.ccs },
   { key: 'rt', label: 'RT (min)', short: 'RT', get: (p) => p.rt },
   { key: 'logp', label: 'logP', short: 'logP', get: (p) => p.logp },
-  { key: 'tm', label: 'Tm (°C)', short: 'Tm', get: (p) => p.tm },
   { key: 'carbons', label: 'Acyl carbons (total)', short: 'C', get: (p) => p.carbons },
   { key: 'carbonsPerChain', label: 'Carbons per chain', short: 'C/chain', get: (p) => p.carbonsPerChain },
   { key: 'dbonds', label: 'Double bonds', short: 'DB', get: (p) => p.dbonds },
@@ -80,7 +78,6 @@ export const FEATURES: Feature[] = [
   { key: 'bio', label: 'Biosynthetic score', short: 'bio', get: (p) => p.bio },
   { key: 'chem', label: 'Chemical synth.', short: 'chem', get: (p) => p.chem },
   { key: 'thickness', label: 'Bilayer thickness (nm)', short: 'thick', get: (p) => p.thickness },
-  { key: 'breakthrough', label: 'Breakthrough force (nN)', short: 'Fb', get: (p) => p.breakthrough },
   { key: 'packing', label: 'Packing parameter', short: 'pack', get: (p) => p.packing },
 ]
 export const FEATURE_MAP = Object.fromEntries(FEATURES.map((f) => [f.key, f])) as Record<FeatureKey, Feature>
@@ -116,28 +113,24 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 //    predictions.json) — the curve tests whether it obeys a literature
 //    scaling law, which is a genuine check, not a tautology.
 //  - 'formula': the property is itself *computed* from the cited formula
-//    elsewhere in this app (thickness/tm/breakthrough all come from
-//    membraneBiophysics()/props(), not from measured or ML data) — the curve
-//    just makes that formula legible, it can't fail to fit.
+//    elsewhere in this app (bilayer thickness comes from membraneBiophysics()'s
+//    Tanford geometry, not from measured or ML data) — the curve just makes
+//    that formula legible, it can't fail to fit.
 //
 // logP vs carbons was considered and rejected: cls.lpOff (the per-class
 // headgroup intercept) spans −6 to +14 against a slope of 0.52/carbon, so
 // pooling classes reproduces the exact multi-band artifact chain-count
 // normalization fixed for thickness — there's no single clean curve to draw.
 //
-// thickness/tm/breakthrough are each a function of TWO composition variables
-// (chain length AND unsaturation), not one — membraneBiophysics()'s real
-// formulas are `1.095 + 0.16445·nc − 0.35·dpc`, `3·c − 55 − 25·d`, and
-// `max(0.3, 0.32·nc − 2.0·dpc − 2.4)` respectively. Least-squares-fitting a
-// single line against chain length alone (as an earlier version of this file
-// did) silently averages over the unsaturation axis, understating the real
-// r and hiding a second, comparably-sized effect as unexplained scatter —
-// confirmed on the breakthrough-force plot, where a naive 1D fit gave r=0.34
-// despite the data visibly banding by double-bond count. Since we know these
-// formulas exactly (they're our own code, not something to discover by
-// regression), each curve now plots the *known* d=0 (fully saturated) slice
-// directly, and points are colored by unsaturation (`colorBy`) so the second
-// dimension is visible instead of read as noise.
+// Bilayer thickness is a function of TWO composition variables (chain length
+// AND unsaturation), not one — membraneBiophysics()'s Tanford formula is
+// `1.095 + 0.16445·nc − 0.35·dpc`. Least-squares-fitting a single line against
+// chain length alone silently averages over the unsaturation axis, understating
+// the real r and hiding a second, comparably-sized effect as unexplained
+// scatter. Since we know the formula exactly (it's our own code, not something
+// to discover by regression), the curve plots the *known* d=0 (fully saturated)
+// slice directly, and points are colored by unsaturation (`colorBy`) so the
+// second dimension is visible instead of read as noise.
 //
 // Curated relationships:
 //  - CCS vs mass: Mason–Schamp mobility scaling, CCS ∝ mass^0.635 — the same
@@ -155,10 +148,6 @@ export function correlate(points: Point[], fx: FeatureKey, fy: FeatureKey): numb
 //    inspecting the actual outlier points, not assumed. Still plotted as
 //    data, just excluded from what the reference curve is fit against.
 //  - thickness vs carbonsPerChain: Tanford's hydrocarbon-chain-length rule.
-//  - tm vs carbons: Marsh's Handbook of Lipid Bilayers; Koynova & Caffrey
-//    1998 — chain length is roughly linear, double bonds shift it down.
-//  - breakthrough vs carbonsPerChain: AFM nanoindentation literature (e.g.
-//    Garcia-Manyes, Oncins & Sanz, Biophys J 2005).
 export type TrendBasis = 'validation' | 'formula'
 export interface Trend {
   x: FeatureKey // the curve's natural independent axis
@@ -192,16 +181,6 @@ const TRENDS: Trend[] = [
     x: 'carbonsPerChain', y: 'thickness', basis: 'formula', colorBy: { key: 'dbondsPerChain', label: 'double bonds/chain' },
     reason: "Tanford's rule at 0 double bonds/chain — each unit of unsaturation shifts this down ~0.35 nm (color axis); shown as the known formula, not re-fit",
     fit: knownFormula((nc) => 1.095 + 0.16445 * nc),
-  },
-  {
-    x: 'carbons', y: 'tm', basis: 'formula', colorBy: { key: 'dbonds', label: 'double bonds' },
-    reason: 'Chain-length/Tm scaling (Marsh; Koynova & Caffrey 1998) at 0 double bonds — each double bond shifts this down 25°C (color axis); shown as the known formula, not re-fit',
-    fit: knownFormula((c) => 3 * c - 55),
-  },
-  {
-    x: 'carbonsPerChain', y: 'breakthrough', basis: 'formula', colorBy: { key: 'dbondsPerChain', label: 'double bonds/chain' },
-    reason: 'AFM nanoindentation chain-length scaling (Garcia-Manyes, Oncins & Sanz 2005) at 0 double bonds/chain — each unit of unsaturation shifts this down 2.0 nN (color axis); shown as the known formula, not re-fit',
-    fit: knownFormula((nc) => Math.max(0.3, 0.32 * nc - 2.4)),
   },
 ]
 

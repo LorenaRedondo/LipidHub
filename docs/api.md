@@ -7,11 +7,13 @@ Skill**. The REST API and MCP server share one adapter
 frontend uses the same record shape but computes it client-side from
 [`src/lib/service.ts`](../src/lib/service.ts) instead (works standalone, e.g. GitHub Pages).
 
-> Research preview: `formula`, `exactMass`, and `adducts` are computed exactly.
-> `ccs`/`rt` are ML-predicted with uncertainty where available (else heuristic); `tm`/`logP`
-> are heuristic placeholders (issue #3). `synthesizability` is real server-side (RDKit
-> SAScore + live UniProt/Rhea pathway verification, issue #4) but still heuristic in the
-> frontend UI.
+> Research preview. Every property is reliable-or-null: `formula`, `exactMass` and `adducts`
+> are computed exactly; `ccs`/`rt` are trained-model predictions with 90% intervals; `logP` is
+> an RDKit Crippen calculation. Each is present only where a real value exists — otherwise it is
+> `null` ("not available"), never a heuristic placeholder. `tm` is always `null` (no reliable
+> source). `properties.provenance` names the source of each value. `synthesizability` uses the
+> real RDKit SAScore where computed (biosynthetic score is a composition estimate, live-verified
+> against UniProt/Rhea). Same records from the REST API, MCP and the frontend.
 
 ## REST API
 

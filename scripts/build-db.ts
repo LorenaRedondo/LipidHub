@@ -51,11 +51,6 @@ const insertSynth = db.prepare(
   `INSERT INTO synth (species_id, bio_score, bio_method, bio_model_version, chem_sascore, chem_method, chem_model_version)
    VALUES (@species_id, @bio_score, 'predicted', 'heuristic-v0', @chem_sascore, 'predicted', 'heuristic-v0')`,
 )
-const insertProperty = db.prepare(
-  `INSERT INTO property (species_id, key, value, unit, method, model_version, ci_low, ci_high)
-   VALUES (@species_id, @key, @value, @unit, @method, @model_version, @ci_low, @ci_high)`,
-)
-
 let speciesCount = 0
 let curatedCount = 0
 let gapCount = 0
@@ -84,10 +79,10 @@ const buildAll = db.transaction(() => {
         })
         insertSynth.run({ species_id: id, bio_score: sy.bio, chem_sascore: sy.sa })
 
-        insertProperty.run({ species_id: id, key: 'ccs', value: p.ccs, unit: 'Å^2', method: 'predicted', model_version: 'heuristic-v0', ci_low: null, ci_high: null })
-        insertProperty.run({ species_id: id, key: 'rt', value: p.rt, unit: 'min', method: 'predicted', model_version: 'heuristic-v0', ci_low: null, ci_high: null })
-        insertProperty.run({ species_id: id, key: 'logp', value: p.logp, unit: null, method: 'predicted', model_version: 'heuristic-v0', ci_low: null, ci_high: null })
-        if (p.tm != null) insertProperty.run({ species_id: id, key: 'tm', value: p.tm, unit: '°C', method: 'predicted', model_version: 'heuristic-v0', ci_low: null, ci_high: null })
+        // CCS/RT/logP are inserted only by the real overlays below (trained model / RDKit).
+        // No heuristic placeholder rows: a species with no real value simply has no property
+        // row, so the API reports "not available" rather than a fabricated number. Tm has no
+        // reliable per-species source and is not stored at all.
 
         speciesCount++
       }
