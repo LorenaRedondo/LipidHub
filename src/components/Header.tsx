@@ -61,7 +61,7 @@ export default function Header({ view, onView, compareCount }: { view: View; onV
           {RESOURCES.map((r) => (
             <button key={r.id} aria-current={view === r.id ? 'page' : undefined} onClick={() => go(r.id)}>{r.label}</button>
           ))}
-          <a href="https://github.com/alpibrusl/lipidex" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a href="https://github.com/LorenaRedondo/LipidHub" target="_blank" rel="noreferrer">GitHub ↗</a>
         </div>
       </details>
 
@@ -73,7 +73,7 @@ export default function Header({ view, onView, compareCount }: { view: View; onV
             <button key={r.id} aria-current={view === r.id ? 'page' : undefined} onClick={() => go(r.id)}>{r.label}</button>
           ))}
           <div className="sep" />
-          <a href="https://github.com/alpibrusl/lipidex" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a href="https://github.com/LorenaRedondo/LipidHub" target="_blank" rel="noreferrer">GitHub ↗</a>
         </div>
       </details>
 

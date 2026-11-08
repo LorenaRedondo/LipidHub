@@ -9,7 +9,7 @@ import { CLASSES, LMSD_CURATED, dMaxOf, findClass } from '../src/lib/lipids'
 import { buildRecord, type SpeciesRecord } from '../src/lib/service'
 import structuresData from '../src/data/lmsdStructures.json'
 
-const SITE = process.env.SITE_URL || 'https://lipiverse.example'
+const SITE = process.env.SITE_URL || 'https://lorenaredondo.github.io/LipidHub'
 const OUT = 'dist/s'
 const structures = (structuresData as { structures: Record<string, { lmId: string; inchikey: string; smiles: string }> }).structures
 

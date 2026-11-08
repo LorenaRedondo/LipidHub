@@ -91,7 +91,7 @@ export default function DataAccessView() {
           <span className="status-pill planned" style={{ marginRight: 8 }}>planned</span>
           A full-atlas download (all curated + enumerated species, CSV/Parquet) and a SPARQL
           endpoint are tracked in{' '}
-          <a href="https://github.com/alpibrusl/lipidex/issues/7" target="_blank" rel="noreferrer">issue #7</a>{' '}
+          <a href="https://github.com/LorenaRedondo/LipidHub/issues/7" target="_blank" rel="noreferrer">issue #7</a>{' '}
           — not built yet. Every interactive view (Search, Identify, Compare, Analytics) has a
           CSV/SVG export for its current result set in the meantime.
         </p>

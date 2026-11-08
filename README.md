@@ -35,7 +35,7 @@ SQLite store (`db/schema.sqlite.sql`, see [`docs/architecture.md`](docs/architec
 instead of recomputing the space per request. Build it once before running either:
 
 ```bash
-npm run db:build                     # build db/lipidex.sqlite (regenerate any time)
+npm run db:build                     # build db/lipidhub.sqlite (regenerate any time)
 npm run api                          # REST at http://localhost:8787
 npm run mcp                          # MCP server (stdio)
 claude mcp add lipiverse -- npm run mcp

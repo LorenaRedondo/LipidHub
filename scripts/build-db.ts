@@ -1,5 +1,5 @@
 // ── SQLite store builder ───────────────────────────────────────────────────
-// Materializes the enumerated lipidome + curated overlays into db/lipidex.sqlite,
+// Materializes the enumerated lipidome + curated overlays into db/lipidhub.sqlite,
 // the dev/local store behind the REST API + MCP server (server/db.ts). Derived
 // artifact — regenerate any time with `npm run db:build`; not hand-edited.
 //
@@ -29,7 +29,7 @@ const SYNTH = synthData as unknown as { model_version: string; method: string; s
 const LOGP = logpData as unknown as { model_version: string; method: string; values: Record<string, number> }
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.join(HERE, '../db/lipidex.sqlite')
+const DB_PATH = path.join(HERE, '../db/lipidhub.sqlite')
 const SCHEMA_PATH = path.join(HERE, '../db/schema.sqlite.sql')
 
 const round4 = (n: number) => Math.round(n * 1e4) / 1e4

@@ -29,7 +29,7 @@ structures.sdf
 ml/dataset.csv
 
 # SQLite dev store (regenerate via npm run db:build)
-db/lipidex.sqlite*
+db/lipidhub.sqlite*
 
 # python
 __pycache__/

@@ -3,7 +3,7 @@
 # ABI-incompatible with the linux/arm64 container.
 node_modules
 dist
-db/lipidex.sqlite*
+db/lipidhub.sqlite*
 
 # ML: heavy/regenerable, not needed to run the app
 ml/.venv

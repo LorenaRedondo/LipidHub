@@ -28,7 +28,7 @@ COPY package.json ./
 COPY server ./server
 COPY mcp ./mcp
 COPY src ./src
-COPY --from=build /app/db/lipidex.sqlite ./db/lipidex.sqlite
+COPY --from=build /app/db/lipidhub.sqlite ./db/lipidhub.sqlite
 EXPOSE 8787
 CMD ["npx", "tsx", "server/api.ts"]
 

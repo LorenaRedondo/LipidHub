@@ -1,6 +1,6 @@
 // ── LIPIVERSE SQLite-backed service adapter ─────────────────────────────────
 // Server-only. Same exported names/shapes as src/lib/service.ts, backed by
-// db/lipidex.sqlite (built with `npm run db:build`) instead of recomputing the
+// db/lipidhub.sqlite (built with `npm run db:build`) instead of recomputing the
 // full enumerated space on every request. The frontend never imports this —
 // it keeps using src/lib/service.ts directly and computes client-side.
 //
@@ -24,7 +24,7 @@ const PATHWAY_GRAPH = (pathwayGraphData as unknown as {
 }).classes
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = process.env.LIPIDEX_DB ?? path.join(HERE, '../db/lipidex.sqlite')
+const DB_PATH = process.env.LIPIDHUB_DB ?? process.env.LIPIDEX_DB ?? path.join(HERE, '../db/lipidhub.sqlite')
 
 const db = new Database(DB_PATH, { fileMustExist: true })
 db.pragma('journal_mode = WAL')
