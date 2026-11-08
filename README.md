@@ -5,7 +5,7 @@ A navigable atlas that unifies the **known** lipids (from reference databases), 
 composition**, their **biological origin**, and a **synthesizability** view (accessible in
 nature, in a lab, or neither).
 
-> **Status:** interactive prototype. Formula, exact mass and adduct m/z are computed exactly.
+> **Status:** alpha — interactive prototype. Formula, exact mass and adduct m/z are computed exactly.
 > CCS/RT come from a trained model, logP and SAScore from RDKit — each shown only where a real
 > value exists, otherwise **not available**. Tm is not reported (no reliable source yet). See
 > [issues](../../issues) for what's still in progress.
@@ -146,6 +146,14 @@ design notes.
 - LIPID MAPS — Nucleic Acids Research 2024, D1677 (LMSD, LMISSD, COMP_DB)
 - SwissLipids — Bioinformatics 2015 (enzyme/pathway-driven enumeration)
 - CCS/RT ML prediction — e.g. large-scale HMDB prediction, DeepCCS/AllCCS families
+
+## Disclaimer
+
+> **Alpha software.** LipidHub was originally developed for internal use and is currently in
+> alpha. Its content, features and interfaces may change without notice and may contain errors
+> or omissions. The software and its data are provided "as is", without warranty of any kind,
+> express or implied. Use is at your own risk; please validate any result independently before
+> relying on it.
 
 ## License
 

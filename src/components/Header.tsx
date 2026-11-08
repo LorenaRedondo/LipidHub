@@ -33,7 +33,8 @@ export default function Header({ view, onView, compareCount }: { view: View; onV
     <>
     <header>
       <div className="brand">
-        <span className="logo">LIPI<b>VERSE</b></span>
+        <span className="logo">LIPID<b>HUB</b></span>
+        <span className="alpha-badge" title="Alpha release: may change or contain errors. See the disclaimer at the bottom of the page.">Alpha</span>
         <span className="tag">A navigable atlas of the known &amp; predicted lipidome</span>
       </div>
 

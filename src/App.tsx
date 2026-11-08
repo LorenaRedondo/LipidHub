@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CLASSES, dMaxOf, findClass, type LipidClass, type Persona } from './lib/lipids'
+import Disclaimer from './components/Disclaimer'
 import Header, { type View } from './components/Header'
 import AtlasView from './components/AtlasView'
 import PipelineView from './components/PipelineView'
@@ -129,6 +130,7 @@ export default function App() {
       {view === 'users' && <UsersView />}
       {view === 'access' && <DataAccessView />}
       {view === 'methods' && <MethodsView />}
+      <Disclaimer />
     </div>
   )
 }
