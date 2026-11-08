@@ -1,6 +1,7 @@
 {
   "name": "lipiverse",
   "private": true,
+  "license": "EUPL-1.2",
   "version": "0.1.0",
   "type": "module",
   "description": "LIPIVERSE — an interactive atlas of the known & predicted lipidome",

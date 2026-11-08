@@ -146,3 +146,7 @@ design notes.
 - LIPID MAPS — Nucleic Acids Research 2024, D1677 (LMSD, LMISSD, COMP_DB)
 - SwissLipids — Bioinformatics 2015 (enzyme/pathway-driven enumeration)
 - CCS/RT ML prediction — e.g. large-scale HMDB prediction, DeepCCS/AllCCS families
+
+## License
+
+[EUPL-1.2](LICENSE). Third-party data and code keep their own licences — see [`NOTICE`](NOTICE).
