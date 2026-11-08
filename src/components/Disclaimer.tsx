@@ -8,7 +8,12 @@ export default function Disclaimer() {
   return (
     <footer className="disclaimer" role="contentinfo">
       <span className="alpha-badge">Alpha</span>
-      <p><b>Disclaimer.</b> {DISCLAIMER}</p>
+      <div>
+        <p><b>About.</b> LipidHub is a collaboration between{' '}
+          <a href="https://lorenaredondo.github.io/lrm-www/" target="_blank" rel="noreferrer">Lorena Redondo-Morata&rsquo;s lab</a>{' '}
+          and <a href="https://alpibru.com" target="_blank" rel="noreferrer">Alpibru</a>.</p>
+        <p><b>Disclaimer.</b> {DISCLAIMER}</p>
+      </div>
     </footer>
   )
 }

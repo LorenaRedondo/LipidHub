@@ -154,6 +154,12 @@ design notes.
 - SwissLipids — Bioinformatics 2015 (enzyme/pathway-driven enumeration)
 - CCS/RT ML prediction — e.g. large-scale HMDB prediction, DeepCCS/AllCCS families
 
+## About
+
+LipidHub is a collaboration between
+[Lorena Redondo-Morata's lab](https://lorenaredondo.github.io/lrm-www/) and
+[Alpibru](https://alpibru.com).
+
 ## Disclaimer
 
 > **Alpha software.** LipidHub was originally developed for internal use and is currently in
