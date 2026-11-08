@@ -1,4 +1,4 @@
-// ── LIPIVERSE data model ───────────────────────────────────────────────────
+// ── LipidHub data model ───────────────────────────────────────────────────
 // Pure, framework-free chemistry + biological taxonomy. Formulas/masses are
 // computed exactly from composition. Reliable property values (trained CCS/RT,
 // RDKit logP/SAScore) live in src/lib/realProps.ts and are reported only where
@@ -333,7 +333,7 @@ export interface Synth { bio: number; sa: number; chem: number }
  * plausibly make, independent of whether the pathway itself exists? Odd
  * chains, very long chains, and highly polyunsaturated compositions are
  * penalized. Server-side, this is scaled by a live UniProt/Rhea pathway
- * verification (src/lib/pathway.ts) to get the full biosynthetic score (#4).
+ * verification (src/lib/pathway.ts) to get the full biosynthetic score.
  */
 export function bioAttainability(cls: LipidClass, c: number, d: number): number {
   let bio = 90
@@ -480,7 +480,7 @@ export interface MixComponent { cls: LipidClass; c: number; d: number; molFracti
  *
  * No non-ideal interaction terms: real mixtures deviate from this for well-studied pairs (e.g.
  * cholesterol's condensing effect, Lo/Ld phase separation) — this function doesn't model that,
- * see issue #63. Callers must present this as an approximation, not a discovered result.
+ * Callers must present this as an approximation, not a discovered result.
  */
 export function mixMembraneBiophysics(components: MixComponent[]): Membrane | null {
   const valid = components.filter((k) => MEMBRANE_CLASSES.has(k.cls.k) && k.molFraction > 0)

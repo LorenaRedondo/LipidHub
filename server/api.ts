@@ -1,4 +1,4 @@
-// ── LIPIVERSE REST API ──────────────────────────────────────────────────────
+// ── LipidHub REST API ──────────────────────────────────────────────────────
 // Run: npm run api   (tsx server/api.ts).  Thin HTTP layer over src/lib/service.
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
@@ -20,9 +20,9 @@ const num = (v: string | undefined) => (v == null || v === '' ? undefined : Numb
 
 app.get('/', (c) =>
   c.json({
-    name: 'LIPIVERSE API',
+    name: 'LipidHub API',
     version: '0.1.0',
-    note: 'Research preview. mass/formula/adducts are exact; CCS/RT/Tm/synthesizability are heuristic placeholders (issue #3).',
+    note: 'Research preview. mass/formula/adducts are exact; CCS/RT/Tm/synthesizability are heuristic placeholders.',
     endpoints: [
       'GET /health',
       'GET /classes',
@@ -33,7 +33,7 @@ app.get('/', (c) =>
       'GET /compare?ids=PC-34-1,MGDG-34-2',
       'GET /gaps?class=PC&limit=50',
       'GET /predict/:id             (ML CCS/RT with 90% uncertainty intervals)',
-      'GET /pathway/:class          (live UniProt/Rhea pathway verification + the real discovered enzyme/reaction graph, #5)',
+      'GET /pathway/:class          (live UniProt/Rhea pathway verification + the real discovered enzyme/reaction graph)',
       'GET /lab-only?limit=50       (the "valuable quadrant": high chemical accessibility, low biosynthetic)',
     ],
   }),
@@ -76,7 +76,7 @@ app.get('/search', (c) => {
   if (q.format === 'csv') {
     const head = 'id,shorthand,group,formula,exact_mass,ccs_pred,rt_pred,logp,origin,biosynthetic,sascore'
     const rows = res.results.map((r) => [r.id, r.shorthand, r.class.group, r.formula, r.exactMass, r.properties.ccs, r.properties.rt, r.properties.logP, r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore].join(','))
-    return c.body([head, ...rows].join('\n'), 200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lipiverse-search.csv"' })
+    return c.body([head, ...rows].join('\n'), 200, { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="lipidhub-search.csv"' })
   }
   return c.json(res)
 })
@@ -96,14 +96,14 @@ app.get('/compare', (c) => {
 
 app.get('/gaps', (c) => c.json({ gaps: findGaps(c.req.query('class'), num(c.req.query('limit')) ?? 50) }))
 
-// live UniProt/Rhea verification of a class's declared enzymes + reaction (issue #4)
+// live UniProt/Rhea verification of a class's declared enzymes + reaction
 app.get('/pathway/:class', async (c) => {
   const cls = findClass(c.req.param('class'))
   if (!cls) return c.json({ error: 'not found', hint: 'class looks like PC, MGDG, SM' }, 404)
   return c.json(await verifyPathway(cls))
 })
 
-// the "valuable quadrant" (#4): high chemical accessibility, low biosynthetic
+// the "valuable quadrant": high chemical accessibility, low biosynthetic
 app.get('/lab-only', (c) => c.json({ species: findLabOnly(num(c.req.query('limit')) ?? 50) }))
 
 // ML property predictions with calibrated uncertainty (from ml/train.py)
@@ -111,11 +111,11 @@ app.get('/predict/:id', (c) => {
   const p = PRED.predictions[c.req.param('id')]
   if (!p) return c.json({ error: 'no prediction for this id', hint: 'only plausible enumerated species are precomputed' }, 404)
   return c.json({ id: c.req.param('id'), model_version: PRED.model_version, method: 'predicted', units: PRED.unit,
-    ccs: p.ccs, rt: p.rt, note: 'demo model trained on synthetic targets (issue #33); 90% conformal intervals' })
+    ccs: p.ccs, rt: p.rt, note: 'demo model trained on synthetic targets (issue #9); 90% conformal intervals' })
 })
 
 const port = Number(process.env.API_PORT) || 8787
 serve({ fetch: app.fetch, port }, (info) => {
   // eslint-disable-next-line no-console
-  console.log(`LIPIVERSE API on http://localhost:${info.port}`)
+  console.log(`LipidHub API on http://localhost:${info.port}`)
 })

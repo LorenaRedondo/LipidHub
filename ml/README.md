@@ -1,4 +1,4 @@
-# LIPIVERSE ML pipeline
+# LipidHub ML pipeline
 
 Cleans real experimental data, trains hyperparameter-tuned property models with every
 experiment tracked in MLflow, and writes into the store the API/MCP/UI read (the "ML

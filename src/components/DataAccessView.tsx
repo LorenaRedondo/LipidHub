@@ -60,7 +60,7 @@ export default function DataAccessView() {
         <p className="note" style={{ marginBottom: 4 }}><b>stdio</b> — requires a local checkout of this repo:</p>
         <div className="plancode">
           npm run mcp{'\n'}
-          claude mcp add lipiverse -- npm run mcp
+          claude mcp add lipidhub -- npm run mcp
         </div>
         <p className="note" style={{ margin: '10px 0 4px' }}><b>hosted HTTP</b> — for anyone with an API key, no checkout needed:</p>
         <div className="plancode">
@@ -81,7 +81,7 @@ export default function DataAccessView() {
 
         <h3 className="refsub">Claude Skill</h3>
         <p className="note" style={{ marginBottom: 20 }}>
-          <code>skills/lipiverse-atlas/SKILL.md</code> packages domain guidance — identifying
+          <code>skills/lipidhub-atlas/SKILL.md</code> packages domain guidance — identifying
           from m/z, disambiguating isobars, respecting predicted-vs-exact — on top of the MCP
           tools above.
         </p>
@@ -91,7 +91,7 @@ export default function DataAccessView() {
           <span className="status-pill planned" style={{ marginRight: 8 }}>planned</span>
           A full-atlas download (all curated + enumerated species, CSV/Parquet) and a SPARQL
           endpoint are tracked in{' '}
-          <a href="https://github.com/LorenaRedondo/LipidHub/issues/7" target="_blank" rel="noreferrer">issue #7</a>{' '}
+          <a href="https://github.com/LorenaRedondo/LipidHub/issues/2" target="_blank" rel="noreferrer">issue #2</a>{' '}
           — not built yet. Every interactive view (Search, Identify, Compare, Analytics) has a
           CSV/SVG export for its current result set in the meantime.
         </p>

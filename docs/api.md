@@ -1,4 +1,4 @@
-# LIPIVERSE API & agent access
+# LipidHub API & agent access
 
 Three ways to consume the atlas: a **REST API**, an **MCP server**, and a **Claude
 Skill**. The REST API and MCP server share one adapter
@@ -18,7 +18,7 @@ frontend uses the same record shape but computes it client-side from
 ## REST API
 
 ```bash
-npm run db:build   # build db/lipiverse.sqlite once (see docs/architecture.md)
+npm run db:build   # build db/lipidhub.sqlite once (see docs/architecture.md)
 npm run api        # http://localhost:8787  (API_PORT to override)
 ```
 
@@ -32,7 +32,7 @@ npm run api        # http://localhost:8787  (API_PORT to override)
 | `GET /gaps?class=SM&limit=50` | in-silico-only "gap" species |
 | `GET /lmsd/:id` | **live LIPID MAPS verification** — real LM IDs + classification |
 | `GET /species/:id?lmsd=1` | species record enriched with LMSD verification |
-| `GET /pathway/:class` | **live UniProt/Rhea verification** + the real discovered enzyme set and reaction participants (#5) |
+| `GET /pathway/:class` | **live UniProt/Rhea verification** + the real discovered enzyme set and reaction participants |
 | `GET /lab-only?limit=50` | the "valuable quadrant" — high chemical, low biosynthetic accessibility |
 | `GET /predict/:id` | ML CCS/RT with 90% uncertainty intervals |
 
@@ -49,7 +49,7 @@ curl "localhost:8787/lab-only?limit=10"
 
 ```bash
 npm run mcp                          # stdio transport
-claude mcp add lipiverse -- npm run mcp
+claude mcp add lipidhub -- npm run mcp
 ```
 
 Tools: `list_lipid_classes`, `get_lipid`, `search_lipids`, `identify_by_mz`,
@@ -65,7 +65,7 @@ npx tsx mcp/test-client.ts
 
 ## Claude Skill
 
-[`skills/lipiverse-atlas/SKILL.md`](../skills/lipiverse-atlas/SKILL.md) packages the domain
+[`skills/lipidhub-atlas/SKILL.md`](../skills/lipidhub-atlas/SKILL.md) packages the domain
 guidance (identify from m/z, disambiguate isobars, read synthesizability, respect
 predicted-vs-exact) on top of the MCP tools.
 
@@ -76,7 +76,7 @@ src/lib/lipids.ts + smiles.ts        ← model (pure)
         ├── src/lib/service.ts       ← client-side query/record functions (frontend, standalone)
         └── server/db.ts             ← server-side adapter (SQLite; same record shape)
                 ├── server/api.ts    ← REST (Hono)
-                └── mcp/server.ts    ← MCP (stdio)  ──►  skills/lipiverse-atlas  (agents)
+                └── mcp/server.ts    ← MCP (stdio)  ──►  skills/lipidhub-atlas  (agents)
 ```
 
 In production the MCP server would proxy the REST API rather than importing the adapter
@@ -91,4 +91,4 @@ the Structure Database, returning real **LM IDs** and the authoritative classifi
 LMSD uses. Results are cached per process.
 
 This is the honest bridge from the prototype's *rule-based* curated/gap guess to ground
-truth; the full bulk ingest is issue #1. Lipid data © LIPID MAPS, **CC BY 4.0**.
+truth; the LMSD ingest script is `npm run ingest:lmsd`. Lipid data © LIPID MAPS, **CC BY 4.0**.

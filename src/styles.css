@@ -472,7 +472,7 @@
   .sp-actions .cta{padding:7px 12px;font-size:12px;text-decoration:none}
   @media (max-width:720px){ .sp-grid{grid-template-columns:1fr} .sp-title{font-size:30px} }
 
-  /* Print stylesheet, scoped to species pages only (issue #58) — light background, dark
+  /* Print stylesheet, scoped to species pages only — light background, dark
      text, hide interactive-only chrome. Reuses the same CSS custom properties every
      component already reads, just with light-mode values, so nothing else needs to change. */
   @media print {

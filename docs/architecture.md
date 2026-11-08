@@ -13,8 +13,8 @@ flows left to right; every stored value knows how it was produced.
 |---|---|---|
 | LIPID MAPS **LMSD** | ~48k curated known species, structures, classification | bulk SDF, REST |
 | LIPID MAPS **LMISSD / COMP_DB** | ~1.1M in-silico enumerated species | bulk |
-| ~~SwissLipids~~ | lipid ↔ enzyme ↔ reaction ↔ pathway | not viable — undocumented private API (see #5) |
-| **Rhea** + **UniProt** | reaction definitions, real discovered enzyme accessions | REST, live (see #4/#5) |
+| ~~SwissLipids~~ | lipid ↔ enzyme ↔ reaction ↔ pathway | not viable — undocumented private API |
+| **Rhea** + **UniProt** | reaction definitions, real discovered enzyme accessions | REST, live |
 | **HMDB**, **ChEBI** | biological/clinical context, ontology | bulk, API |
 
 ## 02 · Reconcile — normalize & dedup
@@ -68,7 +68,7 @@ they can succeed or fall back independently):
   RDKit (`ml/synth.py`, vendoring RDKit's `Contrib/SA_Score`) from each species'
   generated SMILES — `calculated`, tagged with the RDKit version. A retrosynthesis pass
   (e.g. AiZynthFinder) to attach a candidate route is **not yet implemented** — `synth
-  .route_json` stays null (tracked under #4).
+  .route_json` stays null.
 
 The valuable quadrant is **high chemical, low biosynthetic** — lab-accessible lipids
 nature doesn't make (e.g. novel LNP components); surfaced via `GET /lab-only` and the
@@ -82,7 +82,7 @@ model/RDKit coverage. The biosynthetic score remains a composition estimate (liv
 against UniProt/Rhea server-side). The *pathway graph* (below) is likewise precomputed at
 build time into a committed JSON artifact, so the Inspector shows it too.
 
-### Origin & pathway graph (#5)
+### Origin & pathway graph
 
 Real enzyme/reaction links, not the hand-authored `LipidClass.enz`/`.rhea`/`.pw` prose.
 SwissLipids turned out not to be viable (its REST API is an undocumented Angular-app
@@ -117,7 +117,7 @@ above, cover this better:
   `pg`/`postgres.js`, keep the same exported function signatures, and `server/api.ts` /
   `mcp/server.ts` don't change.
 - **REST + SPARQL + bulk export**; stable IDs and cross-refs on every species (SPARQL +
-  bulk export still open, #7).
+  bulk export still open, #2).
 - The **Atlas UI** (this repo) computes client-side and never touches the store — it
   works standalone (e.g. GitHub Pages) and is one client of the API for everyone else.
 
@@ -146,9 +146,9 @@ TABLE property (
   source        text           -- DOI / DB accession
 );
 
-TABLE pathway (species_id, enzyme_uniprot, rhea_rxn, direction);  -- populated: real UniProt/Rhea discovery (#5)
+TABLE pathway (species_id, enzyme_uniprot, rhea_rxn, direction);  -- populated: real UniProt/Rhea discovery
 TABLE synth   (species_id, bio_score, chem_sascore, route_json);
-TABLE xref    (species_id, db, accession);   -- LMSD, HMDB… (SwissLipids not viable, see #5)
+TABLE xref    (species_id, db, accession);   -- LMSD, HMDB… (SwissLipids not viable)
 ```
 
 ## Non-negotiables

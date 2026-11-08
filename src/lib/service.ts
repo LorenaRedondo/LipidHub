@@ -1,4 +1,4 @@
-// ── LIPIVERSE service layer ─────────────────────────────────────────────────
+// ── LipidHub service layer ─────────────────────────────────────────────────
 // Pure query/record functions over the model. Shared by the REST API and the
 // MCP server so agents and HTTP clients return identical records.
 
@@ -38,7 +38,7 @@ export interface SpeciesRecord {
   smiles: string | null
   msmsHeadgroup: { label: string; mz: number | null }
   literatureSearch: string
-  /** Real enzyme/reaction links, live-discovered from UniProt/Rhea (#5). Server-only — absent client-side. */
+  /** Real enzyme/reaction links, live-discovered from UniProt/Rhea. Server-only — absent client-side. */
   pathway?: { enzymeUniprot: string; gene?: string; proteinName?: string; rheaRxn: string; equation?: string }[]
 }
 

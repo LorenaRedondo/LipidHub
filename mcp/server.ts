@@ -1,10 +1,10 @@
-// ── LIPIVERSE MCP server ────────────────────────────────────────────────────
+// ── LipidHub MCP server ────────────────────────────────────────────────────
 // Exposes the atlas to agents. Two entrypoints share the same tool set:
 //   npm run mcp        (this file, stdio transport — local checkout only)
 //   npm run mcp:http    (mcp/httpServer.ts, hosted HTTP transport with auth)
 // Queries the SQLite-backed adapter (same layer server/api.ts uses; in
 // production it would proxy the REST API). Add to Claude Code with:
-//   claude mcp add lipiverse -- npm run mcp
+//   claude mcp add lipidhub -- npm run mcp
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
@@ -23,7 +23,7 @@ const json = (data: unknown) => ({ content: [{ type: 'text' as const, text: JSON
 /** Builds a fresh, fully-registered MCP server instance. Called once for the stdio
  *  process below, and once per request by the stateless HTTP transport (mcp/httpServer.ts). */
 export function buildMcpServer(): McpServer {
-  const server = new McpServer({ name: 'lipiverse', version: '0.1.0' })
+  const server = new McpServer({ name: 'lipidhub', version: '0.1.0' })
 
   server.registerTool(
     'list_lipid_classes',
@@ -98,7 +98,7 @@ export function buildMcpServer(): McpServer {
     },
     async ({ id }) => {
       const p = PRED.predictions[id]
-      return p ? json({ id, model_version: PRED.model_version, method: 'predicted', ...p, note: '90% conformal intervals; demo model (issue #33)' })
+      return p ? json({ id, model_version: PRED.model_version, method: 'predicted', ...p, note: '90% conformal intervals; demo model (issue #9)' })
         : json({ error: 'no prediction for this id (only plausible enumerated species are precomputed)' })
     },
   )
@@ -132,7 +132,7 @@ export function buildMcpServer(): McpServer {
     'check_pathway',
     {
       title: 'Verify a class\'s biosynthetic pathway',
-      description: 'Live-check a lipid class\'s declared enzymes (UniProt, reviewed human genes) and reaction (Rhea, approved + balanced), and discover the real, complete enzyme set UniProt annotates for that reaction plus its real substrate/product names — not just a verification of a hand-picked guess (#5).',
+      description: 'Live-check a lipid class\'s declared enzymes (UniProt, reviewed human genes) and reaction (Rhea, approved + balanced), and discover the real, complete enzyme set UniProt annotates for that reaction plus its real substrate/product names — not just a verification of a hand-picked guess.',
       inputSchema: { classK: z.string().describe('class code, e.g. PC, MGDG, SM') },
     },
     async ({ classK }) => {
@@ -160,5 +160,5 @@ if (isMain) {
   const transport = new StdioServerTransport()
   await buildMcpServer().connect(transport)
   // eslint-disable-next-line no-console
-  console.error('LIPIVERSE MCP server ready (stdio)')
+  console.error('LipidHub MCP server ready (stdio)')
 }

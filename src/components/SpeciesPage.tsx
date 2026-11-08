@@ -19,7 +19,7 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   useEffect(() => {
     if (!rec) return
     const prev = document.title
-    document.title = `${rec.shorthand} (${rec.formula}) · LIPIVERSE`
+    document.title = `${rec.shorthand} (${rec.formula}) · LipidHub`
     let meta = document.querySelector('meta[name="description"]')
     if (!meta) { meta = document.createElement('meta'); meta.setAttribute('name', 'description'); document.head.appendChild(meta) }
     meta.setAttribute('content', `${rec.shorthand} — ${rec.class.name}. Formula ${rec.formula}, exact mass ${rec.exactMass}. Predicted CCS, RT, logP; ${rec.origin === 'curated' ? 'curated in LIPID MAPS' : 'in-silico'}.`)
@@ -43,14 +43,14 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
   const downloadStructure = () => downloadSVG(`${rec!.id}.svg`, document.querySelector('.sp-struct .struct-canvas svg'))
   // Pin the model version (and the values it produced) into the citation text itself — the
   // live page updates when the model is retrained, but a copied citation shouldn't silently
-  // drift with it (issue #57).
+  // drift with it.
   const predNote = pred && predFile ? `CCS ${pred.ccs.v} Å², RT ${pred.rt.v} min (model ${predFile.model_version}). ` : ''
-  const cite = `LIPIVERSE. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}${predNote}Retrieved from lipiverse, ${location.origin}/#/species/${rec.id}`
+  const cite = `LipidHub. ${rec.shorthand} (${rec.formula}). ${real ? `LIPID MAPS ${real.lmId}. ` : ''}${predNote}Retrieved from lipidhub, ${location.origin}/#/species/${rec.id}`
 
   return (
     <div className="app">
       <div className="species-page">
-        <button className="crumb" onClick={onBack}>← LIPIVERSE atlas</button>
+        <button className="crumb" onClick={onBack}>← LipidHub atlas</button>
 
         <header className="sp-hero">
           <div className="sp-badges">

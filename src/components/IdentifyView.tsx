@@ -54,7 +54,7 @@ export default function IdentifyView({ onOpen }: Props) {
           Enter an observed m/z from a run — add CCS and RT to disambiguate. You get ranked
           candidates with a confidence score, <b>including species no spectral library has</b>{' '}
           because the atlas predicted them.{' '}
-          <span style={{ color: 'var(--faint)' }}>Mass is exact; CCS/RT are predicted (issue #3).</span>
+          <span style={{ color: 'var(--faint)' }}>Mass is exact; CCS/RT are predicted.</span>
         </p>
 
         <div className="idf-inputs">
@@ -81,7 +81,7 @@ export default function IdentifyView({ onOpen }: Props) {
           <b className="num">{results.length}</b> candidate{results.length === 1 ? '' : 's'} within tolerance
           {isobaric && <span className="an-sub"> · isobaric — use CCS/RT to disambiguate</span>}
           {results.length > 0 && (
-            <button className="dl-link" onClick={() => downloadCSV('lipiverse-identify.csv',
+            <button className="dl-link" onClick={() => downloadCSV('lipidhub-identify.csv',
               ['shorthand', 'formula', 'adduct', 'adduct_mz', 'error_ppm', 'ccs_pred', 'rt_pred', 'origin', 'confidence'],
               results.map(({ cand, s }) => [cand.record.shorthand, cand.record.formula, cand.adduct, cand.adductMz.toFixed(4), cand.errorPpm.toFixed(2), cand.record.properties.ccs ?? '', cand.record.properties.rt ?? '', cand.record.origin, s.conf]))}>download CSV ↓</button>
           )}

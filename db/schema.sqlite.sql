@@ -1,4 +1,4 @@
--- ── LIPIVERSE reconciled data model — SQLite dialect ────────────────────────
+-- ── LipidHub reconciled data model — SQLite dialect ────────────────────────
 -- Mirrors db/schema.sql (the Postgres/Supabase target). This is the dev/local
 -- store that backs the REST API + MCP server (server/db.ts); the browser
 -- bundle never touches it — it keeps computing client-side from src/lib.
@@ -66,7 +66,7 @@ CREATE TABLE property (
 CREATE INDEX property_species_key_idx ON property (species_id, key);
 -- measured wins over predicted at read time; keep both for provenance.
 
--- ── biology: enzyme / reaction / pathway links (populated by #5) ──────────
+-- ── biology: enzyme / reaction / pathway links (populated by the live UniProt/Rhea discovery) ──────────
 CREATE TABLE pathway (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   species_id     TEXT NOT NULL REFERENCES species(id) ON DELETE CASCADE,
@@ -80,7 +80,7 @@ CREATE TABLE pathway (
 -- bio and chem carry separate provenance: they come from independent pipelines
 -- (live UniProt/Rhea pathway verification vs. RDKit SAScore) that can succeed
 -- or fall back to the heuristic independently — one shared model_version
--- couldn't express that (see #4).
+-- couldn't express that.
 CREATE TABLE synth (
   species_id         TEXT PRIMARY KEY REFERENCES species(id) ON DELETE CASCADE,
   bio_score          REAL,                     -- 0–100: pathway attainability
@@ -89,7 +89,7 @@ CREATE TABLE synth (
   chem_sascore       REAL,                     -- 1(easy)–10(hard)
   chem_method        TEXT CHECK (chem_method IN ('measured','calculated','predicted')),
   chem_model_version TEXT,                     -- 'rdkit-<ver>-sascorer' or 'heuristic-v0'
-  route_json         TEXT                      -- retrosynthesis route (JSON-encoded); not yet populated (#4)
+  route_json         TEXT                      -- retrosynthesis route (JSON-encoded); not yet populated
 );
 
 -- ── cross-references & literature ───────────────────────────────────────────
@@ -100,7 +100,7 @@ CREATE TABLE xref (
   PRIMARY KEY (species_id, db, accession)
 );
 
--- populated by #14
+-- populated by #6
 CREATE TABLE citation (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   species_id TEXT REFERENCES species(id) ON DELETE CASCADE,  -- null = class/general

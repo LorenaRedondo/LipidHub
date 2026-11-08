@@ -182,7 +182,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
       </div>
       <p className="verdict">
         {bioVerdict}<br />
-        {chemVerdict} — SAScore {saVal}. Retrosynthesis route generation not yet implemented (issue #4).
+        {chemVerdict} — SAScore {saVal}. Retrosynthesis route generation not yet implemented.
       </p>
       <p className="note" style={{ marginTop: 8 }}>
         Chemical: {sa != null ? SOURCE.saScore : 'composition estimate (no RDKit SAScore for this species)'}.
@@ -272,7 +272,7 @@ export default function Inspector({ cls, sel, persona, pins, onTogglePin }: Prop
         Search “{cls.name}” on Europe PMC →
       </a>
       <p className="note" style={{ marginTop: 10 }}>
-        Curated per-species citations arrive with database integration (#5, #7).
+        Curated per-species citations arrive with database integration (#6).
       </p>
     </Section>
   )

@@ -1,4 +1,4 @@
-// ── LIPIVERSE hosted MCP server (HTTP transport) ────────────────────────────
+// ── LipidHub hosted MCP server (HTTP transport) ────────────────────────────
 // Run: npm run mcp:http   (requires MCP_API_KEYS to be set — fails fast otherwise).
 // Same tools as mcp/server.ts's stdio transport, reachable over the network for
 // agents that don't have a local checkout of this repo. Auth: one shared API key
@@ -28,7 +28,7 @@ app.use('*', cors({
 app.get('/health', (c) => c.json({ ok: true }))
 
 app.get('/', (c) => c.json({
-  name: 'LIPIVERSE hosted MCP server',
+  name: 'LipidHub hosted MCP server',
   transport: 'streamable-http',
   endpoint: '/mcp',
   auth: 'Authorization: Bearer <key>',
@@ -58,5 +58,5 @@ app.all('/mcp', async (c) => {
 const port = Number(process.env.MCP_HTTP_PORT) || 8788
 serve({ fetch: app.fetch, port }, (info) => {
   // eslint-disable-next-line no-console
-  console.log(`LIPIVERSE MCP server (HTTP) on http://localhost:${info.port}/mcp — ${API_KEYS.size} key(s) configured`)
+  console.log(`LipidHub MCP server (HTTP) on http://localhost:${info.port}/mcp — ${API_KEYS.size} key(s) configured`)
 })

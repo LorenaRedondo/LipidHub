@@ -4,7 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const transport = new StdioClientTransport({ command: 'npx', args: ['tsx', 'mcp/server.ts'] })
-const client = new Client({ name: 'lipiverse-test', version: '0.1.0' })
+const client = new Client({ name: 'lipidhub-test', version: '0.1.0' })
 await client.connect(transport)
 
 const tools = await client.listTools()

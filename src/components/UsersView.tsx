@@ -11,10 +11,10 @@ const PERSONAS: Persona[] = [
     gives: <>Read <b>membrane geometry</b> from the Tanford/Israelachvili model — packing parameter, preferred curvature, bilayer thickness and area/lipid — alongside RDKit logP; see how one more double bond changes the packing across the grid. Phase state and nanomechanics are shown as "not available" until a measured tier exists.</> },
   { ic: '⚗', name: 'Synthetic chemist / biotech', role: 'discovery',
     task: "Find a lipid that's chemically makeable but not naturally abundant.",
-    gives: <>Query the space directly: <b>high chemical-synthesizability (RDKit SAScore), low biosynthetic score</b> — i.e. the "lab-only" quadrant — with the properties to prioritise candidates. Retrosynthesis route generation is not yet implemented (issue #4).</> },
+    gives: <>Query the space directly: <b>high chemical-synthesizability (RDKit SAScore), low biosynthetic score</b> — i.e. the "lab-only" quadrant — with the properties to prioritise candidates. Retrosynthesis route generation is not yet implemented.</> },
   { ic: '⌗', name: 'Bioinformatician / data scientist', role: 'integrator · programmatic',
     task: 'Annotate features and join lipids to enzymes for a network model.',
-    gives: <>Hit the <b>REST API or MCP tools</b>; every species carries a provenance-tagged property table (measured / calculated / predicted) that's safe to build pipelines on, plus LMSD cross-refs where curated. Bulk export and SPARQL are planned (issue #7), not built yet.</> },
+    gives: <>Hit the <b>REST API or MCP tools</b>; every species carries a provenance-tagged property table (measured / calculated / predicted) that's safe to build pipelines on, plus LMSD cross-refs where curated. Bulk export and SPARQL are planned (issue #2), not built yet.</> },
   { ic: '⚕', name: 'Pharma / clinical researcher', role: 'translational',
     task: 'A lipid biomarker moves in disease — what makes it, and is it druggable?',
     gives: <>Trace a species to its <b>biosynthetic enzymes and pathway</b>, see structurally-neighbouring species that co-vary, and assess whether the pathway is a tractable target.</> },
@@ -48,7 +48,7 @@ export default function UsersView() {
         </div>
 
         <div className="marketnote">
-          <b>How LIPIVERSE fits alongside the reference databases.</b> LIPIVERSE builds on the resources
+          <b>How LipidHub fits alongside the reference databases.</b> LipidHub builds on the resources
           the field already relies on — LIPID MAPS, Rhea, UniProt, HMDB — rather than replacing
           them. It adds three things they don't put in one place: the <em>enumerated</em> space shown
           beside the <em>catalogued</em> one, so the gaps are visible; properties inferred for every

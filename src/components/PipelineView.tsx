@@ -27,7 +27,7 @@ const STAGES: Stage[] = [
       { text: 'the Atlas UI (this)' },
       { text: 'Postgres + RDKit cartridge', planned: true },
       { text: 'graph store for pathways', planned: true },
-      { text: 'SPARQL + bulk export (#7)', planned: true },
+      { text: 'SPARQL + bulk export (#2)', planned: true },
     ],
     why: 'Researchers meet it as UI, API, or download.' },
 ]
@@ -101,7 +101,7 @@ export default function PipelineView() {
               The reference DBs don't put a "can I make this?" answer in one place. This splits it: a{' '}
               <b>biosynthetic score</b> (live-verified enzyme + reaction match against UniProt/Rhea)
               and a <b>chemical score</b> (the real RDKit SAScore; a retrosynthesis route-generation
-              pass was validated but found chemically unreliable for lipid chemistry — see issue #52).
+              pass was validated but found chemically unreliable for lipid chemistry — see issue #12).
               The distinction — nature-accessible vs. lab-accessible vs. neither — is what the
               "lab-only" quadrant surfaces.
             </p>

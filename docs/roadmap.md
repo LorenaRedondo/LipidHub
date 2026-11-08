@@ -1,27 +1,25 @@
 # Roadmap
 
-Phased plan of work. Each item below maps to a GitHub issue.
+Phased plan of work. Open items are tracked as GitHub issues.
 
-## Phase 1 — make the data real
-- **#1 Ingest LIPID MAPS LMSD** and mark real curated species (replace the rule-based
-  known/gap demo with a true diff against LMSD).
-- **#2 Enumeration engine** — documented, rule-based headgroup × acyl generator;
-  produce the gap set as `origin = in_silico`.
-- **#3 Property engine v1** — RDKit for formula/mass/logP/TPSA; wire trained CCS & RT
-  models (DeepCCS/AllCCS-style) replacing the heuristic placeholders.
+## Done
+- Ingest of LIPID MAPS LMSD with real curated-species marking; rule-based enumeration of the gap set (`origin = in_silico`).
+- Property engine v1: RDKit formula/mass/logP/TPSA/SAScore; trained CCS & RT models with conformal intervals.
+- Synthesizability scoring (biosynthetic pathway match + chemical SAScore); live UniProt/Rhea pathway graph.
+- Class coverage: sphingolipids, sterols/oxysterols, cardiolipin.
+- REST API and MCP server; provenance and confidence shown on every value; accessibility pass on the gap map.
 
-## Phase 2 — the differentiators
-- **#4 Synthesizability scoring** — biosynthetic (SwissLipids/Rhea pathway match) +
-  chemical (SAScore/RAScore + retrosynthesis route).
-- **#5 Origin & pathway graph** — real enzyme/reaction links from SwissLipids/Rhea.
-- **#6 Extend coverage** — sphingolipids and sterols in the live composition model
-  (backbone + N-acyl handling differs from glycerolipids).
-
-## Phase 3 — product surface
-- **#7 REST + SPARQL API and bulk export** with stable IDs and cross-refs.
-- **#8 Provenance & confidence UI** — surface model version + uncertainty on every value.
-- **#9 Accessibility & performance pass** on the Atlas UI; GitHub Pages deploy.
-
-## Prototype follow-ups (small)
-- **#10 Improve prototype fidelity** — persist a `data.json` the UI reads instead of
-  hardcoded classes; add adduct choice per class; keyboard navigation of the grid.
+## Open
+- [#2](https://github.com/LorenaRedondo/LipidHub/issues/2) REST + SPARQL API and bulk export
+- [#3](https://github.com/LorenaRedondo/LipidHub/issues/3) Perf pass and GitHub Pages deploy
+- [#4](https://github.com/LorenaRedondo/LipidHub/issues/4) Prototype fidelity: externalize data, adduct selector
+- [#5](https://github.com/LorenaRedondo/LipidHub/issues/5) Class coverage: archaeal/prenol ether lipids, gangliosides
+- [#6](https://github.com/LorenaRedondo/LipidHub/issues/6) Curated per-species literature citations
+- [#7](https://github.com/LorenaRedondo/LipidHub/issues/7) Production infrastructure
+- [#8](https://github.com/LorenaRedondo/LipidHub/issues/8) Resource paper and prediction benchmarking
+- [#9](https://github.com/LorenaRedondo/LipidHub/issues/9) CCS/RT per adduct and method, GNN, monotonicity
+- [#10](https://github.com/LorenaRedondo/LipidHub/issues/10) Client packages and pipeline plugins
+- [#11](https://github.com/LorenaRedondo/LipidHub/issues/11) Physics-informed property engine
+- [#12](https://github.com/LorenaRedondo/LipidHub/issues/12) Retrosynthesis route generation
+- [#13](https://github.com/LorenaRedondo/LipidHub/issues/13) Cross-reference pathway enzymes with chemical probes/drugs
+- [#14](https://github.com/LorenaRedondo/LipidHub/issues/14) Mixture calculator and phase diagram as MCP tools

@@ -1,7 +1,7 @@
 // Lazy access to the real, discovered enzyme/reaction graph (UniProt + Rhea).
 // Written by scripts/build-db.ts into src/data/pathwayGraph.json; code-split so it
 // loads on demand. Supersedes the hand-picked LipidClass.enz/.rhea for display —
-// this is what UniProt/Rhea actually say catalyzes the class's reaction (#5).
+// this is what UniProt/Rhea actually say catalyzes the class's reaction.
 import { useEffect, useState } from 'react'
 
 export interface DiscoveredEnzyme { accession: string; gene?: string; proteinName?: string }

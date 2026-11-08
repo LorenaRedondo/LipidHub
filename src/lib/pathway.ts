@@ -2,7 +2,7 @@
 // Server-side only (same reason as src/lib/lmsd.ts — CORS blocks these from
 // the browser SPA). Confirms a lipid class's declared enzymes (LipidClass.enz)
 // and reaction (LipidClass.rhea) are real, reviewed UniProt/Rhea entries —
-// the "does a known enzyme + pathway exist?" half of synthesizability (#4).
+// the "does a known enzyme + pathway exist?" half of synthesizability.
 import type { LipidClass } from './lipids'
 
 export interface EnzymeCheck { gene: string; found: boolean; accession?: string; proteinName?: string }
@@ -17,7 +17,7 @@ export interface PathwayVerification {
   /** Fraction of declared enzymes confirmed + reaction confirmed/approved/balanced, in [0,1]. */
   confidence: number
   /** Real enzyme set discovered from UniProt's catalytic-activity annotation for the Rhea
-   * reaction — independent of (often larger than) the hand-picked `cls.enz` list (#5). */
+   * reaction — independent of (often larger than) the hand-picked `cls.enz` list. */
   discoveredEnzymes: DiscoveredEnzyme[]
   /** Real reaction participants (ChEBI id + name) parsed from Rhea, split by equation side. */
   substrates: Participant[]
@@ -36,7 +36,7 @@ async function fetchJson(url: string, timeoutMs = 15000): Promise<unknown | null
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (LIPIVERSE research preview)' } })
+    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (LipidHub research preview)' } })
     if (!res.ok) return null
     return await res.json()
   } catch {
@@ -81,7 +81,7 @@ const discoveredEnzymeCache = new Map<string, DiscoveredEnzyme[]>()
 
 /**
  * Discover every real reviewed human enzyme UniProt annotates as catalyzing this Rhea
- * reaction — the actual enzyme set, not a verification of a hand-picked guess (#5).
+ * reaction — the actual enzyme set, not a verification of a hand-picked guess.
  */
 export async function discoverEnzymes(rheaId: string): Promise<DiscoveredEnzyme[]> {
   const cached = discoveredEnzymeCache.get(rheaId)

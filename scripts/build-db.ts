@@ -91,7 +91,7 @@ const buildAll = db.transaction(() => {
 })
 buildAll()
 
-// ── overlay: real ML predictions replace the heuristic ccs/rt (issue #33) ──
+// ── overlay: real ML predictions replace the heuristic ccs/rt (issue #9) ──
 const deleteMlProp = db.prepare(`DELETE FROM property WHERE species_id = ? AND key = ?`)
 const insertMlProp = db.prepare(
   `INSERT INTO property (species_id, key, value, unit, method, model_version, ci_low, ci_high)
@@ -127,7 +127,7 @@ const overlayStructures = db.transaction(() => {
 })
 overlayStructures()
 
-// ── overlay: real SAScore (RDKit) replaces the heuristic chem_sascore (#4) ──
+// ── overlay: real SAScore (RDKit) replaces the heuristic chem_sascore ──
 const updateChem = db.prepare(`UPDATE synth SET chem_sascore = ?, chem_method = 'calculated', chem_model_version = ? WHERE species_id = ?`)
 let saOverlaid = 0
 const overlaySa = db.transaction(() => {
@@ -141,7 +141,7 @@ overlaySa()
 
 // ── overlay: real logP (RDKit Crippen) replaces the heuristic — property_best already
 // prefers 'calculated' over 'predicted', so this just adds a second, better row per
-// species rather than deleting the heuristic one (#3) ──
+// species rather than deleting the heuristic one ──
 const insertLogp = db.prepare(
   `INSERT INTO property (species_id, key, value, unit, method, model_version, ci_low, ci_high)
    VALUES (@species_id, 'logp', @value, NULL, 'calculated', @model_version, NULL, NULL)`,
@@ -156,15 +156,15 @@ const overlayLogp = db.transaction(() => {
 })
 overlayLogp()
 
-// ── overlay: live UniProt/Rhea pathway verification scales bio_score (#4) and
+// ── overlay: live UniProt/Rhea pathway verification scales bio_score and
 // populates the `pathway` table + src/data/pathwayGraph.json with the real,
-// discovered enzyme/reaction graph (#5) — not the hand-picked cls.enz/rhea.
+// discovered enzyme/reaction graph — not the hand-picked cls.enz/rhea.
 // Best-effort: if UniProt is unreachable (offline build), bio_score stays the
 // heuristic-only fallback and pathwayGraph.json is left untouched.
 const updateBio = db.prepare(`UPDATE synth SET bio_score = ?, bio_method = 'calculated', bio_model_version = 'pathway-verified-v1' WHERE species_id = ?`)
 const insertPathway = db.prepare(
   `INSERT INTO pathway (species_id, enzyme_uniprot, rhea_rxn, direction, source)
-   VALUES (@species_id, @enzyme_uniprot, @rhea_rxn, NULL, 'UniProt (Swiss-Prot) + Rhea, live, precomputed at db:build (#5)')`,
+   VALUES (@species_id, @enzyme_uniprot, @rhea_rxn, NULL, 'UniProt (Swiss-Prot) + Rhea, live, precomputed at db:build')`,
 )
 let classesVerified = 0
 let pathwayRows = 0
@@ -239,5 +239,5 @@ console.log(`  ML predictions:       ${predictionsOverlaid} species (ccs+rt repl
 console.log(`  SAScore (RDKit):      ${saOverlaid} species (chem_sascore replaced; model ${SYNTH.model_version})`)
 console.log(`  logP (RDKit Crippen): ${logpOverlaid} species (real logp added; model ${LOGP.model_version})`)
 console.log(`  Pathway verification: ${live ? `${classesVerified}/${CLASSES.length} classes verified (bio_score scaled)` : 'skipped (offline)'}`)
-console.log(`  Pathway graph (#5):   ${live ? `${pathwayRows} pathway rows, ${Object.values(pathwayGraph).reduce((n, c) => n + c.enzymes.length, 0)} distinct enzyme links across ${classesVerified} classes` : 'skipped (offline)'}`)
+console.log(`  Pathway graph:   ${live ? `${pathwayRows} pathway rows, ${Object.values(pathwayGraph).reduce((n, c) => n + c.enzymes.length, 0)} distinct enzyme links across ${classesVerified} classes` : 'skipped (offline)'}`)
 console.log(`  LMSD structures:      ${structuresOverlaid} species (smiles/inchikey/lm_id + xref)`)

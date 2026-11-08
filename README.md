@@ -1,4 +1,4 @@
-# LIPIVERSE — an atlas of the known & predicted lipidome
+# LipidHub — an atlas of the known & predicted lipidome
 
 A navigable atlas that unifies the **known** lipids (from reference databases), the
 **enumerated but uncatalogued** ones (the *gaps*), their **properties inferred from
@@ -38,7 +38,7 @@ instead of recomputing the space per request. Build it once before running eithe
 npm run db:build                     # build db/lipidhub.sqlite (regenerate any time)
 npm run api                          # REST at http://localhost:8787
 npm run mcp                          # MCP server (stdio)
-claude mcp add lipiverse -- npm run mcp
+claude mcp add lipidhub -- npm run mcp
 ```
 
 See [`docs/api.md`](docs/api.md) for endpoints/tools.
@@ -105,7 +105,7 @@ open data and adds three things they don't put in one place:
 |---|---|---|
 | Formula & exact mass | ✅ computed exactly from backbone + acyl chains | same |
 | Adduct m/z | ✅ computed | same |
-| CCS / RT | ✅ trained GBM model with 90% intervals; shown where the model covers the species, else **not available** | per-adduct/method scope, GNN, monotonicity constraint (#33) |
+| CCS / RT | ✅ trained GBM model with 90% intervals; shown where the model covers the species, else **not available** | per-adduct/method scope, GNN, monotonicity constraint (#9) |
 | logP | ✅ real RDKit Crippen where a valid SMILES exists, else **not available** | TPSA / other descriptors |
 | Tm | ⛔ **not reported** — no reliable measured or trained source | trained model or QSPR |
 | Membrane geometry | ✅ Tanford/Israelachvili packing, curvature, thickness, area — a geometric model estimate, labelled as such | measured tier (AFM / X-ray) |

@@ -42,7 +42,7 @@ export default function SearchView({ onOpen, pins, onTogglePin }: Props) {
 
   function exportCsv() {
     const all = search({ ...JSON.parse(filterKey), page: 1, pageSize: 5000 }).results
-    downloadCSV('lipiverse-search.csv',
+    downloadCSV('lipidhub-search.csv',
       ['id', 'shorthand', 'group', 'category', 'formula', 'exact_mass', 'ccs_pred', 'rt_pred', 'logp', 'origin', 'biosynthetic', 'sascore', 'kingdoms'],
       all.map((r) => [r.id, r.shorthand, r.class.group, r.class.category, r.formula, r.exactMass, r.properties.ccs ?? '', r.properties.rt ?? '', r.properties.logP ?? '', r.origin, r.synthesizability.biosynthetic, r.synthesizability.saScore, r.class.kingdoms.join('|')]))
   }

@@ -154,7 +154,7 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
               approximation), then deriving thickness/curvature from the blend with
               the same Tanford geometry used for a single species. This is <b>not</b> a phase-separation
               model — real mixtures of e.g. cholesterol + saturated lipids deviate from ideal
-              mixing significantly (tracked separately, issue #63).
+              mixing significantly (not modelled).
               {cols.length !== membraneCols.length && (
                 <span style={{ display: 'block', marginTop: 6, color: 'var(--faint)' }}>
                   {cols.length - membraneCols.length} pinned species don't form membranes and are excluded from the blend.
@@ -226,7 +226,7 @@ export default function CompareView({ pins, onTogglePin, onGoAtlas }: { pins: Pi
             ) : cols.length === 3 ? (
               <p className="note" style={{ marginTop: 16, maxWidth: 480 }}>
                 No published phase diagram is digitized for this combination yet — real Lo/Ld domain
-                data currently only covers DOPC (PC 36:2) + DPPC (PC 32:0) + cholesterol. See issue #63.
+                data currently only covers DOPC (PC 36:2) + DPPC (PC 32:0) + cholesterol..
               </p>
             ) : null}
           </>

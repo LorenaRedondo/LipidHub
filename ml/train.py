@@ -38,7 +38,7 @@ N_FOLDS = 4
 SEED = 42
 
 mlflow.set_tracking_uri(f"sqlite:///{os.path.join(HERE, 'mlflow.db')}")
-mlflow.set_experiment("lipidex-property-models")
+mlflow.set_experiment("lipidhub-property-models")
 
 
 def load_real_ccs() -> pd.DataFrame:
@@ -143,7 +143,7 @@ def main():
 
     ccs_target, rt_target = synthetic_targets(df, feats, seed=SEED, ccs_coef=ccs_coef)
 
-    with mlflow.start_run(run_name="lipidex-training-run") as parent:
+    with mlflow.start_run(run_name="lipidhub-training-run") as parent:
         mlflow.log_param("model_version", MODEL_VERSION)
         mlflow.log_param("n_species", len(df))
         mlflow.log_param("n_real_anchor", len(real_anchor))

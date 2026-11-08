@@ -1,4 +1,4 @@
--- ── LIPIVERSE reconciled data model ───────────────────────────────────────
+-- ── LipidHub reconciled data model ───────────────────────────────────────
 -- Portable PostgreSQL DDL. Apply to Postgres (RDKit cartridge recommended for
 -- structure search) or Supabase. Provenance is a first-class citizen: every
 -- property value knows how it was produced, by which model version, with what
@@ -72,7 +72,7 @@ CREATE TABLE pathway (
 -- bio and chem carry separate provenance: they come from independent pipelines
 -- (live UniProt/Rhea pathway verification vs. RDKit SAScore) that can succeed
 -- or fall back to a heuristic independently — one shared model_version
--- couldn't express that (see #4).
+-- couldn't express that.
 CREATE TABLE synth (
   species_id         uuid PRIMARY KEY REFERENCES species(id) ON DELETE CASCADE,
   bio_score          numeric,                  -- 0–100: pathway attainability
@@ -81,7 +81,7 @@ CREATE TABLE synth (
   chem_sascore       numeric,                  -- 1(easy)–10(hard)
   chem_method        text CHECK (chem_method IN ('measured','calculated','predicted')),
   chem_model_version text,                     -- 'rdkit-<ver>-sascorer' or 'heuristic-v0'
-  route_json         jsonb                     -- retrosynthesis route; not yet populated (#4)
+  route_json         jsonb                     -- retrosynthesis route; not yet populated
 );
 
 -- ── cross-references & literature ───────────────────────────────────────────

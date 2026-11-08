@@ -1,4 +1,4 @@
-// ── LIPIVERSE SQLite-backed service adapter ─────────────────────────────────
+// ── LipidHub SQLite-backed service adapter ─────────────────────────────────
 // Server-only. Same exported names/shapes as src/lib/service.ts, backed by
 // db/lipidhub.sqlite (built with `npm run db:build`) instead of recomputing the
 // full enumerated space on every request. The frontend never imports this —
@@ -24,7 +24,7 @@ const PATHWAY_GRAPH = (pathwayGraphData as unknown as {
 }).classes
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = process.env.LIPIDHUB_DB ?? process.env.LIPIDEX_DB ?? path.join(HERE, '../db/lipidhub.sqlite')
+const DB_PATH = process.env.LIPIDHUB_DB ?? process.env.LipidHubKEEP ?? path.join(HERE, '../db/lipidhub.sqlite')
 
 const db = new Database(DB_PATH, { fileMustExist: true })
 db.pragma('journal_mode = WAL')
@@ -43,7 +43,7 @@ const chemScoreFromSa = (sa: number) => Math.round(Math.max(8, 100 - (sa - 2.6) 
 function synthNote(row: SpeciesRow): string {
   const bio = row.bio_model_version === 'heuristic-v0' ? 'heuristic composition penalty' : `live UniProt/Rhea pathway verification (${row.bio_model_version})`
   const chem = row.chem_model_version === 'heuristic-v0' ? 'heuristic formula' : `RDKit SAScore (${row.chem_model_version})`
-  return `Biosynthetic from ${bio}; chemical (SAScore) from ${chem}. Retrosynthesis route generation not yet implemented (issue #4).`
+  return `Biosynthetic from ${bio}; chemical (SAScore) from ${chem}. Retrosynthesis route generation not yet implemented.`
 }
 
 function propsNote(byKey: Record<string, { model_version: string | null }>): string {
@@ -57,7 +57,7 @@ function propsNote(byKey: Record<string, { model_version: string | null }>): str
 const propsForIdStmt = db.prepare(`SELECT key, value, model_version, ci_low, ci_high FROM property_best WHERE species_id = ?`)
 const pathwayForIdStmt = db.prepare(`SELECT enzyme_uniprot, rhea_rxn FROM pathway WHERE species_id = ?`)
 
-/** Real enzyme/reaction links for a species — the `pathway` table (#5), enzyme names resolved from pathwayGraph.json. */
+/** Real enzyme/reaction links for a species — the `pathway` table, enzyme names resolved from pathwayGraph.json. */
 export function getPathwayLinks(speciesId: string, classCode: string): NonNullable<SpeciesRecord['pathway']> {
   const rows = pathwayForIdStmt.all(speciesId) as { enzyme_uniprot: string; rhea_rxn: string }[]
   const classGraph = PATHWAY_GRAPH[classCode]
@@ -234,7 +234,7 @@ export function findGaps(clsK?: string, limit = 50): SpeciesRecord[] {
 const LAB_ONLY_MAX_SASCORE = 4.5
 const LAB_ONLY_MAX_BIOSYNTHETIC = 30
 
-/** The "valuable quadrant" (#4): high chemical accessibility (low SAScore), low biosynthetic score — lab-accessible lipids nature doesn't make. */
+/** The "valuable quadrant": high chemical accessibility (low SAScore), low biosynthetic score — lab-accessible lipids nature doesn't make. */
 export function findLabOnly(limit = 50): SpeciesRecord[] {
   const sql = `
     SELECT ${SPECIES_COLUMNS} ${SPECIES_FROM}
