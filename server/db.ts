@@ -24,7 +24,7 @@ const PATHWAY_GRAPH = (pathwayGraphData as unknown as {
 }).classes
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = process.env.LIPIDHUB_DB ?? process.env.LipidHubKEEP ?? path.join(HERE, '../db/lipidhub.sqlite')
+const DB_PATH = process.env.LIPIDHUB_DB ?? process.env.LIPIDEX_DB ?? path.join(HERE, '../db/lipidhub.sqlite')
 
 const db = new Database(DB_PATH, { fileMustExist: true })
 db.pragma('journal_mode = WAL')

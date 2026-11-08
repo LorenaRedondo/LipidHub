@@ -37,6 +37,10 @@
   .brand{display:flex;align-items:baseline;gap:12px}
   .brand .logo{font-family:var(--sans);font-weight:700;font-size:19px;letter-spacing:.01em;color:var(--text);white-space:nowrap}
   .brand .logo b{color:var(--cyan);font-weight:800}
+  .alpha-badge{display:inline-block;align-self:center;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gap);border:1px solid var(--gap-dim);border-radius:999px;padding:1px 8px;white-space:nowrap}
+  .disclaimer{display:flex;gap:12px;align-items:flex-start;margin:28px 0 8px;padding:14px 0 0;border-top:1px solid var(--line2);font-size:12px;line-height:1.55;color:var(--muted)}
+  .disclaimer p{margin:0;max-width:900px}
+  .disclaimer .alpha-badge{margin-top:1px;flex:none}
   .brand .tag{font-size:12.5px;color:var(--muted);border-left:1px solid var(--line2);padding-left:12px;white-space:nowrap}
   nav{display:flex;gap:2px;margin-left:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
   nav button{border:none;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;font-size:13px;font-weight:550;white-space:nowrap}

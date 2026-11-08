@@ -1,3 +1,4 @@
+import Disclaimer from './Disclaimer'
 import { Fragment, useEffect } from 'react'
 import { findClass, isomer } from '../lib/lipids'
 import { getSpecies } from '../lib/service'
@@ -148,6 +149,7 @@ export default function SpeciesPage({ id, onBack }: { id: string; onBack: () => 
           and is not reported. Curated status is ingested from LIPID MAPS (CC BY 4.0).
         </p>
       </div>
+      <Disclaimer />
     </div>
   )
 }
