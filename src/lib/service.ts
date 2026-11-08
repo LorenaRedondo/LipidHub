@@ -9,6 +9,7 @@ import {
 } from './lipids'
 import { ccsRtFor, logpFor, saScoreFor, chemScoreFromSa, SOURCE } from './realProps'
 import { toSmiles } from './smiles'
+import { SUM_COMPOSITION_IDENTITY, illustrativeStructure, type Identity, type StructureInfo } from './resolution'
 
 export interface SpeciesRecord {
   id: string
@@ -35,7 +36,10 @@ export interface SpeciesRecord {
   headgroupCharge: string
   origin: 'curated' | 'in_silico'
   isGap: boolean
-  smiles: string | null
+  /** What this record identifies. All enumerated records are sum compositions. */
+  identity: Identity
+  /** A depicted structure with its status, or null. Never a confirmed identification unless `status` says so. */
+  structure: StructureInfo | null
   msmsHeadgroup: { label: string; mz: number | null }
   literatureSearch: string
   /** Real enzyme/reaction links, live-discovered from UniProt/Rhea. Server-only — absent client-side. */
@@ -102,7 +106,8 @@ export function buildRecord(cls: LipidClass, c: number, d: number): SpeciesRecor
     headgroupCharge: headgroupCharge(cls),
     origin: st === 'known' ? 'curated' : 'in_silico',
     isGap: st !== 'known',
-    smiles: toSmiles(cls, c, d),
+    identity: SUM_COMPOSITION_IDENTITY,
+    structure: (() => { const sm = toSmiles(cls, c, d); return sm ? illustrativeStructure(sm) : null })(),
     msmsHeadgroup: { label: cls.hgFrag.lab, mz: cls.hgFrag.mz },
     literatureSearch: pmcSearchUrl(cls),
   }

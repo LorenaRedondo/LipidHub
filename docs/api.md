@@ -92,3 +92,21 @@ LMSD uses. Results are cached per process.
 
 This is the honest bridge from the prototype's *rule-based* curated/gap guess to ground
 truth; the LMSD ingest script is `npm run ingest:lmsd`. Lipid data © LIPID MAPS, **CC BY 4.0**.
+
+## Structural resolution and structure status
+
+Every species record is a **sum composition** (class, total carbons, total double
+bonds; e.g. `PC 34:1`), not a single molecule. Records therefore carry:
+
+- `identity.resolution` — currently always `sum_composition`, with a `caveat`.
+  Levels, coarse to fine: `class`, `sum_composition`, `molecular_species`
+  (`PC 16:0_18:1`), `sn_resolved` (`PC 16:0/18:1`), `structure_resolved`.
+- `structure` — a depicted structure with its `status`, or `null`:
+  - `database-derived`: one representative LIPID MAPS (LMSD) isomer, with `lmId`
+    and `inchikey`;
+  - `illustrative`: generated from the composition with assumed chain and
+    double-bond placement; not an identification and not suitable for
+    structure-level properties.
+
+The former top-level `smiles` field was removed: it could not say which of these
+it was. Use `structure.smiles` together with `structure.status`.

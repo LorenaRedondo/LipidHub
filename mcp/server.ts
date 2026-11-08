@@ -35,7 +35,7 @@ export function buildMcpServer(): McpServer {
     'get_lipid',
     {
       title: 'Get a lipid species',
-      description: 'Return the full record for one species by id or shorthand (e.g. "PC-34-1" or "PC 34:1"): formula, exact mass, adduct m/z, predicted CCS/RT/logP/Tm, synthesizability, biological taxonomy, SMILES, and a literature link.',
+      description: 'Return the full record for one species by id or shorthand (e.g. "PC-34-1" or "PC 34:1"): formula, exact mass, adduct m/z, predicted CCS/RT/logP/Tm, synthesizability, biological taxonomy, a literature link, `identity` (structural resolution: records are sum compositions, not single molecules) and `structure` (SMILES with a status: database-derived representative, or illustrative and not identified).',
       inputSchema: { id: z.string().describe('Species id or shorthand, e.g. PC-34-1 or "MGDG 34:6"') },
     },
     async ({ id }) => {
