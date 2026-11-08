@@ -16,6 +16,7 @@ import {
   type Group, type Kingdom, type LipidClass,
 } from '../src/lib/lipids'
 import { toSmiles } from '../src/lib/smiles'
+import { SUM_COMPOSITION_IDENTITY, databaseStructure, illustrativeStructure } from '../src/lib/resolution'
 import type { SearchParams, SpeciesRecord } from '../src/lib/service'
 import pathwayGraphData from '../src/data/pathwayGraph.json'
 
@@ -34,6 +35,7 @@ interface SpeciesRow {
   formula: string; exact_mass: number; origin: 'curated' | 'in_silico'; status: string
   display_group: Group; bio_score: number | null; bio_model_version: string | null
   chem_sascore: number | null; chem_model_version: string | null
+  smiles: string | null; inchikey: string | null; lm_id: string | null
 }
 
 const round4 = (n: number) => Math.round(n * 1e4) / 1e4
@@ -65,6 +67,13 @@ export function getPathwayLinks(speciesId: string, classCode: string): NonNullab
     const enz = classGraph?.enzymes.find((e) => e.accession === r.enzyme_uniprot)
     return { enzymeUniprot: r.enzyme_uniprot, gene: enz?.gene, proteinName: enz?.proteinName, rheaRxn: r.rhea_rxn, equation: classGraph?.equation }
   })
+}
+
+/** Structure with status: LMSD entry when the row has one, otherwise an illustrative generated SMILES. */
+function structureFor(row: SpeciesRow, cls: LipidClass, c: number, d: number): SpeciesRecord['structure'] {
+  if (row.lm_id && row.smiles) return databaseStructure(row.smiles, row.lm_id, row.inchikey ?? null)
+  const sm = toSmiles(cls, c, d)
+  return sm ? illustrativeStructure(sm) : null
 }
 
 /** Assemble the full SpeciesRecord contract from a DB row + its property_best rows. */
@@ -115,7 +124,8 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
     headgroupCharge: headgroupCharge(cls),
     origin: row.origin,
     isGap: row.status !== 'known',
-    smiles: toSmiles(cls, c, d),
+    identity: SUM_COMPOSITION_IDENTITY,
+    structure: structureFor(row, cls, c, d),
     msmsHeadgroup: { label: cls.hgFrag.lab, mz: cls.hgFrag.mz },
     literatureSearch: pmcSearchUrl(cls),
     pathway: pathway.length ? pathway : undefined,
@@ -123,7 +133,7 @@ function assembleRecord(row: SpeciesRow): SpeciesRecord {
 }
 
 const SPECIES_COLUMNS = `
-  s.id, s.shorthand, s.class_code, s.n_carbon, s.n_dbond, s.formula, s.exact_mass, s.origin, s.status,
+  s.id, s.shorthand, s.class_code, s.smiles, s.inchikey, s.lm_id, s.n_carbon, s.n_dbond, s.formula, s.exact_mass, s.origin, s.status,
   lc.display_group, sy.bio_score, sy.bio_model_version, sy.chem_sascore, sy.chem_model_version
 `
 const SPECIES_FROM = `FROM species s JOIN lipid_class lc ON lc.code = s.class_code LEFT JOIN synth sy ON sy.species_id = s.id`

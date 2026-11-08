@@ -84,6 +84,13 @@ during the image build, so both services start with a fully populated dataset.
   Serve), the core schema, and where provenance lives.
 - **Who it's for** — six audiences and the concrete task each brings.
 
+## What a record represents
+
+Records are **sum compositions** (e.g. `PC 34:1`), not single molecules. Each record
+declares its structural resolution (`identity`), and any depicted structure carries a
+status (`database-derived` representative isomer, or `illustrative`). See
+[`docs/api.md`](docs/api.md#structural-resolution-and-structure-status).
+
 ## What it adds
 
 The reference databases already hold the catalogue — [LIPID MAPS](https://www.lipidmaps.org/)

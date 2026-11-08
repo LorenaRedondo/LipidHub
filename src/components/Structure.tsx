@@ -59,8 +59,8 @@ export default function Structure({ cls, c, d, iso }: Props) {
       <div className="struct-canvas" ref={canvasRef} dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="struct-cap">
         {real
-          ? <>Real structure from <b>LIPID MAPS</b> · {real.lmId}</>
-          : <>Predicted 2D structure of the likely isomer {iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')} · double-bond positions illustrative</>}
+          ? <>Representative structure from <b>LIPID MAPS</b> · {real.lmId} · one isomer of this sum composition</>
+          : <><b>Illustrative</b> structure (not identified) · assumed chains {iso.map((x) => `${x[0]}:${x[1]}`).join(' / ')} · double-bond positions assumed</>}
         <button
           className="dl-link"
           style={{ marginLeft: 10 }}

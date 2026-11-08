@@ -18,7 +18,8 @@
     "db:build": "tsx scripts/build-db.ts",
     "api": "tsx server/api.ts",
     "mcp": "tsx mcp/server.ts",
-    "mcp:http": "tsx mcp/httpServer.ts"
+    "mcp:http": "tsx mcp/httpServer.ts",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.8",
